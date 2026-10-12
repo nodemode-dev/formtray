@@ -390,6 +390,23 @@ fn updates(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn set_hotkey(app: AppHandle, action: String, chord: String) -> Result<Snapshot, String> {
+    let result = with_engine(&app, |e| e.set_hotkey(&action, &chord));
+    register_hotkeys(&app);
+    broadcast(&app);
+    result.map(|_| with_engine(&app, |e| e.snapshot()))
+}
+
+#[tauri::command]
+fn pause_hotkeys(app: AppHandle, paused: bool) {
+    if paused {
+        let _ = app.global_shortcut().unregister_all();
+    } else {
+        register_hotkeys(&app);
+    }
+}
+
+#[tauri::command]
 fn rescan(app: AppHandle) {
     with_engine(&app, |e| e.rediscover());
     broadcast(&app);
@@ -411,7 +428,7 @@ pub fn run() {
                 .build(),
         )
         .manage(Shell::default())
-        .invoke_handler(tauri::generate_handler![snapshot, open_app, quit_app, set_prefs, show, dismiss, shell_info, updates, rescan])
+        .invoke_handler(tauri::generate_handler![snapshot, open_app, quit_app, set_prefs, show, dismiss, shell_info, updates, rescan, set_hotkey, pause_hotkeys])
         .on_window_event(|window, event| match event {
             WindowEvent::Focused(false) if PANELS.contains(&window.label()) => {
                 let app = window.app_handle();
