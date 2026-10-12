@@ -10,6 +10,7 @@ export default defineConfig({
     port: FRONTEND_PORT,
     host: false,
     strictPort: true,
+    fs: { allow: [".", "../core/data"] },
   },
   preview: {
     port: FRONTEND_PORT + 1,
