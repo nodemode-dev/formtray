@@ -2,8 +2,18 @@ export type View = "switcher" | "stack" | "apps" | "windows" | "widgets" | "pref
 export const VIEWS: View[] = ["switcher", "stack", "apps", "windows", "widgets"];
 
 export interface Tile {
+  kind: "app" | "group" | "updates";
+  id: string;
   app: string;
+  name: string;
+  apps: string[];
   size: "s" | "m" | "l";
+}
+
+export interface PortalUpdate {
+  id: string;
+  from: string;
+  to: string;
 }
 
 export interface Prefs {
@@ -39,6 +49,8 @@ export interface Snapshot {
   prefs: Prefs;
   hotkeys: Record<string, string>;
   platform: "macos" | "windows" | "linux";
+  portal: boolean;
+  updates: PortalUpdate[];
 }
 
 export interface ShellInfo {
@@ -79,8 +91,10 @@ async function previewSnapshot(): Promise<Snapshot> {
     categories: data.categories,
     apps,
     platform: "macos",
+    portal: true,
+    updates: [{ id: "formvis", from: "1.60.0", to: "1.66.1" }, { id: "formcut", from: "2.6.2", to: "2.8.8" }],
     hotkeys: { switcher: "Alt+Tab", summon: "Control+Alt+Super+Space", "view-switcher": "Control+Alt+Super+Digit1", "view-stack": "Control+Alt+Super+Digit2", "view-apps": "Control+Alt+Super+Digit3", "view-windows": "Control+Alt+Super+Digit4", "view-widgets": "Control+Alt+Super+Digit5" },
-    prefs: { default_view: "apps", open_at_login: false, hidden: [], pinned: board, locations: [], widgets: board.map((app, i) => ({ app, size: i < 2 ? "l" : "m" })), hotkeys: {} },
+    prefs: { default_view: "apps", open_at_login: false, hidden: [], pinned: board, locations: [], widgets: board.map((app, i) => ({ kind: "app" as const, id: app, app, name: "", apps: [], size: i < 2 ? ("l" as const) : ("m" as const) })), hotkeys: {} },
   };
   return preview;
 }
@@ -92,6 +106,13 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
   if (cmd === "set_prefs") {
     const snap = await previewSnapshot();
     snap.prefs = args?.prefs as Prefs;
+    return snap as T;
+  }
+  if (cmd === "set_hotkey") {
+    const snap = await previewSnapshot();
+    const chord = String(args?.chord ?? "");
+    if (chord.toLowerCase() === "super+space") throw "Super+Space is used by Spotlight";
+    snap.hotkeys[String(args?.action)] = chord || snap.hotkeys[String(args?.action)];
     return snap as T;
   }
   if (cmd === "open_app") {

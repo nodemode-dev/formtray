@@ -20,6 +20,8 @@ export function prefsView(): ViewModule {
   let locations: HTMLTextAreaElement;
   let keys: HTMLElement;
   let about: HTMLElement;
+  let capturing: string | null = null;
+  let keySignature = "";
   const rows = new Map<string, { row: HTMLElement; show: HTMLInputElement; pin: HTMLInputElement; where: HTMLElement }>();
 
   function draft(): Prefs {
@@ -53,14 +55,77 @@ export function prefsView(): ViewModule {
     return f;
   }
 
+  function capture(action: string, button: HTMLButtonElement) {
+    capturing = action;
+    button.textContent = "Press the new keys, or Esc";
+    button.classList.add("is-capturing");
+    void call("pause_hotkeys", { paused: true });
+  }
+
+  function finishCapture() {
+    capturing = null;
+    keySignature = "";
+    void call("pause_hotkeys", { paused: false });
+    void renderKeys(ctx.snap);
+  }
+
+  function onCapture(e: KeyboardEvent) {
+    if (!capturing) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (e.key === "Escape") return finishCapture();
+    if (["Shift", "Control", "Alt", "Meta", "AltGraph", "CapsLock"].includes(e.key)) return;
+    const mods: string[] = [];
+    if (e.ctrlKey) mods.push("Control");
+    if (e.shiftKey) mods.push("Shift");
+    if (e.altKey) mods.push("Alt");
+    if (e.metaKey) mods.push("Super");
+    if (!mods.some((m) => m !== "Shift")) {
+      ctx.toast(ctx.snap.platform === "macos" ? "Hold Control, Option or Command with the key." : "Hold Ctrl, Alt or the Windows key with the key.");
+      return;
+    }
+    const action = capturing;
+    const chord = [...mods, e.code].join("+");
+    capturing = null;
+    call<Snapshot>("set_hotkey", { action, chord })
+      .then((next) => {
+        ctx.snap = next;
+      })
+      .catch((err) => ctx.toast(String(err)))
+      .finally(finishCapture);
+  }
+
   async function renderKeys(snap: Snapshot) {
     const info = await call<ShellInfo>("shell_info");
+    const signature = JSON.stringify([snap.hotkeys, snap.prefs.hotkeys, info.issues, capturing]);
+    if (signature === keySignature) return;
+    keySignature = signature;
     keys.replaceChildren();
     for (const action of Object.keys(ACTION_NAMES)) {
       const chord = snap.hotkeys[action];
       if (!chord) continue;
       const row = el("div", "pf-key");
-      row.append(el("span", "pf-key-name", ACTION_NAMES[action]), el("kbd", "pf-kbd", prettyChord(chord, snap.platform)));
+      const change = el("button", "pf-kbd pf-kbd-btn", prettyChord(chord, snap.platform));
+      change.type = "button";
+      change.title = "Change this hotkey";
+      change.addEventListener("click", () => capture(action, change));
+      const acts = el("span", "pf-key-acts");
+      acts.append(change);
+      if (snap.prefs.hotkeys[action]) {
+        const reset = el("button", "pf-reset", "Default");
+        reset.type = "button";
+        reset.addEventListener("click", () => {
+          call<Snapshot>("set_hotkey", { action, chord: "" })
+            .then((next) => {
+              ctx.snap = next;
+              keySignature = "";
+              void renderKeys(next);
+            })
+            .catch((err) => ctx.toast(String(err)));
+        });
+        acts.append(reset);
+      }
+      row.append(el("span", "pf-key-name", ACTION_NAMES[action]), acts);
       keys.append(row);
     }
     for (const issue of info.issues) {
@@ -147,6 +212,7 @@ export function prefsView(): ViewModule {
         section("About", about, updates),
       );
       root.append(head, body);
+      window.addEventListener("keydown", onCapture, true);
       this.update(ctx.snap);
     },
     update(snap) {
