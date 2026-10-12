@@ -7,6 +7,8 @@ const HELP: &str = "formai-cli: the Form apps from the command line
   open <app>      open an app, or bring it forward if it is running
   quit <app>      quit a running app
   hotkeys         this computer's FormAI hotkeys
+  hotkey <action> <chord>   change one hotkey, or give \"\" to go back to the default
+  updates         updates FormPortal has seen for installed apps (read only, no network)
   where           where FormAI keeps its preferences
 
 <app> is an id or a name: formcut, FormVis, form.md";
@@ -23,6 +25,31 @@ fn main() {
             keys.sort();
             for (action, chord) in keys {
                 println!("{action:<14} {chord}");
+            }
+            0
+        }
+        Some("hotkey") => match (args.get(1), args.get(2)) {
+            (Some(action), Some(chord)) => match Engine::new().set_hotkey(action, chord) {
+                Ok(()) => 0,
+                Err(e) => {
+                    eprintln!("{e}");
+                    1
+                }
+            },
+            _ => {
+                eprintln!("Give an action and a chord, for example: formai-cli hotkey summon Control+Alt+Super+KeyF");
+                2
+            }
+        },
+        Some("updates") => {
+            let snapshot = Engine::new().snapshot();
+            if !snapshot.portal {
+                println!("FormPortal has no install record on this computer.");
+            } else if snapshot.updates.is_empty() {
+                println!("FormPortal has seen no updates for installed apps.");
+            }
+            for u in &snapshot.updates {
+                println!("{:<14} {} -> {}", u.id, u.from, u.to);
             }
             0
         }

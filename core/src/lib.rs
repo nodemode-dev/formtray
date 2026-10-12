@@ -1,6 +1,7 @@
 pub mod discover;
 pub mod hotkeys;
 pub mod launch;
+pub mod portal;
 pub mod prefs;
 pub mod registry;
 pub mod running;
@@ -39,12 +40,15 @@ pub struct Snapshot {
     pub prefs: Prefs,
     pub hotkeys: HashMap<String, String>,
     pub platform: &'static str,
+    pub portal: bool,
+    pub updates: Vec<portal::PortalUpdate>,
 }
 
 pub struct Engine {
     pub registry: Registry,
     pub prefs: Prefs,
     pub usage: Usage,
+    portal: portal::PortalState,
     paths: HashMap<String, Option<PathBuf>>,
     running: HashMap<String, running::Running>,
     watcher: running::Watcher,
@@ -62,6 +66,7 @@ impl Engine {
             registry: Registry::load(),
             prefs: Prefs::load(),
             usage: Usage::load(),
+            portal: portal::PortalState::default(),
             paths: HashMap::new(),
             running: HashMap::new(),
             watcher: running::Watcher::new(),
@@ -82,8 +87,39 @@ impl Engine {
     }
 
     pub fn rediscover(&mut self) {
+        self.portal = portal::read();
         let roots = discover::search_roots(&self.prefs.locations);
-        self.paths = self.registry.apps.iter().map(|a| (a.id.clone(), discover::find(a, &roots))).collect();
+        let portal = &self.portal;
+        self.paths = self
+            .registry
+            .apps
+            .iter()
+            .map(|a| {
+                let managed = portal.installs.iter().find(|(id, _)| id == &a.id).and_then(|(_, p)| discover::resolve(a, p));
+                (a.id.clone(), managed.or_else(|| discover::find(a, &roots)))
+            })
+            .collect();
+    }
+
+    pub fn set_hotkey(&mut self, action: &str, chord: &str) -> Result<(), String> {
+        if !hotkeys::ACTIONS.contains(&action) {
+            return Err(format!("{action} is not a FormAI action"));
+        }
+        let mut prefs = self.prefs.clone();
+        if chord.trim().is_empty() {
+            prefs.hotkeys.remove(action);
+        } else {
+            let wanted = hotkeys::normalise(chord);
+            if let Some(owner) = hotkeys::conflict(&wanted) {
+                return Err(format!("{wanted} is used by {owner}"));
+            }
+            let taken = hotkeys::effective(&prefs.hotkeys).into_iter().find(|(a, c)| a != action && hotkeys::normalise(c).eq_ignore_ascii_case(&wanted));
+            if let Some((other, _)) = taken {
+                return Err(format!("{wanted} is already FormAI's {other} hotkey"));
+            }
+            prefs.hotkeys.insert(action.to_string(), wanted);
+        }
+        self.set_prefs(prefs).map_err(|e| e.to_string())
     }
 
     pub fn refresh_running(&mut self) -> bool {
@@ -126,6 +162,8 @@ impl Engine {
             prefs: self.prefs.clone(),
             hotkeys: hotkeys::effective(&self.prefs.hotkeys),
             platform: Self::platform(),
+            portal: self.portal.found,
+            updates: self.portal.updates.clone(),
         }
     }
 

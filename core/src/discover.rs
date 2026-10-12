@@ -33,6 +33,13 @@ pub fn search_roots(extra: &[PathBuf]) -> Vec<PathBuf> {
     roots.into_iter().filter(|r| r.is_dir()).collect()
 }
 
+pub fn resolve(app: &AppEntry, path: &Path) -> Option<PathBuf> {
+    if path.is_dir() && !is_bundle(path) {
+        return scan(app, path, 0);
+    }
+    candidate(app, path).or_else(|| path.exists().then(|| path.to_path_buf()))
+}
+
 pub fn find(app: &AppEntry, roots: &[PathBuf]) -> Option<PathBuf> {
     roots.iter().find_map(|root| scan(app, root, 0))
 }

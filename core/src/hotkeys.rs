@@ -79,8 +79,9 @@ pub fn normalise(chord: &str) -> String {
             "ctrl" | "control" => "Control".to_string(),
             "alt" | "option" | "opt" => "Alt".to_string(),
             "shift" => "Shift".to_string(),
-            other => {
-                let mut c = other.chars();
+            _ => {
+                let key = p.trim();
+                let mut c = key.chars();
                 c.next().map(|f| f.to_ascii_uppercase().to_string() + c.as_str()).unwrap_or_default()
             }
         })

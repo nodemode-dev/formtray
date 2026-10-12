@@ -7,7 +7,16 @@ pub const VIEWS: [&str; 5] = ["switcher", "stack", "apps", "windows", "widgets"]
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Tile {
+    #[serde(default = "Tile::default_kind")]
+    pub kind: String,
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
     pub app: String,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub apps: Vec<String>,
     #[serde(default = "Tile::default_size")]
     pub size: String,
 }
@@ -15,6 +24,12 @@ pub struct Tile {
 impl Tile {
     fn default_size() -> String {
         "m".to_string()
+    }
+    fn default_kind() -> String {
+        "app".to_string()
+    }
+    pub fn app(app: &str, size: &str) -> Tile {
+        Tile { kind: "app".into(), id: app.into(), app: app.into(), name: String::new(), apps: Vec::new(), size: size.into() }
     }
 }
 
@@ -39,7 +54,7 @@ impl Default for Prefs {
             hidden: Vec::new(),
             pinned: board.iter().map(|s| s.to_string()).collect(),
             locations: Vec::new(),
-            widgets: board.iter().enumerate().map(|(i, a)| Tile { app: a.to_string(), size: if i < 2 { "l".into() } else { "m".into() } }).collect(),
+            widgets: board.iter().enumerate().map(|(i, a)| Tile::app(a, if i < 2 { "l" } else { "m" })).collect(),
             hotkeys: HashMap::new(),
         }
     }
