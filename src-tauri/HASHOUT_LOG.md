@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.4.0
-Last updated: 2026-10-12 · first build of the shell
+Current build version: v0.5.0
+Last updated: 2026-10-12 · set_hotkey and pause_hotkeys
 
 ---
 
@@ -44,6 +44,10 @@ src-tauri/
 - refers-to: register_hotkeys
 - kind: rationale
 - `switcher-back` is the Switcher chord plus Shift, registered only when the chord has no Shift of its own.
+- refers-to: set_hotkey, pause_hotkeys
+- kind: rationale
+- logged: v0.5.0 · 2026-10-12
+- While Settings is recording a chord every global hotkey is unregistered. Otherwise pressing an existing chord would show a view instead of being recorded. Both commands end in a full re-registration.
 - refers-to: run ExitRequested
 - kind: rationale
 - Exits that do not come from Quit are prevented, so FormAI idles in the menu bar.

@@ -26,7 +26,14 @@ FormAI is a launcher and switching station for the 19 built Form apps. You pin o
   Every view reads the same state, so pins, recents and running dots always agree.
 - **Real Liquid Glass.** On macOS 26 each panel's web content sits inside an `NSGlassEffectView`, not a CSS imitation. Older macOS gets vibrancy, Windows gets acrylic, and Linux gets solid themed panels.
 - **Hotkeys that do not fight the system.** Defaults are chosen per OS around the reserved chords, including FormRef's. Problems are reported in Settings rather than failing silently.
-- **Finds the apps however they were built.** Each app carries every bundle identifier and name it has shipped under, so drift between an app and FormPortal's catalogue does not hide it.
+- **Finds the apps however they were built.** FormAI reads FormPortal's install record first. Each app also carries every bundle identifier and name it has shipped under, so drift between an app and FormPortal's catalogue does not hide it.
+- **Widgets you arrange.** The board holds:
+  - app tiles in three sizes
+  - groups of apps that open as a pop-over
+  - a FormPortal Updates tile counting what FormPortal has already seen
+
+  The Updates tile reads FormPortal's files and never fetches.
+- **Rebind any hotkey in Settings.** Click it and press the new chord. FormAI refuses a chord the system or another FormAI action already uses, and Default puts the original back.
 - **Idles in the menu bar.** Once opened, FormAI waits until a hotkey, the Dock icon or the menu bar calls it. Open at login is off by default.
 - **Never touches the network.**
 
@@ -67,7 +74,7 @@ On Wayland, which gives apps no global hotkeys, bind `formai --view apps` (or `s
 | Path | Role |
 | --- | --- |
 | `core/` | The engine: registry (`core/data/apps.json`), discovery, open, focus, quit, running state, prefs, hotkey tables |
-| `cli/` | `formai-cli list`, `open`, `quit`, `hotkeys` and `where` |
+| `cli/` | `formai-cli list`, `open`, `quit`, `hotkeys`, `hotkey <action> <chord>`, `updates` and `where` |
 | `src-tauri/` | The window shell: panels, glass, menu bar, hotkeys, Dock reopen, single instance and autostart |
 | `frontend/` | The interface: the views, tokens, and the layer scale |
 
@@ -75,7 +82,7 @@ On Wayland, which gives apps no global hotkeys, bind `formai --view apps` (or `s
 | --- | --- |
 | 5610 | Vite dev server (localhost only) |
 
-Preferences and usage are JSON files under the OS config folder; `./formai cli where` prints the exact path.
+Preferences and usage are JSON files under the OS config folder; `./formai cli where` prints the exact path. FormAI reads, but never writes, FormPortal's `installed.json` and `catalog/apps.json`. These are in FormPortal's folder: `~/Library/Application Support/dev.formai.portal` on macOS, `%LOCALAPPDATA%\FormPortal` on Windows and `~/.local/share/formportal` on Linux. `FORMPORTAL_ROOT` overrides the location.
 
 ## Adding a Form app
 

@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.4.0
-Last updated: 2026-10-12 · first build of the engine and CLI
+Current build version: v0.5.0
+Last updated: 2026-10-12 · FormPortal install record, seen updates, hotkey rebinding
 
 ---
 
@@ -18,6 +18,7 @@ core/
     ├── registry.rs            loads apps.json, lookup by id or any name
     ├── discover.rs            per-OS search roots and candidate matching
     ├── launch.rs              open, focus, quit per OS
+    ├── portal.rs              read-only FormPortal installed.json and cached catalogue
     ├── running.rs             sysinfo process scan mapped to apps
     ├── prefs.rs               Prefs, Usage, Tile, config dir, atomic writes
     └── hotkeys.rs             per-OS defaults, reserved chords, normalise, conflict
@@ -30,7 +31,9 @@ cli/
 - [data/apps.json](#apps-json)
 - [src/discover.rs](#discover)
 - [src/launch.rs](#launch)
+- [src/portal.rs](#portal)
 - [src/running.rs](#running)
+- [src/lib.rs](#lib)
 - [src/prefs.rs](#prefs)
 - [src/hotkeys.rs](#hotkeys)
 
@@ -65,6 +68,32 @@ cli/
 - refers-to: windows_sys::core::BOOL
 - kind: warning-context
 - windows-sys 0.61 moved BOOL out of Win32::Foundation.
+
+## src/portal.rs {#portal}
+
+- refers-to: root, read_at
+- kind: rationale
+- logged: v0.5.0 · 2026-10-12
+- The root folder and the installed.json format mirror formportal-core 0.44.0 (`Portal::default_root` and `state.rs`), including FORMPORTAL_ROOT. Only the stable channel is used.
+- refers-to: catalog/apps.json
+- kind: warning-context
+- This is the catalogue FormPortal kept after verifying its Ed25519 signature on its last fetch. FormAI does not verify it again, because it only displays the version numbers and never downloads anything. If FormPortal has never fetched, there is no update count.
+- refers-to: family_id
+- kind: rationale
+- FormPortal's catalogue calls FormPortal itself `formai` and still lists FormDeck as `formslide`, so both are mapped to FormAI's ids. Remove these mappings once the rename lands on FormPortal's side.
+- refers-to: newer
+- kind: rationale
+- A numeric dotted compare; pre-release suffixes are ignored, which is enough for a count.
+
+## src/lib.rs {#lib}
+
+- refers-to: rediscover
+- kind: rationale
+- logged: v0.5.0 · 2026-10-12
+- FormPortal's install path is tried first and resolved to the .app or executable inside it; the OS folders and extra folders come after.
+- refers-to: set_hotkey
+- kind: rationale
+- The order of checks: is the action known, is the chord reserved, and is it already another FormAI action. An empty chord removes the override.
 
 ## src/running.rs {#running}
 

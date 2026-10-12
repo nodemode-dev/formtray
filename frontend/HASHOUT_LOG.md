@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.4.0
-Last updated: 2026-10-12 · first build of the views
+Current build version: v0.5.0
+Last updated: 2026-10-12 · group and updates tiles, hotkey rebinding
 
 ---
 
@@ -52,7 +52,17 @@ frontend/
 - Quit needs two clicks within 3 s; the button turns red when armed.
 - refers-to: widgets.ts
 - kind: todo
-- v1 has app tiles only. Group, recent-files and quick-action tiles need data the apps do not expose yet (see DEV_PLAN Phase 6).
+- logged: v0.5.0 · 2026-10-12
+- There are app, group and updates tiles. Recent-files and quick-action tiles still need the apps to expose recents and a new-project entry point (see DEV_PLAN Phase 6).
+- refers-to: widgets.ts tiles map
+- kind: rationale
+- An app tile is keyed by its app id, a group by `group-<base36 time>` and the updates tile by `updates`; `order()` reads the keys back from `data-id` in DOM order. Changing a group rebuilds only that tile's mini-icon row, and opening a group fills only the pop-over list.
+- refers-to: prefs.ts renderKeys
+- kind: rationale
+- The hotkey list is rebuilt only when a signature of the effective hotkeys, the overrides, the registration issues and the capture state changes. Before v0.5.0 it was rebuilt on every state broadcast, which happens once a second while Settings is open.
+- refers-to: prefs.ts onCapture
+- kind: rationale
+- It listens in the capture phase and stops propagation, so the shared keys in main.ts (1 to 5, Esc) do not act while a chord is being recorded. The chord is built from `e.code`, so Option on macOS does not turn the letter into a symbol.
 
 ## src/styles/app.css {#css}
 
