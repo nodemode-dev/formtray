@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -e
+cd "$(dirname "$0")"
+
+if [ "${1:-}" = "cli" ]; then
+  shift
+  bin=target/release/formai-cli
+  if [ ! -x "$bin" ] || [ -n "$(find cli core Cargo.toml -newer "$bin" \( -name '*.rs' -o -name '*.toml' -o -name '*.json' \) 2>/dev/null | head -1)" ]; then
+    cargo build -q --release -p formai-cli >&2
+  fi
+  exec "$bin" "$@"
+fi
+
+command -v cargo >/dev/null || { echo "Rust is required: https://rustup.rs. Then run ./formai_oc_install"; exit 1; }
+[ -d frontend/node_modules ] || { echo "Run ./formai_oc_install first."; exit 1; }
+
+set -m
+interface=
+stop() {
+  trap - EXIT INT TERM
+  [ -n "$interface" ] && kill -- "-$interface" 2>/dev/null || true
+}
+trap stop EXIT INT TERM
+
+( cd frontend && ./boot_frontend ) &
+interface=$!
+
+for _ in $(seq 1 100); do
+  (exec 3<>/dev/tcp/localhost/5610) 2>/dev/null && break
+  sleep 0.2
+done
+
+cargo run -p formai -- "$@"

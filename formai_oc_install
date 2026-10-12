@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -e
+cd "$(dirname "$0")"
+
+missing=0
+command -v node >/dev/null || { echo "Node 20.19 or newer is required: https://nodejs.org"; missing=1; }
+command -v cargo >/dev/null || { echo "Rust is required: https://rustup.rs"; missing=1; }
+if [ "$(uname -s)" = "Linux" ] && command -v pkg-config >/dev/null && ! pkg-config --exists webkit2gtk-4.1; then
+  echo "The window needs WebKitGTK 4.1 and its build packages. On Debian or Ubuntu:"
+  echo "  sudo apt-get install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev pkg-config build-essential"
+  missing=1
+fi
+[ "$missing" = "0" ] || exit 1
+
+( cd frontend && ./oc_install )
+cargo fetch
+
+echo
+echo "FormAI is ready to run from source. Start it with: ./formai"
+echo "The command line works without the window: ./formai cli list"
