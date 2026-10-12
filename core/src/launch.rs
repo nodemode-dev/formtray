@@ -55,7 +55,8 @@ pub fn open(app: &AppEntry, path: Option<&Path>, running: &[u32]) -> Result<(), 
 
 #[cfg(target_os = "windows")]
 fn focus(pids: &[u32]) -> bool {
-    use windows_sys::Win32::Foundation::{BOOL, HWND, LPARAM};
+    use windows_sys::core::BOOL;
+    use windows_sys::Win32::Foundation::{HWND, LPARAM};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         EnumWindows, GetWindowThreadProcessId, IsIconic, IsWindowVisible, SetForegroundWindow, ShowWindow, SW_RESTORE,
     };
