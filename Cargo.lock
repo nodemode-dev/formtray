@@ -1068,7 +1068,7 @@ dependencies = [
 
 [[package]]
 name = "formai"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "formai-core",
  "objc2-app-kit",
@@ -1085,7 +1085,7 @@ dependencies = [
 
 [[package]]
 name = "formai-cli"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "formai-core",
  "serde_json",
@@ -1093,7 +1093,7 @@ dependencies = [
 
 [[package]]
 name = "formai-core"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "dirs 6.0.0",
  "plist",
