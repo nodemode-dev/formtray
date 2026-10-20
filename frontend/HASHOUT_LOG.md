@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.6.0
-Last updated: 2026-10-20 · renamed FormDock, redrawn sibling icons
+Current build version: v0.7.0
+Last updated: 2026-10-20 · one panel window, panes, the move handshake
 
 ---
 

@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.6.0
-Last updated: 2026-10-20 · FormDock rename, app icon and tray, tray per OS
+Current build version: v0.7.0
+Last updated: 2026-10-20 · one panel window, Linux focus, modifier polling, grab focus-out
 
 ---
 
