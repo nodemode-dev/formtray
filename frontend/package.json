@@ -1,7 +1,7 @@
 {
   "name": "formdock",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "FormDock's interface: one dock icon for every Form app",
   "license": "Apache-2.0",
   "type": "module",

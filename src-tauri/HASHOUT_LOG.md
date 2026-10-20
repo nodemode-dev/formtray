@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.5.0
-Last updated: 2026-10-12 · set_hotkey and pause_hotkeys
+Current build version: v0.6.0
+Last updated: 2026-10-20 · FormDock rename, app icon and tray, tray per OS
 
 ---
 

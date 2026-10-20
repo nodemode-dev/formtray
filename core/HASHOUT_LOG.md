@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.5.0
-Last updated: 2026-10-12 · FormPortal install record, seen updates, hotkey rebinding
+Current build version: v0.6.0
+Last updated: 2026-10-20 · renamed FormDock, prefs folder
 
 ---
 

@@ -1068,7 +1068,7 @@ dependencies = [
 
 [[package]]
 name = "formdock"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "formdock-core",
  "objc2-app-kit",
@@ -1085,7 +1085,7 @@ dependencies = [
 
 [[package]]
 name = "formdock-cli"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "formdock-core",
  "serde_json",
@@ -1093,7 +1093,7 @@ dependencies = [
 
 [[package]]
 name = "formdock-core"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "dirs 6.0.0",
  "plist",
