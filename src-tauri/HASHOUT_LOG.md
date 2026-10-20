@@ -1,4 +1,4 @@
-# HASHOUT_LOG · shell · formai
+# HASHOUT_LOG · shell · formdock
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
@@ -15,7 +15,7 @@ src-tauri/
 ├── capabilities/default.json  core plus hide and drag for the six windows
 ├── icons/                     app icon set and tray.png (menu bar template)
 └── src/
-    ├── main.rs                calls formai_shell::run
+    ├── main.rs                calls formdock_shell::run
     ├── lib.rs                 state, commands, show and place, hotkeys, tray, run loop
     ├── glass.rs               Liquid Glass, vibrancy, acrylic, css
     └── keys.rs                is the Switcher's modifier still held
@@ -50,7 +50,7 @@ src-tauri/
 - While Settings is recording a chord every global hotkey is unregistered. Otherwise pressing an existing chord would show a view instead of being recorded. Both commands end in a full re-registration.
 - refers-to: run ExitRequested
 - kind: rationale
-- Exits that do not come from Quit are prevented, so FormAI idles in the menu bar.
+- Exits that do not come from Quit are prevented, so FormDock idles in the menu bar.
 - refers-to: setup handle_args delay
 - kind: rationale
 - The first view is shown 350 ms after setup so the webviews have loaded and are listening for `view:shown`.
@@ -71,7 +71,7 @@ src-tauri/
 
 ## icons/ {#icons}
 
-- refers-to: icons/icon.icns, icon.ico, icon.png, 32x32.png, 128x128.png, 128x128@2x.png; ../assets/formai_icon.png, formai_icon_macos.png; ../assets/icon_src/
+- refers-to: icons/icon.icns, icon.ico, icon.png, 32x32.png, 128x128.png, 128x128@2x.png; ../assets/formdock_icon.png, formdock_icon_macos.png; ../assets/icon_src/
 - kind: rationale
 - logged: v0.6.0 · 2026-10-20
 - The nine flat squares were the one family icon outside the redrawn construction (FormDeck's fanned deck, formpdf's signed page, FormSurface's painted cube, FormDesign's spread). The new mark is a dock: the real sibling icons in a cover-flow arc on a frosted glass plate, formvis facing front in the centre, formpdf and FormDeck turned inward beside it, FormDesign and a "more apps" tile at the ends, with reflections and a family-gradient glow under the glass. Same tile, bloom, rim and drop shadow; the macOS .icns uses the 824 px tile inside a 1024 canvas with a 100 px margin, .ico and PNGs stay full bleed. Sizes 64 px and below show three icons. It is rendered in Chromium with CSS 3D (perspective, rotateY, box-reflect), because the turned cards need real perspective; a flat drawing of rows of gradient squares read as a bar chart. The reflection keeps only each icon's bottom edge, since a longer one mirrored the formvis roller handle as a blob under the centre. The formvis picture is the launcher's 256 px copy cropped to its tile, so a larger formvis master would sharpen the centre at 1024.

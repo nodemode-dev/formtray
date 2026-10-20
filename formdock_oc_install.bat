@@ -11,4 +11,5 @@ popd
 cargo fetch || exit /b 1
 
 echo.
-echo FormAI is ready to run from source. Start it with: formai.bat
+echo FormDock is ready to run from source. Start it with: formdock.bat
+echo To build the installers: build_app.bat

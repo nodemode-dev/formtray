@@ -55,7 +55,7 @@ export function stack(): ViewModule {
     mount(root, c) {
       ctx = c;
       root.classList.add("v-stack");
-      const title = el("h1", "st-title", "FormAI");
+      const title = el("h1", "st-title", "FormDock");
       grid = el("div", "st-grid");
       more = el("button", "st-cell st-more");
       more.type = "button";

@@ -16,5 +16,6 @@ fi
 cargo fetch
 
 echo
-echo "FormAI is ready to run from source. Start it with: ./formai"
-echo "The command line works without the window: ./formai cli list"
+echo "FormDock is ready to run from source. Start it with: ./formdock"
+echo "The command line works without the window: ./formdock cli list"
+echo "To build the installable app: ./build_app"

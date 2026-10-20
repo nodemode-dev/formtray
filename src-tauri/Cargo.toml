@@ -1,20 +1,20 @@
 [package]
-name = "formai"
+name = "formdock"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "FormAI: one dock icon for every Form app"
+description = "FormDock: one dock icon for every Form app"
 
 [lib]
-name = "formai_shell"
+name = "formdock_shell"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-formai-core = { path = "../core" }
+formdock-core = { path = "../core" }
 tauri = { version = "2", features = ["macos-private-api", "tray-icon", "image-png"] }
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-single-instance = "2"

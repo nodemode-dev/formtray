@@ -1,4 +1,4 @@
-# HASHOUT_LOG · core and cli · formai
+# HASHOUT_LOG · core and cli · formdock
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
@@ -11,7 +11,7 @@ Last updated: 2026-10-12 · FormPortal install record, seen updates, hotkey rebi
 
 ```
 core/
-├── Cargo.toml                 formai-core, no window
+├── Cargo.toml                 formdock-core, no window
 ├── data/apps.json             the 19 apps: ids, names, hues, icons, every identifier and name
 └── src/
     ├── lib.rs                 Engine, Snapshot, AppState
@@ -77,10 +77,14 @@ cli/
 - The root folder and the installed.json format mirror formportal-core 0.44.0 (`Portal::default_root` and `state.rs`), including FORMPORTAL_ROOT. Only the stable channel is used.
 - refers-to: catalog/apps.json
 - kind: warning-context
-- This is the catalogue FormPortal kept after verifying its Ed25519 signature on its last fetch. FormAI does not verify it again, because it only displays the version numbers and never downloads anything. If FormPortal has never fetched, there is no update count.
+- This is the catalogue FormPortal kept after verifying its Ed25519 signature on its last fetch. FormDock does not verify it again, because it only displays the version numbers and never downloads anything. If FormPortal has never fetched, there is no update count.
 - refers-to: family_id
 - kind: rationale
-- FormPortal's catalogue calls FormPortal itself `formai` and still lists FormDeck as `formslide`, so both are mapped to FormAI's ids. Remove these mappings once the rename lands on FormPortal's side.
+- FormPortal's catalogue calls FormPortal itself `formai` and still lists FormDeck as `formslide`, so both are mapped to FormDock's ids. Remove these mappings once the rename lands on FormPortal's side.
+- refers-to: family_id "formai", root dev.formai.portal
+- kind: warning-context
+- logged: v0.6.0 · 2026-10-20
+- These two strings are FormPortal's own identifiers (its catalogue id and its macOS data folder), not this app's name, so the FormDock rename leaves them as they are. The same holds for the `dev.formai.*` bundle ids in data/apps.json and discover.rs: other Form apps ship them.
 - refers-to: newer
 - kind: rationale
 - A numeric dotted compare; pre-release suffixes are ignored, which is enough for a count.
@@ -93,7 +97,7 @@ cli/
 - FormPortal's install path is tried first and resolved to the .app or executable inside it; the OS folders and extra folders come after.
 - refers-to: set_hotkey
 - kind: rationale
-- The order of checks: is the action known, is the chord reserved, and is it already another FormAI action. An empty chord removes the override.
+- The order of checks: is the action known, is the chord reserved, and is it already another FormDock action. An empty chord removes the override.
 
 ## src/running.rs {#running}
 
@@ -111,6 +115,10 @@ cli/
 - refers-to: write
 - kind: rationale
 - Writes go to a temp file and are then renamed, so a crash cannot leave half a prefs.json.
+- refers-to: dir
+- kind: warning-context
+- logged: v0.6.0 · 2026-10-20
+- The folder follows the rename to FormDock: `formdock` on Linux, `ai.nodemode.formdock` elsewhere. Prefs saved under the old `formai` folders are not carried over, because FormAI was never released; move prefs.json and usage.json across by hand to keep a board.
 
 ## src/hotkeys.rs {#hotkeys}
 

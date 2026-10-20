@@ -1,15 +1,15 @@
 [package]
-name = "formai-cli"
+name = "formdock-cli"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "FormAI on the command line: list the Form apps, open or quit one."
+description = "FormDock on the command line: list the Form apps, open or quit one."
 
 [[bin]]
-name = "formai-cli"
+name = "formdock-cli"
 path = "src/main.rs"
 
 [dependencies]
-formai-core = { path = "../core" }
+formdock-core = { path = "../core" }
 serde_json = "1"

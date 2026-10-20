@@ -103,7 +103,7 @@ impl Engine {
 
     pub fn set_hotkey(&mut self, action: &str, chord: &str) -> Result<(), String> {
         if !hotkeys::ACTIONS.contains(&action) {
-            return Err(format!("{action} is not a FormAI action"));
+            return Err(format!("{action} is not a FormDock action"));
         }
         let mut prefs = self.prefs.clone();
         if chord.trim().is_empty() {
@@ -115,7 +115,7 @@ impl Engine {
             }
             let taken = hotkeys::effective(&prefs.hotkeys).into_iter().find(|(a, c)| a != action && hotkeys::normalise(c).eq_ignore_ascii_case(&wanted));
             if let Some((other, _)) = taken {
-                return Err(format!("{wanted} is already FormAI's {other} hotkey"));
+                return Err(format!("{wanted} is already FormDock's {other} hotkey"));
             }
             prefs.hotkeys.insert(action.to_string(), wanted);
         }

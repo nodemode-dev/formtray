@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The FormAI panels: read state, open apps, move and hide their own window.",
+  "description": "The FormDock panels: read state, open apps, move and hide their own window.",
   "windows": ["switcher", "stack", "apps", "windows", "widgets", "prefs"],
   "permissions": [
     "core:default",

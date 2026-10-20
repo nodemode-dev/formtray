@@ -1,15 +1,15 @@
-use formai_core::Engine;
+use formdock_core::Engine;
 
-const HELP: &str = "formai-cli: the Form apps from the command line
+const HELP: &str = "formdock-cli: the Form apps from the command line
 
   list            every Form app, whether it is installed and running
   list --json     the same as JSON
   open <app>      open an app, or bring it forward if it is running
   quit <app>      quit a running app
-  hotkeys         this computer's FormAI hotkeys
+  hotkeys         this computer's FormDock hotkeys
   hotkey <action> <chord>   change one hotkey, or give \"\" to go back to the default
   updates         updates FormPortal has seen for installed apps (read only, no network)
-  where           where FormAI keeps its preferences
+  where           where FormDock keeps its preferences
 
 <app> is an id or a name: formcut, FormVis, form.md";
 
@@ -37,7 +37,7 @@ fn main() {
                 }
             },
             _ => {
-                eprintln!("Give an action and a chord, for example: formai-cli hotkey summon Control+Alt+Super+KeyF");
+                eprintln!("Give an action and a chord, for example: formdock-cli hotkey summon Control+Alt+Super+KeyF");
                 2
             }
         },
@@ -54,7 +54,7 @@ fn main() {
             0
         }
         Some("where") => {
-            println!("{}", formai_core::prefs::dir().display());
+            println!("{}", formdock_core::prefs::dir().display());
             0
         }
         _ => {
@@ -83,7 +83,7 @@ fn list(json: bool) -> i32 {
 
 fn act(target: Option<&String>, open: bool) -> i32 {
     let Some(target) = target else {
-        eprintln!("Name an app, for example: formai-cli {} formcut", if open { "open" } else { "quit" });
+        eprintln!("Name an app, for example: formdock-cli {} formcut", if open { "open" } else { "quit" });
         return 2;
     };
     let mut engine = Engine::new();
