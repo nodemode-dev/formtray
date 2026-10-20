@@ -15,7 +15,7 @@ use tauri::{AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, RunEvent
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
-const PANELS: [&str; 5] = VIEWS;
+const PANEL: &str = "panel";
 const BACKGROUND_FLAG: &str = "--background";
 
 #[derive(Clone, Serialize)]
@@ -34,6 +34,8 @@ struct Shell {
     glass: Mutex<String>,
     watching: AtomicBool,
     shown_at: Mutex<Option<std::time::Instant>>,
+    size: Mutex<(f64, f64)>,
+    pending: Mutex<Option<String>>,
 }
 
 fn with_engine<T>(app: &AppHandle, f: impl FnOnce(&mut Engine) -> T) -> T {
@@ -53,10 +55,8 @@ fn panel(app: &AppHandle, label: &str) -> Option<WebviewWindow> {
 }
 
 fn hide_panels(app: &AppHandle) {
-    for label in PANELS {
-        if let Some(w) = panel(app, label) {
-            let _ = w.hide();
-        }
+    if let Some(w) = panel(app, PANEL) {
+        let _ = w.hide();
     }
     *app.state::<Shell>().shown.lock().unwrap() = None;
 }
@@ -95,26 +95,48 @@ fn panel_size(app: &AppHandle, view: &str) -> (f64, f64) {
             (count.clamp(1, 9) as f64 * 112.0 + 48.0, 196.0)
         }
         "stack" => (420.0, 452.0),
-        "windows" => (940.0, 560.0),
-        "widgets" => (920.0, 640.0),
-        _ => (880.0, 660.0),
+        _ => (920.0, 660.0),
     }
 }
 
+#[cfg(target_os = "linux")]
+fn raise(window: &WebviewWindow) {
+    fn present(target: &WebviewWindow) {
+        let target = target.clone();
+        let _ = target.clone().run_on_main_thread(move || {
+            use gtk::prelude::*;
+            if let Ok(gw) = target.gtk_window() {
+                gw.realize();
+                let time = gw.window().and_then(|g| g.downcast::<gdkx11::X11Window>().ok()).map(|x| gdkx11::functions::x11_get_server_time(&x)).unwrap_or(0);
+                if !gw.is_active() {
+                    gw.present_with_time(time);
+                }
+            }
+        });
+    }
+    present(window);
+    let later = window.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(120));
+        present(&later);
+    });
+}
+
+#[cfg(not(target_os = "linux"))]
+fn raise(window: &WebviewWindow) {
+    let _ = window.set_focus();
+}
+
 fn show_view(app: &AppHandle, view: &str, reason: &str) {
-    if !PANELS.contains(&view) {
+    if !VIEWS.contains(&view) {
         return;
     }
-    let Some(window) = panel(app, view) else { return };
+    let Some(window) = panel(app, PANEL) else { return };
     let shell = app.state::<Shell>();
-    if shell.shown.lock().unwrap().as_deref() == Some(view) && window.is_visible().unwrap_or(false) && reason != "switcher" {
+    let visible = window.is_visible().unwrap_or(false);
+    if visible && shell.shown.lock().unwrap().as_deref() == Some(view) && reason != "switcher" && reason != "switch" {
         hide_panels(app);
         return;
-    }
-    for label in PANELS.iter().filter(|l| **l != view) {
-        if let Some(w) = panel(app, label) {
-            let _ = w.hide();
-        }
     }
     with_engine(app, |e| {
         e.refresh_running();
@@ -122,15 +144,49 @@ fn show_view(app: &AppHandle, view: &str, reason: &str) {
     });
     broadcast(app);
     let logical = panel_size(app, view);
-    let _ = window.set_resizable(true);
-    let _ = window.set_size(LogicalSize::new(logical.0, logical.1));
-    let _ = window.set_resizable(false);
-    place(app, &window, view, logical);
-    let _ = app.emit_to(view, "view:shown", reason);
-    let _ = window.show();
-    let _ = window.set_focus();
+    let moving = !visible || *shell.size.lock().unwrap() != logical;
     *shell.shown.lock().unwrap() = Some(view.to_string());
     *shell.shown_at.lock().unwrap() = Some(std::time::Instant::now());
+    let _ = app.emit_to(PANEL, "view:show", serde_json::json!({ "view": view, "reason": reason, "moving": moving }));
+    if !moving {
+        raise(&window);
+        return;
+    }
+    *shell.pending.lock().unwrap() = Some(view.to_string());
+    let fallback = app.clone();
+    let wanted = view.to_string();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(200));
+        let inner = fallback.clone();
+        let _ = fallback.run_on_main_thread(move || settle_view(&inner, &wanted));
+    });
+}
+
+fn settle_view(app: &AppHandle, view: &str) {
+    let shell = app.state::<Shell>();
+    if shell.pending.lock().unwrap().as_deref() != Some(view) {
+        return;
+    }
+    *shell.pending.lock().unwrap() = None;
+    let Some(window) = panel(app, PANEL) else { return };
+    let logical = panel_size(app, view);
+    if *shell.size.lock().unwrap() != logical {
+        let size = LogicalSize::new(logical.0, logical.1);
+        let _ = window.set_resizable(true);
+        let _ = window.set_min_size(None::<LogicalSize<f64>>);
+        let _ = window.set_max_size(None::<LogicalSize<f64>>);
+        let _ = window.set_size(size);
+        let _ = window.set_min_size(Some(size));
+        let _ = window.set_max_size(Some(size));
+        *shell.size.lock().unwrap() = logical;
+    }
+    place(app, &window, view, logical);
+    if !window.is_visible().unwrap_or(false) {
+        let _ = window.show();
+    }
+    raise(&window);
+    *shell.shown_at.lock().unwrap() = Some(std::time::Instant::now());
+    let _ = app.emit_to(PANEL, "view:placed", view);
     if view == "switcher" {
         watch_switcher(app);
     }
@@ -139,7 +195,7 @@ fn show_view(app: &AppHandle, view: &str, reason: &str) {
 fn watch_switcher(app: &AppHandle) {
     let chord = with_engine(app, |e| e.snapshot().hotkeys.get("switcher").cloned().unwrap_or_default());
     let mods = keys::modifiers(&chord);
-    if keys::held(&mods).is_none() {
+    if keys::held(&mods) != Some(true) {
         return;
     }
     let shell = app.state::<Shell>();
@@ -150,12 +206,13 @@ fn watch_switcher(app: &AppHandle) {
     std::thread::spawn(move || {
         loop {
             std::thread::sleep(Duration::from_millis(25));
-            let visible = panel(&app, "switcher").and_then(|w| w.is_visible().ok()).unwrap_or(false);
-            if !visible {
+            let visible = panel(&app, PANEL).and_then(|w| w.is_visible().ok()).unwrap_or(false);
+            let on_switcher = app.state::<Shell>().shown.lock().unwrap().as_deref() == Some("switcher");
+            if !visible || !on_switcher {
                 break;
             }
             if keys::held(&mods) == Some(false) {
-                let _ = app.emit_to("switcher", "switcher:commit", ());
+                let _ = app.emit_to(PANEL, "switcher:commit", ());
                 break;
             }
         }
@@ -194,12 +251,11 @@ fn register_hotkeys(app: &AppHandle) {
 fn on_hotkey(app: &AppHandle, shortcut: &Shortcut) {
     let action = app.state::<Shell>().chords.lock().unwrap().get(&shortcut.id()).cloned();
     let Some(action) = action else { return };
-    let shown = app.state::<Shell>().shown.lock().unwrap().clone();
-    match action.as_str() {
+    let shown = app.state::<Shell>().shown.lock().unwrap().clone();    match action.as_str() {
         "switcher" | "switcher-back" => {
             let step: i32 = if action == "switcher" { 1 } else { -1 };
             if shown.as_deref() == Some("switcher") {
-                let _ = app.emit_to("switcher", "switcher:step", step);
+                let _ = app.emit_to(PANEL, "switcher:step", step);
             } else {
                 show_view(app, "switcher", "switcher");
             }
@@ -227,7 +283,7 @@ fn open_prefs(app: &AppHandle) {
         let _ = app.emit_to("prefs", "view:shown", "menu");
         let _ = w.center();
         let _ = w.show();
-        let _ = w.set_focus();
+        raise(&w);
     }
 }
 
@@ -368,6 +424,16 @@ fn show(app: AppHandle, view: String) {
 }
 
 #[tauri::command]
+fn settle(app: AppHandle, view: String) {
+    settle_view(&app, &view);
+}
+
+#[tauri::command]
+fn current_view(app: AppHandle) -> Option<String> {
+    app.state::<Shell>().shown.lock().unwrap().clone()
+}
+
+#[tauri::command]
 fn dismiss(app: AppHandle, window: WebviewWindow) {
     if window.label() == "prefs" {
         let _ = window.hide();
@@ -429,13 +495,13 @@ pub fn run() {
                 .build(),
         )
         .manage(Shell::default())
-        .invoke_handler(tauri::generate_handler![snapshot, open_app, quit_app, set_prefs, show, dismiss, shell_info, updates, rescan, set_hotkey, pause_hotkeys])
+        .invoke_handler(tauri::generate_handler![snapshot, open_app, quit_app, set_prefs, show, settle, current_view, dismiss, shell_info, updates, rescan, set_hotkey, pause_hotkeys])
         .on_window_event(|window, event| match event {
-            WindowEvent::Focused(false) if PANELS.contains(&window.label()) => {
+            WindowEvent::Focused(false) if window.label() == PANEL => {
                 let app = window.app_handle();
                 let shown = app.state::<Shell>().shown.lock().unwrap().clone();
                 let settling = app.state::<Shell>().shown_at.lock().unwrap().is_some_and(|t| t.elapsed() < Duration::from_millis(300));
-                if shown.as_deref() == Some(window.label()) && !settling {
+                if shown.is_some() && !settling {
                     hide_panels(app);
                 }
             }
@@ -448,7 +514,7 @@ pub fn run() {
         .setup(|app| {
             let handle = app.handle().clone();
             let mut mode = "css";
-            for label in PANELS.iter().chain(["prefs"].iter()) {
+            for label in [PANEL, "prefs"].iter() {
                 if let Some(w) = panel(&handle, label) {
                     mode = glass::apply(&w);
                 }

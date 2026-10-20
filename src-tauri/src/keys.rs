@@ -31,6 +31,29 @@ pub fn held(mods: &[String]) -> Option<bool> {
 }
 
 #[cfg(all(unix, not(target_os = "macos")))]
-pub fn held(_mods: &[String]) -> Option<bool> {
-    None
+pub fn held(mods: &[String]) -> Option<bool> {
+    use x11::xlib;
+    let mask = unsafe {
+        let display = xlib::XOpenDisplay(std::ptr::null());
+        if display.is_null() {
+            return None;
+        }
+        let root = xlib::XDefaultRootWindow(display);
+        let (mut root_ret, mut child) = (0, 0);
+        let (mut rx, mut ry, mut wx, mut wy) = (0, 0, 0, 0);
+        let mut mask = 0u32;
+        let ok = xlib::XQueryPointer(display, root, &mut root_ret, &mut child, &mut rx, &mut ry, &mut wx, &mut wy, &mut mask);
+        xlib::XCloseDisplay(display);
+        if ok == 0 {
+            return None;
+        }
+        mask
+    };
+    Some(!mods.is_empty() && mods.iter().all(|m| match m.as_str() {
+        "alt" | "option" => mask & xlib::Mod1Mask != 0,
+        "control" | "ctrl" => mask & xlib::ControlMask != 0,
+        "super" | "cmd" | "command" => mask & xlib::Mod4Mask != 0,
+        "shift" => true,
+        _ => false,
+    }))
 }

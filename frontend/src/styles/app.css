@@ -82,9 +82,22 @@ html[data-view="prefs"] .panel {
 
 html[data-native="false"][data-view="switcher"] .panel { width: 1048px; height: 196px; }
 html[data-native="false"][data-view="stack"] .panel { width: 420px; height: 452px; }
-html[data-native="false"][data-view="apps"] .panel { width: 880px; height: 660px; }
-html[data-native="false"][data-view="windows"] .panel { width: 940px; height: 560px; }
-html[data-native="false"][data-view="widgets"] .panel { width: 920px; height: 640px; }
+html[data-native="false"][data-view="apps"] .panel,
+html[data-native="false"][data-view="windows"] .panel,
+html[data-native="false"][data-view="widgets"] .panel { width: 920px; height: 660px; }
+
+html.is-moving .panel {
+  visibility: hidden;
+}
+
+/* one pane per view inside the single panel window; switching only toggles hidden */
+.pane {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 html[data-native="false"][data-view="prefs"] .panel { width: 640px; height: 600px; }
 
 /* app icons: fixed boxes so nothing shifts while images decode */
@@ -277,9 +290,17 @@ html[data-native="false"][data-view="prefs"] .panel { width: 640px; height: 600p
   padding: var(--sp-4) var(--sp-4) var(--sp-5);
 }
 
+.st-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-3);
+  flex: none;
+}
+
 .st-title {
-  margin: var(--sp-1) 0 var(--sp-4);
-  text-align: center;
+  margin: 0 0 0 var(--sp-2);
   font-size: var(--fs-l);
   font-weight: 500;
   color: var(--ink-soft);
@@ -443,6 +464,10 @@ html[data-native="false"][data-view="prefs"] .panel { width: 640px; height: 600p
   padding: 0 var(--sp-5) var(--sp-5);
   overflow-y: auto;
   align-content: start;
+}
+
+.wc-grid:empty {
+  display: none;
 }
 
 .wc-card {

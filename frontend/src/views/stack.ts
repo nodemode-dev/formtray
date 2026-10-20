@@ -1,6 +1,6 @@
 import type { AppState } from "../bridge";
 import { icons } from "../icons";
-import { appIcon, el, runDot } from "../ui";
+import { appIcon, el, runDot, viewBar } from "../ui";
 import type { Ctx, ViewModule } from "./types";
 
 export function stack(): ViewModule {
@@ -55,7 +55,9 @@ export function stack(): ViewModule {
     mount(root, c) {
       ctx = c;
       root.classList.add("v-stack");
-      const title = el("h1", "st-title", "FormDock");
+      const head = el("header", "st-head");
+      head.setAttribute("data-tauri-drag-region", "");
+      head.append(el("h1", "st-title", "FormDock"), viewBar("stack", (v) => ctx.go(v)));
       grid = el("div", "st-grid");
       more = el("button", "st-cell st-more");
       more.type = "button";
@@ -64,7 +66,7 @@ export function stack(): ViewModule {
       more.append(ring, el("span", "st-name", "All Apps"));
       more.addEventListener("click", () => ctx.go("apps"));
       grid.append(more);
-      root.append(title, grid, el("span", "st-arrow"));
+      root.append(head, grid, el("span", "st-arrow"));
       build();
     },
     update(snap) {

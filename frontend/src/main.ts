@@ -15,7 +15,45 @@ document.documentElement.dataset.view = view;
 document.documentElement.dataset.native = String(native);
 
 const factories: Record<View, () => ViewModule> = { switcher, stack, apps, windows: windowsView, widgets, prefs: prefsView };
-const module = factories[view]();
+const panelMode = view !== "prefs";
+const panes = new Map<View, { module: ViewModule; pane: HTMLElement }>();
+let active: View = view;
+let holding = false;
+for (const v of panelMode ? VIEWS : [view]) {
+  const pane = panelMode ? document.createElement("section") : root;
+  if (panelMode) {
+    pane.className = "pane";
+    pane.dataset.pane = v;
+    pane.hidden = v !== active;
+    root.append(pane);
+  }
+  panes.set(v, { module: factories[v](), pane });
+}
+const current = () => panes.get(active)!.module;
+
+function afterPaint(cb: () => void) {
+  let done = false;
+  const run = () => {
+    if (done) return;
+    done = true;
+    cb();
+  };
+  requestAnimationFrame(() => requestAnimationFrame(run));
+  window.setTimeout(run, 60);
+}
+
+function activate(next: View, reason: string) {
+  const target = panes.get(next);
+  if (!target) return;
+  holding = next === "switcher" && reason === "switcher";
+  if (next !== active) {
+    panes.get(active)!.pane.hidden = true;
+    target.pane.hidden = false;
+    active = next;
+    document.documentElement.dataset.view = next;
+  }
+  target.module.shown(reason);
+}
 
 let toastTimer = 0;
 function toast(message: string) {
@@ -39,9 +77,15 @@ async function start() {
       await call("quit_app", { id }).catch((e) => toast(String(e)));
     },
     go(target) {
-      if (target === view) return;
-      if (native) call("show", { view: target });
-      else location.search = `?view=${target}`;
+      if (target === active && panelMode) return;
+      if (target === "prefs" || !panelMode) {
+        if (native) call("show", { view: target });
+        else location.search = `?view=${target}`;
+      } else if (native) {
+        call("show", { view: target });
+      } else {
+        activate(target, "switch");
+      }
     },
     dismiss() {
       if (native) call("dismiss");
@@ -60,19 +104,30 @@ async function start() {
     },
   };
 
-  module.mount(root, ctx);
+  for (const { module, pane } of panes.values()) module.mount(pane, ctx);
 
   await on<Snapshot>("state", (next) => {
     ctx.snap = next;
-    module.update(next);
+    for (const { module } of panes.values()) module.update(next);
   });
-  await on<string>("view:shown", (reason) => module.shown(reason));
-  await on<number>("switcher:step", (by) => module.step?.(by));
-  await on<null>("switcher:commit", () => module.commit?.());
+  await on<string>("view:shown", (reason) => current().shown(reason));
+  await on<{ view: View; reason: string; moving: boolean }>("view:show", (p) => {
+    if (!p.moving) return activate(p.view, p.reason);
+    document.documentElement.classList.add("is-moving");
+    activate(p.view, p.reason);
+    afterPaint(() => call("settle", { view: p.view }));
+  });
+  await on<string>("view:placed", () => afterPaint(() => afterPaint(() => document.documentElement.classList.remove("is-moving"))));
+  if (native && panelMode) {
+    const now = await call<View | null>("current_view");
+    if (now && now !== active) activate(now, "launch");
+  }
+  await on<number>("switcher:step", (by) => panes.get("switcher")?.module.step?.(by));
+  await on<null>("switcher:commit", () => panes.get("switcher")?.module.commit?.());
   await on<string>("notice", (message) => toast(message));
 
   window.addEventListener("keydown", (e) => {
-    if (module.key?.(e)) {
+    if (current().key?.(e)) {
       e.preventDefault();
       return;
     }
@@ -89,14 +144,13 @@ async function start() {
     }
   });
 
-  if (view === "switcher") {
+  if (panelMode && snap.platform === "linux") {
     window.addEventListener("keyup", (e) => {
-      const linux = snap.platform === "linux";
-      if (linux && (e.key === "Alt" || e.key === "Meta" || e.key === "Control")) module.commit?.();
+      if (active === "switcher" && holding && (e.key === "Alt" || e.key === "Meta" || e.key === "Control")) panes.get("switcher")?.module.commit?.();
     });
   }
 
-  if (!native) module.shown(view === "switcher" ? "switcher" : "preview");
+  if (!native) current().shown(view === "switcher" ? "switcher" : "preview");
   document.documentElement.classList.add("is-ready");
 }
 

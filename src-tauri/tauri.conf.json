@@ -15,12 +15,8 @@
       "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
     },
     "windows": [
-      { "label": "switcher", "url": "index.html?view=switcher", "width": 760, "height": 196, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": true, "skipTaskbar": true, "resizable": false, "shadow": true, "focus": true },
-      { "label": "stack", "url": "index.html?view=stack", "width": 420, "height": 452, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": true, "skipTaskbar": true, "resizable": false, "shadow": true, "focus": true },
-      { "label": "apps", "url": "index.html?view=apps", "width": 880, "height": 660, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": true, "skipTaskbar": true, "resizable": false, "shadow": true, "focus": true },
-      { "label": "windows", "url": "index.html?view=windows", "width": 940, "height": 560, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": true, "skipTaskbar": true, "resizable": false, "shadow": true, "focus": true },
-      { "label": "widgets", "url": "index.html?view=widgets", "width": 920, "height": 640, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": true, "skipTaskbar": true, "resizable": false, "shadow": true, "focus": true },
-      { "label": "prefs", "url": "index.html?view=prefs", "width": 640, "height": 600, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": false, "skipTaskbar": false, "resizable": false, "shadow": true, "focus": true, "center": true }
+      { "label": "panel", "title": "FormDock", "url": "index.html?view=apps", "width": 920, "height": 660, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": true, "skipTaskbar": true, "resizable": false, "shadow": true, "focus": true },
+      { "label": "prefs", "title": "FormDock Settings", "url": "index.html?view=prefs", "width": 640, "height": 600, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": false, "skipTaskbar": false, "resizable": false, "shadow": true, "focus": true, "center": true }
     ]
   },
   "bundle": {

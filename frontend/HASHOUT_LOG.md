@@ -15,7 +15,7 @@ frontend/
 ├── vite.config.ts             port 5610, host false, fs allows core/data for preview
 ├── public/apps/               app icons, 256 px
 └── src/
-    ├── main.ts                picks the view from ?view=, the shared keys, events
+    ├── main.ts                one pane per view in the panel (prefs alone), activate, the move handshake, keys, events
     ├── bridge.ts              types, invoke and listen, browser preview data
     ├── ui.ts                  el, appIcon, viewBar, time words, chord words
     ├── icons.ts               inline currentColor svg
@@ -25,11 +25,28 @@ frontend/
 
 ## Table of contents
 
+- [src/main.ts](#main)
 - [src/bridge.ts](#bridge)
 - [src/views](#views)
 - [src/styles/app.css](#css)
 
 ---
+
+## src/main.ts {#main}
+
+- refers-to: panes, activate
+- kind: rationale
+- logged: v0.7.0 · 2026-10-20
+- All five views live in one window (`panel`) as sibling panes mounted once at load; Settings keeps its own window with one module. Switching hides one pane and shows another, sets `data-view` on html, and calls `shown`. Before this each view was its own window, and a switch hid one window and mapped another: under Xvfb with openbox and xcompmgr the recording showed a black or empty frame between them, the panel jumping to a new size and place, and the new window never getting keyboard focus, so the next number key went nowhere.
+- refers-to: view:show moving, afterPaint, settle, view:placed
+- kind: rationale
+- When the shell must resize, move or show the window, the event carries `moving`: html gets `is-moving` (panel hidden), the pane swaps, and only after a paint does the page call `settle`, which resizes, places and shows. `view:placed` is followed by two paints before `is-moving` is removed. Without it the recording showed the old view clipped to the new size, the panel moving before resizing, and a white strip. `afterPaint` races two rAFs against a 60 ms timer because a hidden WebKitGTK window may not run rAF; the shell settles on its own after 200 ms in case the call never comes.
+- refers-to: current_view on start
+- kind: warning-context
+- The launch `view:show` can arrive before the listeners are registered, so the page asks the shell which view it is showing once the listeners exist.
+- refers-to: holding, keyup
+- kind: rationale
+- The webview keyup commit is now only a fallback for Wayland, and only when the Switcher was opened by holding its chord. Before, tapping Alt in a Switcher opened from the menu or key 1 opened an app. On X11 the shell polls the modifier instead (src-tauri keys.rs).
 
 ## src/bridge.ts {#bridge}
 

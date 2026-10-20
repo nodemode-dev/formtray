@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "The FormDock panels: read state, open apps, move and hide their own window.",
-  "windows": ["switcher", "stack", "apps", "windows", "widgets", "prefs"],
+  "windows": ["panel", "prefs"],
   "permissions": [
     "core:default",
     "core:window:allow-hide",

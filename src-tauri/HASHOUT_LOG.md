@@ -11,8 +11,8 @@ Last updated: 2026-10-20 · FormDock rename, app icon and tray, tray per OS
 
 ```
 src-tauri/
-├── tauri.conf.json            six hidden windows, withGlobalTauri, macOSPrivateApi, bundle
-├── capabilities/default.json  core plus hide and drag for the six windows
+├── tauri.conf.json            two hidden windows (panel, prefs), withGlobalTauri, macOSPrivateApi, bundle
+├── capabilities/default.json  core plus hide and drag for panel and prefs
 ├── icons/                     app icon set and tray.png (menu bar template)
 └── src/
     ├── main.rs                calls formdock_shell::run
@@ -41,6 +41,19 @@ src-tauri/
 - refers-to: watch_switcher
 - kind: rationale
 - On macOS and Windows a thread polls the modifier every 25 ms while the Switcher is visible, and emits `switcher:commit` on release. On Linux the webview's keyup does it.
+- refers-to: watch_switcher, keys::held (Linux)
+- kind: rationale
+- logged: v0.7.0 · 2026-10-20
+- X11 now polls too, through XQueryPointer's modifier mask on its own short-lived display connection, because the release keyup did not reach the webview when the Switcher was opened by holding Alt+` (seen under Xvfb). The watch starts only when the modifier is held at that moment; it used to start whenever `held` was not None, so a Switcher opened from the menu, key 1 or a view hotkey committed at once on every OS. Wayland returns None and keeps the webview keyup fallback.
+- refers-to: one panel window, show_view, settle_view, panel_size
+- kind: rationale
+- The five views share the `panel` window. Apps, Windows and Widgets are all 920 x 660, so switching among them only swaps panes and the panel stays where it is (including where it was dragged). When the size changes, or the panel is hidden, show_view sends `view:show` with `moving` and waits for the page's `settle` (200 ms fallback) before resizing, placing and showing. A visible GTK window only shrank when its min and max size hints were set to the new size; toggling resizable around set_size grew it but never shrank it.
+- refers-to: raise (Linux)
+- kind: warning-context
+- tao 0.37's set_focus is dropped when called right after show (the window is not visible yet) and presents with timestamp 0, so openbox never gave the panel keyboard focus and the number keys, Esc and the search field did nothing until a click. raise presents on the GTK main thread with the X server time, then once more 120 ms later, after the window manager has mapped it; the first request alone was ignored. Other OSs keep set_focus.
+- refers-to: tauri.conf.json window titles
+- kind: rationale
+- Both windows carry titles (FormDock, FormDock Settings); without them Linux and Windows show "Tauri App" in Alt+Tab and taskbars.
 - refers-to: register_hotkeys
 - kind: rationale
 - `switcher-back` is the Switcher chord plus Shift, registered only when the chord has no Shift of its own.
