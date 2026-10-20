@@ -38,6 +38,10 @@ src-tauri/
 - refers-to: on_window_event Focused(false)
 - kind: warning-context
 - Panels hide when they lose focus, except within 300 ms of being shown. Without that guard, a panel shown by a forwarded launch hid itself while focus settled.
+- refers-to: on_window_event Focused(false), the 180 ms check
+- kind: warning-context
+- logged: v0.7.0 · 2026-10-20
+- On X11 every global hotkey press activates a key grab, which sends the focused panel a focus-out and gives focus back on release. Hiding at once made each Alt+` tap hide and reopen the Switcher (the selection reset and jumped, traced as shown=None on every press), and any view hotkey pressed over a visible panel would blink it. The hide now waits 180 ms and happens only if the panel is still unfocused, and never while the Switcher's chord is held.
 - refers-to: watch_switcher
 - kind: rationale
 - On macOS and Windows a thread polls the modifier every 25 ms while the Switcher is visible, and emits `switcher:commit` on release. On Linux the webview's keyup does it.

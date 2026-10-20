@@ -498,12 +498,18 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![snapshot, open_app, quit_app, set_prefs, show, settle, current_view, dismiss, shell_info, updates, rescan, set_hotkey, pause_hotkeys])
         .on_window_event(|window, event| match event {
             WindowEvent::Focused(false) if window.label() == PANEL => {
-                let app = window.app_handle();
-                let shown = app.state::<Shell>().shown.lock().unwrap().clone();
-                let settling = app.state::<Shell>().shown_at.lock().unwrap().is_some_and(|t| t.elapsed() < Duration::from_millis(300));
-                if shown.is_some() && !settling {
-                    hide_panels(app);
-                }
+                let app = window.app_handle().clone();
+                let lost = window.clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(Duration::from_millis(180));
+                    let shell = app.state::<Shell>();
+                    let shown = shell.shown.lock().unwrap().clone();
+                    let settling = shell.shown_at.lock().unwrap().is_some_and(|t| t.elapsed() < Duration::from_millis(300));
+                    let holding = shell.watching.load(Ordering::SeqCst);
+                    if shown.is_some() && !settling && !holding && !lost.is_focused().unwrap_or(false) {
+                        hide_panels(&app);
+                    }
+                });
             }
             WindowEvent::CloseRequested { api, .. } => {
                 api.prevent_close();
