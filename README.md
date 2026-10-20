@@ -49,7 +49,21 @@ Requirements: Rust (stable), Node 20.19+, and on Linux WebKitGTK 4.1 (the instal
 ./formdock cli list          # the engine without a window
 ```
 
-On Windows run `formdock_oc_install.bat`, then `formdock.bat`. To build installers, run `cd src-tauri && cargo tauri build`. That needs the Tauri CLI; the interface is built by `beforeBuildCommand`.
+On Windows run `formdock_oc_install.bat`, then `formdock.bat`.
+
+## Build the desktop app
+
+`./build_app` does everything from a fresh clone on macOS or Linux: it checks the tools (installing Rust with rustup when missing), installs the interface packages and the Rust crates, builds the interface, compiles the app and bundles it. Every step is logged to `build_app.log`.
+
+| OS | Run | You get (under `target/release/bundle/`) |
+| --- | --- | --- |
+| macOS | `./build_app` | `macos/FormDock.app` and `dmg/FormDock_<version>_<arch>.dmg`; the app is copied to Applications (`--no-install` keeps it in place) |
+| Linux | `./build_app` | `deb/`, `rpm/` and `appimage/` packages; `--install` installs the .deb with apt or the .rpm with dnf, `--bundles deb` builds fewer kinds |
+| Windows | `build_app.bat` | `msi/FormDock_<version>_x64_en-US.msi` and `nsis/FormDock_<version>_x64-setup.exe` |
+
+`--open` opens the result and `--clean` rebuilds the Rust side from nothing. Linux needs the WebKitGTK 4.1, appindicator and librsvg build packages; `./build_app` names them for apt, dnf and pacman when they are missing. Windows needs Rust's MSVC toolchain and the Visual Studio C++ build tools; WebView2 ships with Windows 10 and 11. Without an Apple signing identity the macOS app is ad-hoc signed, so macOS asks once before it opens.
+
+Pushing a `v*.*.*` tag runs `.github/workflows/desktop.yml`, which builds all four (macOS arm64 and x64, Linux x64, Windows x64) and drafts a release with the installers.
 
 ## Hotkeys
 
@@ -79,6 +93,8 @@ On Wayland, which gives apps no global hotkeys, bind `formdock --view apps` (or 
 | `cli/` | `formdock-cli list`, `open`, `quit`, `hotkeys`, `hotkey <action> <chord>`, `updates` and `where` |
 | `src-tauri/` | The window shell: panels, glass, menu bar, hotkeys, Dock reopen, single instance and autostart |
 | `frontend/` | The interface: the views, tokens, and the layer scale |
+| `assets/` | Repo art: `formdock_icon.png`, the macOS icon, and the icon and tray sources in `icon_src/` |
+| `build_app`, `build_app.bat` | One-shot desktop builds for macOS and Linux, and for Windows |
 
 | Port | Service |
 | --- | --- |

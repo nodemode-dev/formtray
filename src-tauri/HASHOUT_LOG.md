@@ -81,6 +81,11 @@ src-tauri/
 - logged: v0.6.0 · 2026-10-20
 - tray.png is tray-v2 as a template image: pure black, with the reference greys turned into alpha (front faces lightest, back rows and side faces near solid), so macOS draws it dark or light with the menu bar. The greys are painted opaque in layer order first and converted per pixel afterwards; drawing each shape with its own alpha let overlapping rows add up into solid blobs. It is 190 x 44 px because tray-v2 is wide, so the status item is wide too. assets/icon_src/tray_template.svg is the vector source.
 
+- refers-to: lib.rs tray_png, icon_as_template(cfg!(target_os = "macos"))
+- kind: rationale
+- logged: v0.6.0 · 2026-10-20
+- Only the macOS menu bar takes the wide black template. Windows' notification area and the Linux appindicator draw tray icons square, so the 190 x 44 template came out squashed, and black on a dark taskbar is close to invisible. They get icons/32x32.png, the redesigned app icon's three-tile small size, in full colour and not as a template.
+
 - refers-to: ../frontend/public/apps/formdeck.png, formpdf.png, formdesign.png
 - kind: rationale
 - logged: v0.6.0 · 2026-10-20

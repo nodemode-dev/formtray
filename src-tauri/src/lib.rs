@@ -263,9 +263,10 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     refs.extend([&sep1 as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &updates, &rescan, &prefs, &login, &sep2, &quit]);
     let menu = Menu::with_items(app, &refs)?;
     let login_item = login.clone();
+    let tray_png: &[u8] = if cfg!(target_os = "macos") { include_bytes!("../icons/tray.png") } else { include_bytes!("../icons/32x32.png") };
     TrayIconBuilder::with_id("formdock")
-        .icon(Image::from_bytes(include_bytes!("../icons/tray.png"))?)
-        .icon_as_template(true)
+        .icon(Image::from_bytes(tray_png)?)
+        .icon_as_template(cfg!(target_os = "macos"))
         .tooltip("FormDock")
         .menu(&menu)
         .show_menu_on_left_click(true)
