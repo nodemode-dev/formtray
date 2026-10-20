@@ -68,3 +68,20 @@ src-tauri/
 - kind: rationale
 - logged: v0.4.0 · 2026-10-12
 - `NSEvent::modifierFlags_class()` takes no MainThreadMarker in objc2-app-kit 0.3.2, so it is safe to call from the polling thread. Shift is treated as held, so Shift+Tab backwards does not commit early.
+
+## icons/ {#icons}
+
+- refers-to: icons/icon.icns, icon.ico, icon.png, 32x32.png, 128x128.png, 128x128@2x.png; ../assets/formai_icon.png, formai_icon_macos.png; ../assets/icon_src/
+- kind: rationale
+- logged: v0.6.0 · 2026-10-20
+- The nine flat squares were the one family icon outside the redrawn construction (FormDeck's fanned deck, formpdf's signed page, FormSurface's painted cube, FormDesign's spread). The new mark is a dock: the real sibling icons in a cover-flow arc on a frosted glass plate, formvis facing front in the centre, formpdf and FormDeck turned inward beside it, FormDesign and a "more apps" tile at the ends, with reflections and a family-gradient glow under the glass. Same tile, bloom, rim and drop shadow; the macOS .icns uses the 824 px tile inside a 1024 canvas with a 100 px margin, .ico and PNGs stay full bleed. Sizes 64 px and below show three icons. It is rendered in Chromium with CSS 3D (perspective, rotateY, box-reflect), because the turned cards need real perspective; a flat drawing of rows of gradient squares read as a bar chart. The reflection keeps only each icon's bottom edge, since a longer one mirrored the formvis roller handle as a blob under the centre. The formvis picture is the launcher's 256 px copy cropped to its tile, so a larger formvis master would sharpen the centre at 1024.
+
+- refers-to: icons/tray.png, lib.rs TrayIconBuilder icon_as_template(true)
+- kind: rationale
+- logged: v0.6.0 · 2026-10-20
+- tray.png is tray-v2 as a template image: pure black, with the reference greys turned into alpha (front faces lightest, back rows and side faces near solid), so macOS draws it dark or light with the menu bar. The greys are painted opaque in layer order first and converted per pixel afterwards; drawing each shape with its own alpha let overlapping rows add up into solid blobs. It is 190 x 44 px because tray-v2 is wide, so the status item is wide too. assets/icon_src/tray_template.svg is the vector source.
+
+- refers-to: ../frontend/public/apps/formdeck.png, formpdf.png, formdesign.png
+- kind: rationale
+- logged: v0.6.0 · 2026-10-20
+- The launcher's copies of the redrawn siblings are replaced with their new full-bleed icons at the same 256 px, so the views do not show the old marks next to the new ones.
