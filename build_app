@@ -134,9 +134,10 @@ if [ "$os" = macos ]; then
   fi
   if [ "$open_app" = 1 ]; then open "${target_app:-$app}"; fi
 else
-  deb="$(ls -t "$bundle"/deb/*.deb 2>/dev/null | head -1 || true)"
-  rpm="$(ls -t "$bundle"/rpm/*.rpm 2>/dev/null | head -1 || true)"
-  appimage="$(ls -t "$bundle"/appimage/*.AppImage 2>/dev/null | head -1 || true)"
+  deb=""; rpm=""; appimage=""
+  case ",$bundles," in *,deb,*) deb="$(ls -t "$bundle"/deb/*"_${version}_"*.deb 2>/dev/null | head -1 || true)" ;; esac
+  case ",$bundles," in *,rpm,*) rpm="$(ls -t "$bundle"/rpm/*"-${version}-"*.rpm 2>/dev/null | head -1 || true)" ;; esac
+  case ",$bundles," in *,appimage,*) appimage="$(ls -t "$bundle"/appimage/*"_${version}_"*.AppImage 2>/dev/null | head -1 || true)" ;; esac
   [ -n "$deb" ] && say "deb: $deb"
   [ -n "$rpm" ] && say "rpm: $rpm"
   [ -n "$appimage" ] && say "AppImage: $appimage"

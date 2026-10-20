@@ -86,6 +86,11 @@ src-tauri/
 - logged: v0.6.0 · 2026-10-20
 - Only the macOS menu bar takes the wide black template. Windows' notification area and the Linux appindicator draw tray icons square, so the 190 x 44 template came out squashed, and black on a dark taskbar is close to invisible. They get icons/32x32.png, the redesigned app icon's three-tile small size, in full colour and not as a template.
 
+- refers-to: ../build_app, the Linux package report
+- kind: warning-context
+- logged: v0.6.0 · 2026-10-20
+- Tauri leaves earlier bundles in target/release/bundle, so the report only names packages of the kinds just asked for and of the version in tauri.conf.json. Before that, a `--bundles deb,rpm` run listed a stale AppImage from an earlier version.
+
 - refers-to: ../frontend/public/apps/formdeck.png, formpdf.png, formdesign.png
 - kind: rationale
 - logged: v0.6.0 · 2026-10-20
