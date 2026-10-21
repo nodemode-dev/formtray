@@ -2,7 +2,7 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.6.0
+Current build version: v0.8.0
 Last updated: 2026-10-21 · renamed FormTray, prefs folder
 
 ---

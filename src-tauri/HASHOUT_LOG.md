@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.7.0
-Last updated: 2026-10-20 · one panel window, Linux focus, modifier polling, grab focus-out
+Current build version: v0.8.0
+Last updated: 2026-10-21 · renamed FormTray
 
 ---
 
