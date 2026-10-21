@@ -1,4 +1,4 @@
-# HASHOUT_LOG · frontend · formdock
+# HASHOUT_LOG · frontend · formtray
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 

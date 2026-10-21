@@ -16,6 +16,6 @@ fi
 cargo fetch
 
 echo
-echo "FormDock is ready to run from source. Start it with: ./formdock"
-echo "The command line works without the window: ./formdock cli list"
+echo "FormTray is ready to run from source. Start it with: ./formtray"
+echo "The command line works without the window: ./formtray cli list"
 echo "To build the installable app: ./build_app"

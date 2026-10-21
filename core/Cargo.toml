@@ -1,10 +1,10 @@
 [package]
-name = "formdock-core"
+name = "formtray-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "FormDock's engine: the Form app registry, finding installed apps, opening, focusing and quitting them, running state, usage and preferences. No window."
+description = "FormTray's engine: the Form app registry, finding installed apps, opening, focusing and quitting them, running state, usage and preferences. No window."
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

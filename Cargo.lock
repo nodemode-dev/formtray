@@ -1067,10 +1067,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "formdock"
+name = "formtray"
 version = "0.7.0"
 dependencies = [
- "formdock-core",
+ "formtray-core",
  "gdkx11",
  "gtk",
  "objc2-app-kit",
@@ -1087,15 +1087,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "formdock-cli"
+name = "formtray-cli"
 version = "0.7.0"
 dependencies = [
- "formdock-core",
+ "formtray-core",
  "serde_json",
 ]
 
 [[package]]
-name = "formdock-core"
+name = "formtray-core"
 version = "0.7.0"
 dependencies = [
  "dirs 6.0.0",

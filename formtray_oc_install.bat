@@ -11,5 +11,5 @@ popd
 cargo fetch || exit /b 1
 
 echo.
-echo FormDock is ready to run from source. Start it with: formdock.bat
+echo FormTray is ready to run from source. Start it with: formtray.bat
 echo To build the installers: build_app.bat

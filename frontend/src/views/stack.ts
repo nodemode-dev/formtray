@@ -57,7 +57,7 @@ export function stack(): ViewModule {
       root.classList.add("v-stack");
       const head = el("header", "st-head");
       head.setAttribute("data-tauri-drag-region", "");
-      head.append(el("h1", "st-title", "FormDock"), viewBar("stack", (v) => ctx.go(v)));
+      head.append(el("h1", "st-title", "FormTray"), viewBar("stack", (v) => ctx.go(v)));
       grid = el("div", "st-grid");
       more = el("button", "st-cell st-more");
       more.type = "button";

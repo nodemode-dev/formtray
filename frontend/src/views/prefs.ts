@@ -132,9 +132,9 @@ export function prefsView(): ViewModule {
       keys.append(el("p", "pf-warn", `${ACTION_NAMES[issue.action] ?? issue.action}: ${prettyChord(issue.chord, snap.platform)} could not be registered (${issue.reason}).`));
     }
     if (info.wayland) {
-      keys.append(el("p", "pf-hint", "Wayland has no global hotkeys for apps. Bind these commands in your desktop's keyboard settings: formdock --view apps, formdock --view switcher, formdock --view stack, formdock --view windows, formdock --view widgets."));
+      keys.append(el("p", "pf-hint", "Wayland has no global hotkeys for apps. Bind these commands in your desktop's keyboard settings: formtray --view apps, formtray --view switcher, formtray --view stack, formtray --view windows, formtray --view widgets."));
     }
-    about.textContent = `FormDock ${info.version} · ${info.glass === "liquid" ? "Liquid Glass" : info.glass === "vibrancy" ? "macOS vibrancy" : info.glass === "acrylic" ? "Windows acrylic" : "solid panels"} · ${native ? snap.platform : "browser preview"}`;
+    about.textContent = `FormTray ${info.version} · ${info.glass === "liquid" ? "Liquid Glass" : info.glass === "vibrancy" ? "macOS vibrancy" : info.glass === "acrylic" ? "Windows acrylic" : "solid panels"} · ${native ? snap.platform : "browser preview"}`;
   }
 
   function syncRows(snap: Snapshot) {
@@ -154,7 +154,7 @@ export function prefsView(): ViewModule {
       root.classList.add("v-prefs");
       const head = el("header", "pn-head");
       head.setAttribute("data-tauri-drag-region", "");
-      head.append(el("h1", "pn-title", "FormDock Settings"), iconButton(icons.close, "Close", () => ctx.dismiss(), "pf-close"));
+      head.append(el("h1", "pn-title", "FormTray Settings"), iconButton(icons.close, "Close", () => ctx.dismiss(), "pf-close"));
 
       defaultView = el("select", "pf-select");
       for (const v of VIEWS) {
@@ -205,7 +205,7 @@ export function prefsView(): ViewModule {
 
       const body = el("div", "pf-body");
       body.append(
-        section("General", field("Opens with", defaultView, "The view FormDock shows when it starts."), field("Open at login", login, "Off by default. FormDock waits in the menu bar until a hotkey or the Dock icon calls it.")),
+        section("General", field("Opens with", defaultView, "The view FormTray shows when it starts."), field("Open at login", login, "Off by default. FormTray waits in the menu bar until a hotkey or the Dock icon calls it.")),
         section("Apps", list),
         section("Where to look", locations, rescan),
         section("Hotkeys", keys),

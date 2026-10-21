@@ -76,9 +76,9 @@ pub struct Usage {
 pub fn dir() -> PathBuf {
     let base = dirs::config_dir().unwrap_or_else(std::env::temp_dir);
     if cfg!(target_os = "linux") {
-        base.join("formdock")
+        base.join("formtray")
     } else {
-        base.join("ai.nodemode.formdock")
+        base.join("ai.nodemode.formtray")
     }
 }
 

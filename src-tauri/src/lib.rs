@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::Duration;
 
-use formdock_core::{Engine, Prefs, Snapshot, VIEWS};
+use formtray_core::{Engine, Prefs, Snapshot, VIEWS};
 use serde::Serialize;
 use tauri::image::Image;
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
@@ -312,7 +312,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let prefs = MenuItem::with_id(app, "prefs", "Settings...", true, Some("CmdOrCtrl+,"))?;
     let login = CheckMenuItem::with_id(app, "login", "Open at Login", true, login_on, None::<&str>)?;
     let rescan = MenuItem::with_id(app, "rescan", "Find Apps Again", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit FormDock", true, Some("CmdOrCtrl+Q"))?;
+    let quit = MenuItem::with_id(app, "quit", "Quit FormTray", true, Some("CmdOrCtrl+Q"))?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
     let mut refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = items.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>).collect();
@@ -320,10 +320,10 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let menu = Menu::with_items(app, &refs)?;
     let login_item = login.clone();
     let tray_png: &[u8] = if cfg!(target_os = "macos") { include_bytes!("../icons/tray.png") } else { include_bytes!("../icons/32x32.png") };
-    TrayIconBuilder::with_id("formdock")
+    TrayIconBuilder::with_id("formtray")
         .icon(Image::from_bytes(tray_png)?)
         .icon_as_template(cfg!(target_os = "macos"))
-        .tooltip("FormDock")
+        .tooltip("FormTray")
         .menu(&menu)
         .show_menu_on_left_click(true)
         .on_menu_event(move |app, event| match event.id().as_ref() {
@@ -547,7 +547,7 @@ pub fn run() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("FormDock failed to start");
+        .expect("FormTray failed to start");
 
     app.run(|_app, event| match event {
         RunEvent::ExitRequested { api, code, .. } if code.is_none() => api.prevent_exit(),

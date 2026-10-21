@@ -5,7 +5,7 @@ ROOT="$(pwd)"
 
 usage() {
   cat <<'EOF'
-./build_app            build FormDock's desktop app from this folder, start to finish (macOS and Linux)
+./build_app            build FormTray's desktop app from this folder, start to finish (macOS and Linux)
   --no-install         macOS: leave the built app where it is instead of copying it to Applications
   --install            Linux: install the built package (.deb with apt, or .rpm with dnf; asks for your password)
   --open               open the app when the build is done
@@ -15,7 +15,7 @@ Every step's output goes to build_app.log beside this file. On Windows run build
 EOF
 }
 
-install_app=auto open_app=0 clean=0 bundles="${FORMDOCK_BUNDLES:-deb,rpm,appimage}"
+install_app=auto open_app=0 clean=0 bundles="${FORMTRAY_BUNDLES:-deb,rpm,appimage}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --no-install) install_app=no ;;
@@ -32,11 +32,11 @@ done
 log="$ROOT/build_app.log"
 : > "$log"
 exec > >(tee -a "$log") 2>&1
-trap 'status=$?; [ $status -eq 0 ] || printf "\n[formdock] the build stopped (exit %s). The full log is %s\n" "$status" "$log"' EXIT
+trap 'status=$?; [ $status -eq 0 ] || printf "\n[formtray] the build stopped (exit %s). The full log is %s\n" "$status" "$log"' EXIT
 
-say() { printf '[formdock] %s\n' "$*"; }
+say() { printf '[formtray] %s\n' "$*"; }
 die() { say "$*"; exit 1; }
-step() { printf '\n[formdock] == %s\n' "$*"; }
+step() { printf '\n[formtray] == %s\n' "$*"; }
 rust_env() { [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env" || true; }
 
 case "$(uname -s)" in
@@ -80,7 +80,7 @@ fi
 say "node $(node -v), $(rustc -V), $(cargo -V | awk '{print $1, $2}')"
 
 step "installing the interface packages and the Rust crates"
-./formdock_oc_install
+./formtray_oc_install
 
 if [ "$clean" = 1 ]; then
   step "cleaning earlier builds"
@@ -104,17 +104,17 @@ bundle="$ROOT/target/release/bundle"
 version="$(node -p 'require("./src-tauri/tauri.conf.json").version')"
 
 if [ "$os" = macos ]; then
-  app="$bundle/macos/FormDock.app"
+  app="$bundle/macos/FormTray.app"
   [ -d "$app" ] || die "the build finished but $app is missing"
   codesign --verify --deep --strict "$app" 2>/dev/null || say "codesign could not verify the app; it is ad-hoc signed, so macOS may ask once before it opens"
   step "packing the disk image"
   mkdir -p "$bundle/dmg"
-  dmg="$bundle/dmg/FormDock_${version}_$(uname -m).dmg"
+  dmg="$bundle/dmg/FormTray_${version}_$(uname -m).dmg"
   stage="$(mktemp -d)"
-  ditto "$app" "$stage/FormDock.app"
+  ditto "$app" "$stage/FormTray.app"
   ln -s /Applications "$stage/Applications"
   rm -f "$dmg"
-  hdiutil create -quiet -volname FormDock -srcfolder "$stage" -ov -format UDZO "$dmg"
+  hdiutil create -quiet -volname FormTray -srcfolder "$stage" -ov -format UDZO "$dmg"
   rm -rf "$stage"
   say "app: $app"
   say "disk image: $dmg"
@@ -122,14 +122,14 @@ if [ "$os" = macos ]; then
   if [ "$install_app" != no ]; then
     dest=/Applications
     [ -w "$dest" ] || { dest="$HOME/Applications"; mkdir -p "$dest"; }
-    if pgrep -x formdock >/dev/null 2>&1; then
-      osascript -e 'tell application "FormDock" to quit' >/dev/null 2>&1 || true
+    if pgrep -x formtray >/dev/null 2>&1; then
+      osascript -e 'tell application "FormTray" to quit' >/dev/null 2>&1 || true
       sleep 2
     fi
-    rm -rf "$dest/FormDock.app"
-    ditto "$app" "$dest/FormDock.app"
-    xattr -dr com.apple.quarantine "$dest/FormDock.app" 2>/dev/null || true
-    target_app="$dest/FormDock.app"
+    rm -rf "$dest/FormTray.app"
+    ditto "$app" "$dest/FormTray.app"
+    xattr -dr com.apple.quarantine "$dest/FormTray.app" 2>/dev/null || true
+    target_app="$dest/FormTray.app"
     say "installed: $target_app"
   fi
   if [ "$open_app" = 1 ]; then open "${target_app:-$app}"; fi
@@ -153,9 +153,9 @@ else
     say "install it with ./build_app --install, or: sudo apt install ./<the .deb>   (Fedora: sudo dnf install ./<the .rpm>)"
   fi
   if [ "$open_app" = 1 ]; then
-    if [ "$(command -v formdock 2>/dev/null)" = /usr/bin/formdock ]; then nohup /usr/bin/formdock >/dev/null 2>&1 &
+    if [ "$(command -v formtray 2>/dev/null)" = /usr/bin/formtray ]; then nohup /usr/bin/formtray >/dev/null 2>&1 &
     elif [ -n "$appimage" ]; then nohup "$appimage" >/dev/null 2>&1 &
-    else nohup "$ROOT/target/release/formdock" >/dev/null 2>&1 &
+    else nohup "$ROOT/target/release/formtray" >/dev/null 2>&1 &
     fi
   fi
 fi

@@ -14,4 +14,4 @@ for n,d in zip(sizes,ims): ent+=struct.pack('<BBBBHHII',n%256,n%256,0,0,1,32,len
 open(P('src-tauri/icons/icon.ico'),'wb').write(struct.pack('<HHH',0,1,len(sizes))+ent+b''.join(ims))
 for name,n in [('icon.png',512),('32x32.png',32),('128x128.png',128),('128x128@2x.png',256)]: full(n).save(P('src-tauri/icons/'+name))
 Image.open('tray.png').save(P('src-tauri/icons/tray.png'))
-mac(1024).save(P('assets/formdock_icon_macos.png')); full(1024).save(P('assets/formdock_icon.png'))
+mac(1024).save(P('assets/formtray_icon_macos.png')); full(1024).save(P('assets/formtray_icon.png'))
