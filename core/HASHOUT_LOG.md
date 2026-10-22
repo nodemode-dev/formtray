@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.0
-Last updated: 2026-10-22 · live app names and icons (identity.rs), 24 apps, discovered family apps
+Current build version: v0.9.1
+Last updated: 2026-10-22 · the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
 
 ---
 

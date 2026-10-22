@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.0
-Last updated: 2026-10-22 · live icons and names patched in place, new fallback icon set
+Current build version: v0.9.1
+Last updated: 2026-10-22 · checks only in the repository, releases through formcompiler, formsculpt fallback icon
 
 ---
 

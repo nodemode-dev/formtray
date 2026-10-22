@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.0
-Last updated: 2026-10-22 · grid tray, pinned apps in the tray menu, appicon scheme, new app icon
+Current build version: v0.9.1
+Last updated: 2026-10-22 · no shell change; bundles are built by formcompiler, not this repository's desktop.yml
 
 ---
 
