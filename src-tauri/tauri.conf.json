@@ -12,7 +12,7 @@
     "withGlobalTauri": true,
     "macOSPrivateApi": true,
     "security": {
-      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+      "csp": "default-src 'self'; img-src 'self' data: appicon: http://appicon.localhost; style-src 'self' 'unsafe-inline'; script-src 'self'"
     },
     "windows": [
       { "label": "panel", "title": "FormTray", "url": "index.html?view=apps", "width": 920, "height": 660, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": true, "skipTaskbar": true, "resizable": false, "shadow": true, "focus": true },

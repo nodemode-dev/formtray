@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.8.0
-Last updated: 2026-10-21 · renamed FormTray
+Current build version: v0.9.0
+Last updated: 2026-10-22 · grid tray, pinned apps in the tray menu, appicon scheme, new app icon
 
 ---
 
@@ -13,12 +13,13 @@ Last updated: 2026-10-21 · renamed FormTray
 src-tauri/
 ├── tauri.conf.json            two hidden windows (panel, prefs), withGlobalTauri, macOSPrivateApi, bundle
 ├── capabilities/default.json  core plus hide and drag for panel and prefs
-├── icons/                     app icon set and tray.png (menu bar template)
+├── icons/                     app icon set, tray.png (macOS template), tray_light.png and tray_dark.png
 └── src/
     ├── main.rs                calls formtray_shell::run
-    ├── lib.rs                 state, commands, show and place, hotkeys, tray, run loop
+    ├── lib.rs                 state, commands, show and place, hotkeys, tray menu and refresh, appicon scheme, run loop
     ├── glass.rs               Liquid Glass, vibrancy, acrylic, css
-    └── keys.rs                is the Switcher's modifier still held
+    ├── keys.rs                is the Switcher's modifier still held
+    └── theme.rs               taskbar light or dark, which tray image to use
 ```
 
 ## Table of contents
@@ -26,6 +27,8 @@ src-tauri/
 - [src/lib.rs](#lib)
 - [src/glass.rs](#glass)
 - [src/keys.rs](#keys)
+- [src/theme.rs](#theme)
+- [icons/](#icons)
 
 ---
 
@@ -107,6 +110,33 @@ src-tauri/
 - kind: warning-context
 - logged: v0.6.0 · 2026-10-20
 - Tauri leaves earlier bundles in target/release/bundle, so the report only names packages of the kinds just asked for and of the version in tauri.conf.json. Before that, a `--bundles deb,rpm` run listed a stale AppImage from an earlier version.
+
+- refers-to: icons/tray.png, tray_light.png, tray_dark.png; ../assets/icon_src/tray_grid.svg; theme.rs tray_png
+- kind: rationale
+- logged: v0.9.0 · 2026-10-22
+- Replaces the two v0.6.0 tray entries above. The owner's 3x3 grid (`tray_grid.svg`, kept as supplied) is the menu bar icon on every OS. macOS: a 36 x 36 px black template with each cell's opacity (1.0, and 0.67 for the three faded cells) as alpha, the glyph 32 px so it reads as 16 pt inside the 18 pt height tray-icon 0.25.1 fixes for status items; the status item is now square, not wide. Windows and Linux: 32 x 32 px, the glyph 30 px, white on a dark taskbar and black on a light one. Rendered with Pillow at 16x and scaled down, from the SVG's own rect geometry. `tray_template.svg` (tray-v2) is no longer used.
+
+- refers-to: icons/icon.icns, icon.ico, icon.png, 32x32.png, 128x128.png, 128x128@2x.png; ../assets/formtray_icon.png, formtray_icon_macos.png
+- kind: rationale
+- logged: v0.9.0 · 2026-10-22
+- Replaces the v0.6.0 dock art with the owner's new `formtray_icon_macos.png` (1024 px, from form-icons.zip), on the owner's word. The icns carries PNG payloads from 16 to 1024 px; the ico holds 16 to 256 px. The zip has only the macOS version, so `formtray_icon.png` and the Windows and Linux sizes use it too, with its transparent margin, instead of a full-bleed variant. `assets/icon_src/` (render.mjs, scene.py, sources/) built the old art and no longer matches the shipped icon.
+
+## src/theme.rs {#theme}
+
+- refers-to: taskbar_dark
+- kind: warning-context
+- logged: v0.9.0 · 2026-10-22
+- Windows reads `SystemUsesLightTheme` under HKCU `...\Themes\Personalize`, the shell (taskbar) setting, not `AppsUseLightTheme`, the one the webview's theme follows. The key name comes from community answers, not a Microsoft reference page; confirm on a device. Linux asks GNOME's `color-scheme` through gsettings and treats anything but `prefer-light` (including no gsettings, KDE and others) as a dark panel, since most Linux panels are dark. macOS uses the template, so the answer is unused there.
+
+## src/lib.rs · tray and appicon {#lib-tray}
+
+- refers-to: tray_menu, refresh_tray
+- kind: rationale
+- logged: v0.9.0 · 2026-10-22
+- The menu starts with the pinned apps that are installed and not hidden, each an IconMenuItem with the app's live name and its 36 px cached icon (no icon when the app only has an SVG or none). It is rebuilt with `set_menu` after a rescan (menu or command), after Settings saves prefs (pins change there), and the Windows and Linux tray image is swapped when the panel's theme changes. tray-icon's `set_icon` drops template mode, so the macOS icon is never swapped at runtime. Open at Login now flips the saved pref rather than reading the menu item, because the item is recreated with each rebuild.
+- refers-to: icon_response, register_uri_scheme_protocol("appicon")
+- kind: rationale
+- Serves only files directly inside the engine's icon cache: the name must be letters, digits, `-`, `_` and `.` with no `..`, so no other path can be read. Responses are cacheable for a year because a changed icon gets a new file name. The webview reaches it as `appicon://localhost/<file>` on macOS and Linux and `http://appicon.localhost/<file>` on Windows (Tauri's custom-scheme origins); both are in the CSP `img-src`.
 
 - refers-to: ../frontend/public/apps/formdeck.png, formpdf.png, formdesign.png
 - kind: rationale

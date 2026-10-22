@@ -1,5 +1,6 @@
 mod glass;
 mod keys;
+mod theme;
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -9,7 +10,7 @@ use std::time::Duration;
 use formtray_core::{Engine, Prefs, Snapshot, VIEWS};
 use serde::Serialize;
 use tauri::image::Image;
-use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
+use tauri::menu::{CheckMenuItem, IconMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, RunEvent, WebviewWindow, WindowEvent};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
@@ -302,8 +303,25 @@ fn sync_login(app: &AppHandle, on: bool) {
     }
 }
 
-fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let login_on = with_engine(app, |e| e.prefs.open_at_login);
+fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
+    let (login_on, pinned) = with_engine(app, |e| {
+        let snap = e.snapshot();
+        let pinned: Vec<(String, String, Option<std::path::PathBuf>)> = e
+            .prefs
+            .pinned
+            .iter()
+            .filter_map(|id| snap.apps.iter().find(|a| &a.id == id && a.installed && !a.hidden))
+            .map(|a| (a.id.clone(), a.name.clone(), e.menu_icon(&a.id)))
+            .collect();
+        (e.prefs.open_at_login, pinned)
+    });
+    let apps: Vec<IconMenuItem<tauri::Wry>> = pinned
+        .iter()
+        .map(|(id, name, icon)| {
+            let image = icon.as_ref().and_then(|p| std::fs::read(p).ok()).and_then(|b| Image::from_bytes(&b).ok());
+            IconMenuItem::with_id(app, format!("open-{id}"), name, true, image, None::<&str>)
+        })
+        .collect::<tauri::Result<_>>()?;
     let items: Vec<MenuItem<tauri::Wry>> = [("view-switcher", "Switcher"), ("view-stack", "Stack"), ("view-apps", "Apps"), ("view-windows", "Windows"), ("view-widgets", "Widgets")]
         .iter()
         .map(|(id, label)| MenuItem::with_id(app, *id, *label, true, None::<&str>))
@@ -313,16 +331,51 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let login = CheckMenuItem::with_id(app, "login", "Open at Login", true, login_on, None::<&str>)?;
     let rescan = MenuItem::with_id(app, "rescan", "Find Apps Again", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit FormTray", true, Some("CmdOrCtrl+Q"))?;
+    let sep0 = PredefinedMenuItem::separator(app)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
-    let mut refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = items.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>).collect();
+    let mut refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = apps.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>).collect();
+    if !refs.is_empty() {
+        refs.push(&sep0);
+    }
+    refs.extend(items.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>));
     refs.extend([&sep1 as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &updates, &rescan, &prefs, &login, &sep2, &quit]);
-    let menu = Menu::with_items(app, &refs)?;
-    let login_item = login.clone();
-    let tray_png: &[u8] = if cfg!(target_os = "macos") { include_bytes!("../icons/tray.png") } else { include_bytes!("../icons/32x32.png") };
+    Menu::with_items(app, &refs)
+}
+
+fn refresh_tray(app: &AppHandle) {
+    let Some(tray) = app.tray_by_id("formtray") else { return };
+    if let Ok(menu) = tray_menu(app) {
+        let _ = tray.set_menu(Some(menu));
+    }
+    if !cfg!(target_os = "macos") {
+        if let Ok(image) = Image::from_bytes(theme::tray_png().0) {
+            let _ = tray.set_icon(Some(image));
+        }
+    }
+}
+
+fn icon_response(path: &str) -> tauri::http::Response<Vec<u8>> {
+    let name = path.trim_start_matches('/');
+    let safe = !name.is_empty() && !name.contains("..") && name.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'));
+    let found = safe.then(|| formtray_core::identity::cache_dir().join(name)).and_then(|p| std::fs::read(&p).ok().map(|b| (p, b)));
+    let builder = tauri::http::Response::builder();
+    match found {
+        Some((p, bytes)) => {
+            let mime = if p.extension().is_some_and(|e| e == "svg") { "image/svg+xml" } else { "image/png" };
+            builder.header("Content-Type", mime).header("Cache-Control", "max-age=31536000, immutable").body(bytes)
+        }
+        None => builder.status(404).body(Vec::new()),
+    }
+    .unwrap_or_default()
+}
+
+fn build_tray(app: &AppHandle) -> tauri::Result<()> {
+    let menu = tray_menu(app)?;
+    let (tray_png, template) = theme::tray_png();
     TrayIconBuilder::with_id("formtray")
         .icon(Image::from_bytes(tray_png)?)
-        .icon_as_template(cfg!(target_os = "macos"))
+        .icon_as_template(template)
         .tooltip("FormTray")
         .menu(&menu)
         .show_menu_on_left_click(true)
@@ -336,9 +389,10 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             "rescan" => {
                 with_engine(app, |e| e.rediscover());
                 broadcast(app);
+                refresh_tray(app);
             }
             "login" => {
-                let on = login_item.is_checked().unwrap_or(false);
+                let on = !with_engine(app, |e| e.prefs.open_at_login);
                 let prefs = with_engine(app, |e| {
                     let mut p = e.prefs.clone();
                     p.open_at_login = on;
@@ -352,6 +406,11 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             other => {
                 if let Some(view) = other.strip_prefix("view-") {
                     show_view(app, view, "menu");
+                } else if let Some(id) = other.strip_prefix("open-") {
+                    if let Err(e) = with_engine(app, |e| e.open(id)) {
+                        let _ = app.emit("notice", e.to_string());
+                    }
+                    broadcast(app);
                 }
             }
         })
@@ -411,6 +470,7 @@ fn set_prefs(app: AppHandle, prefs: Prefs) -> Result<Snapshot, String> {
     sync_login(&app, login);
     register_hotkeys(&app);
     broadcast(&app);
+    refresh_tray(&app);
     Ok(with_engine(&app, |e| e.snapshot()))
 }
 
@@ -477,6 +537,7 @@ fn pause_hotkeys(app: AppHandle, paused: bool) {
 fn rescan(app: AppHandle) {
     with_engine(&app, |e| e.rediscover());
     broadcast(&app);
+    refresh_tray(&app);
 }
 
 pub fn run() {
@@ -495,6 +556,7 @@ pub fn run() {
                 .build(),
         )
         .manage(Shell::default())
+        .register_uri_scheme_protocol("appicon", |_ctx, request| icon_response(request.uri().path()))
         .invoke_handler(tauri::generate_handler![snapshot, open_app, quit_app, set_prefs, show, settle, current_view, dismiss, shell_info, updates, rescan, set_hotkey, pause_hotkeys])
         .on_window_event(|window, event| match event {
             WindowEvent::Focused(false) if window.label() == PANEL => {
@@ -515,6 +577,7 @@ pub fn run() {
                 api.prevent_close();
                 let _ = window.hide();
             }
+            WindowEvent::ThemeChanged(_) if window.label() == PANEL => refresh_tray(window.app_handle()),
             _ => {}
         })
         .setup(|app| {
