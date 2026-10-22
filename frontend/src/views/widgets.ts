@@ -1,6 +1,6 @@
 import type { AppState, Tile } from "../bridge";
 import { icons } from "../icons";
-import { ago, appIcon, el, iconButton, runDot, viewBar } from "../ui";
+import { ago, appIcon, appName, el, iconButton, runDot, viewBar } from "../ui";
 import type { Ctx, ViewModule } from "./types";
 
 const SIZES: Tile["size"][] = ["s", "m", "l"];
@@ -201,7 +201,7 @@ export function widgets(): ViewModule {
     });
     const text = el("div", "wg-text");
     const meta = el("p", "wg-meta");
-    text.append(el("h3", "wg-name", app.name), el("p", "wg-alt", app.alt_of ? `Instead of ${app.alt_of}` : "Built from scratch"), meta);
+    text.append(appName("h3", "wg-name", app), el("p", "wg-alt", app.alt_of ? `Instead of ${app.alt_of}` : "Built from scratch"), meta);
     face.append(appIcon(app, size === "s" ? "m" : "l"), runDot(), text);
     node.append(face, toolsFor(id));
     wireDrag(node);

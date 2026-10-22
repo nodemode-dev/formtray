@@ -1,6 +1,6 @@
 import type { AppState } from "../bridge";
 import { icons } from "../icons";
-import { appIcon, el, runDot, viewBar } from "../ui";
+import { appIcon, appName, el, runDot, viewBar } from "../ui";
 import type { Ctx, ViewModule } from "./types";
 
 export function stack(): ViewModule {
@@ -41,7 +41,7 @@ export function stack(): ViewModule {
         cell = el("button", "st-cell");
         cell.type = "button";
         const id = app.id;
-        cell.append(appIcon(app, "m"), runDot(), el("span", "st-name", app.name));
+        cell.append(appIcon(app, "m"), runDot(), appName("span", "st-name", app));
         cell.addEventListener("click", () => ctx.open(id));
         cells.set(app.id, cell);
       }

@@ -1,6 +1,6 @@
 import { native, VIEWS, call, type Prefs, type ShellInfo, type Snapshot, type View } from "../bridge";
 import { icons } from "../icons";
-import { appIcon, el, iconButton, prettyChord } from "../ui";
+import { appIcon, appName, el, iconButton, prettyChord } from "../ui";
 import type { Ctx, ViewModule } from "./types";
 
 const ACTION_NAMES: Record<string, string> = {
@@ -183,7 +183,7 @@ export function prefsView(): ViewModule {
         pin.addEventListener("change", save);
         const where = el("span", "pf-where");
         const name = el("span", "pf-app-name");
-        name.append(el("strong", "", app.name), where);
+        name.append(appName("strong", "", app), where);
         row.append(appIcon(app, "s"), name, show, pin);
         rows.set(app.id, { row, show, pin, where });
         list.append(row);

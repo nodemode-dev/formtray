@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.8.0
-Last updated: 2026-10-21 · renamed FormTray
+Current build version: v0.9.0
+Last updated: 2026-10-22 · live icons and names patched in place, new fallback icon set
 
 ---
 
@@ -13,11 +13,11 @@ Last updated: 2026-10-21 · renamed FormTray
 frontend/
 ├── index.html                 one panel root and the toast
 ├── vite.config.ts             port 5610, host false, fs allows core/data for preview
-├── public/apps/               app icons, 256 px
+├── public/apps/               fallback app icons, 256 px webp, named by family id
 └── src/
     ├── main.ts                one pane per view in the panel (prefs alone), activate, the move handshake, keys, events
     ├── bridge.ts              types, invoke and listen, browser preview data
-    ├── ui.ts                  el, appIcon, viewBar, time words, chord words
+    ├── ui.ts                  el, appIcon, appName, iconSrc, syncIdentity, viewBar, time words, chord words
     ├── icons.ts               inline currentColor svg
     ├── styles/                tokens.css, layers.css, app.css
     └── views/                 switcher, stack, apps, windows, widgets, prefs, types
@@ -27,6 +27,7 @@ frontend/
 
 - [src/main.ts](#main)
 - [src/bridge.ts](#bridge)
+- [src/ui.ts](#ui)
 - [src/views](#views)
 - [src/styles/app.css](#css)
 
@@ -80,6 +81,26 @@ frontend/
 - refers-to: prefs.ts onCapture
 - kind: rationale
 - It listens in the capture phase and stops propagation, so the shared keys in main.ts (1 to 5, Esc) do not act while a chord is being recorded. The chord is built from `e.code`, so Option on macOS does not turn the letter into a symbol.
+
+## src/ui.ts {#ui}
+
+- refers-to: iconSrc, appIcon, iconImg
+- kind: rationale
+- logged: v0.9.0 · 2026-10-22
+- An installed app's own icon (`live_icon`, from the engine's cache through the appicon scheme) comes first, the bundled `/apps/<icon>` second, initials last. If the live image fails to load it falls back to the bundled file, then to initials, inside the same fixed-size box, so nothing moves. In the browser preview a `live_icon` is read from `/apps/`, which lets the swap be exercised without the shell.
+- refers-to: appName, syncIdentity, data-icon-app, data-name-app
+- kind: rationale
+- Law two. Views build their cells once, so a new name or icon after Find Apps Again is patched, not rebuilt: syncIdentity keeps the last src and name per app, changes the text of `[data-name-app]` nodes, and swaps the `src` of `[data-icon-app]` images only after the new image has decoded off-screen, so the old icon shows until the new one is ready. Seeded with the first snapshot in main.ts before the views mount. Verified under Xvfb with the app on one core shared with four busy loops: a fallback icon became the live one, and later a renamed and redrawn app changed name then icon two frames apart, with no blank or shifted frame.
+- refers-to: persistent name nodes
+- kind: warning-context
+- Only cells that live for the session carry `data-name-app`: Apps grid, Stack, Widgets app tiles, Windows cards and Settings rows. Pop-overs and the add menu are rebuilt each time they open, so they read the current name anyway. Titles and aria-labels keep the name from when the cell was built. An app discovered for the first time by a rescan appears in the views after FormTray restarts, because cells are not added mid-session.
+
+## public/apps/ {#apps}
+
+- refers-to: format.png, formcut.png, formdam.png, formdeck.png, formdesign.png, formencoder.png, formlit.png, formmd.svg, formpath.png, formpdf.png, formportal.png, formref.png, formsculptor.png, formvfx.png, formvis.png, formwav.png, formweb.png
+- kind: removed-code
+- logged: v0.9.0 · 2026-10-22
+- The 17 v0.1.0 to v0.8.0 fallback icons (256 px png and one svg), copied from each app's repo at the time, removed because every one differed from the owner's current icon. Replaced by 23 webp files at 256 px with alpha, resized from the owner's 1024 px form-icons.zip with the aspect ratio kept; the zip's `form-md`, `formDAM`, `formMCP` and `formpth` files are named `formmd`, `formdam`, `formmcp` and `formpath` here. formhub has no icon in the set and shows initials.
 
 ## src/styles/app.css {#css}
 

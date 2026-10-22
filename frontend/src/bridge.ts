@@ -33,6 +33,8 @@ export interface AppState {
   category: string;
   hue: string;
   icon: string;
+  live_icon: string;
+  name_source: "app" | "portal" | "registry";
   installed: boolean;
   path: string | null;
   running: boolean;
@@ -73,11 +75,13 @@ const previewListeners = new Map<string, ((payload: unknown) => void)[]>();
 
 async function previewSnapshot(): Promise<Snapshot> {
   if (preview) return preview;
-  const data = (await import("../../core/data/apps.json")).default as { categories: Snapshot["categories"]; apps: Omit<AppState, "installed" | "path" | "running" | "processes" | "since" | "count" | "last" | "hidden">[] };
+  const data = (await import("../../core/data/apps.json")).default as { categories: Snapshot["categories"]; apps: Omit<AppState, "installed" | "path" | "running" | "processes" | "since" | "count" | "last" | "hidden" | "live_icon" | "name_source">[] };
   const board = ["formvis", "formcut", "formwav", "formdeck", "formlit", "formdam", "formweb", "formportal"];
   const now = Math.floor(Date.now() / 1000);
   const apps = data.apps.map((a, i) => ({
     ...a,
+    live_icon: "",
+    name_source: "registry" as const,
     installed: i % 6 !== 5,
     path: null,
     running: ["formvis", "formcut", "formwav"].includes(a.id),

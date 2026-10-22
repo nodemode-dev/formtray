@@ -1,4 +1,5 @@
 import { call, native, on, VIEWS, type Prefs, type ShellInfo, type Snapshot, type View } from "./bridge";
+import { syncIdentity } from "./ui";
 import { apps } from "./views/apps";
 import { prefsView } from "./views/prefs";
 import { stack } from "./views/stack";
@@ -67,6 +68,7 @@ async function start() {
   const [snap, info] = await Promise.all([call<Snapshot>("snapshot"), call<ShellInfo>("shell_info")]);
   document.documentElement.dataset.glass = info.glass;
   document.documentElement.dataset.platform = snap.platform;
+  syncIdentity(snap);
 
   const ctx: Ctx = {
     snap,
@@ -109,6 +111,7 @@ async function start() {
   await on<Snapshot>("state", (next) => {
     ctx.snap = next;
     for (const { module } of panes.values()) module.update(next);
+    syncIdentity(next);
   });
   await on<string>("view:shown", (reason) => current().shown(reason));
   await on<{ view: View; reason: string; moving: boolean }>("view:show", (p) => {

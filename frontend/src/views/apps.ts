@@ -1,6 +1,6 @@
 import type { AppState } from "../bridge";
 import { icons } from "../icons";
-import { appIcon, el, iconButton, runDot, viewBar, visible } from "../ui";
+import { appIcon, appName, el, iconButton, runDot, viewBar, visible } from "../ui";
 import type { Ctx, ViewModule } from "./types";
 
 const COLS = 7;
@@ -22,7 +22,7 @@ export function apps(): ViewModule {
     const b = el("button", "ap-cell");
     b.type = "button";
     b.dataset.app = app.id;
-    b.append(appIcon(app, "m"), runDot(), el("span", "ap-name", app.name));
+    b.append(appIcon(app, "m"), runDot(), appName("span", "ap-name", app));
     b.title = app.alt_of ? `${app.name} · instead of ${app.alt_of}` : app.name;
     const id = app.id;
     b.addEventListener("click", () => ctx.open(id));

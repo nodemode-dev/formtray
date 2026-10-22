@@ -1,6 +1,6 @@
 import type { AppState } from "../bridge";
 import { icons } from "../icons";
-import { appIcon, el, iconButton, runningFor, sortRecent, viewBar } from "../ui";
+import { appIcon, appName, el, iconButton, runningFor, sortRecent, viewBar } from "../ui";
 import type { Ctx, ViewModule } from "./types";
 
 export function windowsView(): ViewModule {
@@ -28,7 +28,7 @@ export function windowsView(): ViewModule {
     plate.setAttribute("aria-label", `Bring ${app.name} forward`);
     const id = app.id;
     plate.addEventListener("click", () => ctx.open(id));
-    const name = el("h3", "wc-name", app.name);
+    const name = appName("h3", "wc-name", app);
     const meta = el("p", "wc-meta");
     const acts = el("div", "wc-acts");
     const quit = iconButton(icons.power, `Quit ${app.name}`, () => {

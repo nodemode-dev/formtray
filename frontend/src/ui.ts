@@ -1,4 +1,4 @@
-import type { AppState, View } from "./bridge";
+import { native, type AppState, type Snapshot, type View } from "./bridge";
 import { icons } from "./icons";
 
 export function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = "", text = ""): HTMLElementTagNameMap[K] {
@@ -8,21 +8,90 @@ export function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = "", text
   return node;
 }
 
+export function iconSrc(app: AppState): string {
+  if (app.live_icon) {
+    if (!native) return `/apps/${app.live_icon}`;
+    return document.documentElement.dataset.platform === "windows" ? `http://appicon.localhost/${app.live_icon}` : `appicon://localhost/${app.live_icon}`;
+  }
+  return app.icon ? `/apps/${app.icon}` : "";
+}
+
+function initials(app: AppState): string {
+  return app.name.replace(/^form\.?/i, "").slice(0, 2);
+}
+
+function iconImg(box: HTMLElement, src: string, fallback: string, app: AppState): HTMLImageElement {
+  const img = el("img");
+  img.alt = "";
+  img.decoding = "async";
+  img.draggable = false;
+  img.addEventListener("error", () => {
+    if (fallback && !img.src.endsWith(fallback)) {
+      img.src = fallback;
+    } else {
+      img.remove();
+      box.classList.add("app-icon-mono");
+      box.textContent = initials(app);
+    }
+  });
+  img.src = src;
+  return img;
+}
+
 export function appIcon(app: AppState, size: "s" | "m" | "l"): HTMLSpanElement {
   const box = el("span", `app-icon app-icon-${size}`);
   box.style.setProperty("--hue", app.hue);
-  if (app.icon) {
-    const img = el("img");
-    img.src = `/apps/${app.icon}`;
-    img.alt = "";
-    img.decoding = "async";
-    img.draggable = false;
-    box.append(img);
+  box.dataset.iconApp = app.id;
+  const src = iconSrc(app);
+  if (src) {
+    box.append(iconImg(box, src, app.icon ? `/apps/${app.icon}` : "", app));
   } else {
     box.classList.add("app-icon-mono");
-    box.textContent = app.name.replace(/^Form\.?/, "").slice(0, 2);
+    box.textContent = initials(app);
   }
   return box;
+}
+
+export function appName<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, app: AppState): HTMLElementTagNameMap[K] {
+  const node = el(tag, cls, app.name);
+  node.dataset.nameApp = app.id;
+  return node;
+}
+
+const seen = new Map<string, { src: string; name: string }>();
+
+export function syncIdentity(snap: Snapshot): void {
+  for (const app of snap.apps) {
+    const src = iconSrc(app);
+    const prev = seen.get(app.id);
+    seen.set(app.id, { src, name: app.name });
+    if (!prev) continue;
+    if (prev.name !== app.name) {
+      document.querySelectorAll<HTMLElement>(`[data-name-app="${app.id}"]`).forEach((n) => {
+        n.textContent = app.name;
+      });
+    }
+    if (src && prev.src !== src) {
+      const probe = new Image();
+      probe.src = src;
+      probe
+        .decode()
+        .then(() => {
+          if (seen.get(app.id)?.src !== src) return;
+          document.querySelectorAll<HTMLElement>(`[data-icon-app="${app.id}"]`).forEach((box) => {
+            const img = box.querySelector("img");
+            if (img) {
+              img.src = src;
+            } else {
+              box.classList.remove("app-icon-mono");
+              box.textContent = "";
+              box.append(iconImg(box, src, app.icon ? `/apps/${app.icon}` : "", app));
+            }
+          });
+        })
+        .catch(() => undefined);
+    }
+  }
 }
 
 export function runDot(): HTMLSpanElement {
