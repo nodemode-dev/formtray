@@ -24,6 +24,8 @@ pub struct AppEntry {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Registry {
+    #[serde(default)]
+    pub excluded: Vec<String>,
     pub categories: Vec<Category>,
     pub apps: Vec<AppEntry>,
 }

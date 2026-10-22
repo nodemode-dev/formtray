@@ -100,7 +100,7 @@ impl Engine {
             .map(|(id, identifier, path)| (discovered(&id, vec![identifier]), path))
             .collect();
         for (id, path) in &self.portal.installs {
-            if self.registry.get(id).is_none() && !extra.iter().any(|(e, _)| &e.id == id) && id != "formtray" {
+            if self.registry.get(id).is_none() && !self.registry.excluded.contains(id) && !extra.iter().any(|(e, _)| &e.id == id) && id != "formtray" {
                 extra.push((discovered(id, Vec::new()), path.clone()));
             }
         }

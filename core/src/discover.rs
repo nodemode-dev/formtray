@@ -134,7 +134,7 @@ pub fn unknown_family(roots: &[PathBuf], known: &crate::registry::Registry) -> V
         let Some(id) = value.as_dictionary().and_then(|d| d.get("CFBundleIdentifier")).and_then(|v| v.as_string()).map(str::to_string) else { return };
         let Some(rest) = FAMILY_PREFIXES.iter().find_map(|p| id.strip_prefix(p)) else { return };
         let short = rest.rsplit('.').next().unwrap_or(rest).to_ascii_lowercase();
-        let listed = known.apps.iter().any(|a| a.identifiers.iter().any(|i| i == &id) || a.id == short || a.matches_name(&short) || a.matches_name(&stem(&path)));
+        let listed = known.excluded.iter().any(|x| x == &short) || known.apps.iter().any(|a| a.identifiers.iter().any(|i| i == &id) || a.id == short || a.matches_name(&short) || a.matches_name(&stem(&path)));
         if id == SELF_IDENTIFIER || listed || found.iter().any(|(s, _, _)| s == &short) {
             return;
         }

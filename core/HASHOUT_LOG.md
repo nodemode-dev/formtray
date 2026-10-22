@@ -51,6 +51,16 @@ cli/
 - kind: rationale
 - logged: v0.9.0 · 2026-10-22
 - `name` is the canonical display casing the owner set: every app is a lowercase form* name except formDAM and formMCP (form.md keeps its dot). It is used as is whenever an app's own name matches the entry (see identity.rs `form_name`), so the casing survives an app that calls itself FormVis or DAM. `icon` is only the fallback in `frontend/public/apps/`, used when the app is not installed; an installed app's own icon always wins. formcel, formtxt, formranker, formMCP and formskills joined on the owner's word (this reverses the v0.4.0 exclusion). Their identifiers `ai.nodemode.<id>`, categories and empty `alt_of` are guesses until those apps ship; hues are the average colour of their new icons. FormPath now ships as formpath, so `ai.nodemode.formpath` goes first and the old `formpth` id stays as an alias.
+- refers-to: excluded, the formhub entry
+- kind: removed-code
+- logged: v0.9.0 · 2026-10-22
+- Removed on the owner's word (formhub launches later and will be added then):
+
+```json
+{ "id": "formhub", "name": "formhub", "alt_of": "GitHub", "category": "build", "hue": "#eef0f4", "icon": "", "identifiers": ["dev.formai.formhub", "ai.nodemode.formhub"], "names": ["FormHub", "formhub"] },
+```
+
+`excluded` keeps it out of automatic discovery too (macOS family bundles and FormPortal installs), so an installed FormHub does not reappear under More. To add it later, put the entry back and drop the id from `excluded`.
 - refers-to: formmcp names
 - kind: warning-context
 - A bare `MCP` alias was tried and removed: on Linux it matched an unrelated `/usr/local/bin/mcp`. Keep aliases form-prefixed.
