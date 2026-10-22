@@ -64,7 +64,7 @@ On Windows run `formtray_oc_install.bat`, then `formtray.bat`.
 
 `--open` opens the result and `--clean` rebuilds the Rust side from nothing. Linux needs the WebKitGTK 4.1, appindicator and librsvg build packages; `./build_app` names them for apt, dnf and pacman when they are missing. Windows needs Rust's MSVC toolchain and the Visual Studio C++ build tools; WebView2 ships with Windows 10 and 11. Without an Apple signing identity the macOS app is ad-hoc signed, so macOS asks once before it opens.
 
-Pushing a `v*.*.*` tag runs `.github/workflows/desktop.yml`, which builds all four (macOS arm64 and x64, Linux x64, Windows x64) and drafts a release with the installers.
+**Releases.** FormTray builds nothing in this repository. After the version bump lands on main, push a branch `compile_vX.Y.Z` cut from that commit. CI runs on it, and formcompiler (`nodemode-ai/formcompiler`) picks it up on its next 8-hourly watch run, or at once when its watch is run by hand. It builds macOS, Linux and Windows bundles and opens a draft release `formtray-vX.Y.Z` on formcompiler's release page. Review the draft, then publish it there.
 
 ## Hotkeys
 
