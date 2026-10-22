@@ -97,7 +97,7 @@ frontend/
 
 ## public/apps/ {#apps}
 
-- refers-to: format.png, formcut.png, formdam.png, formdeck.png, formdesign.png, formencoder.png, formlit.png, formmd.svg, formpath.png, formpdf.png, formportal.png, formref.png, formsculptor.png, formvfx.png, formvis.png, formwav.png, formweb.png
+- refers-to: format.png, formcut.png, formdam.png, formdeck.png, formdesign.png, formencoder.png, formlit.png, formmd.svg, formpath.png, formpdf.png, formportal.png, formref.png, formsculpt.png, formvfx.png, formvis.png, formwav.png, formweb.png
 - kind: removed-code
 - logged: v0.9.0 · 2026-10-22
 - The 17 v0.1.0 to v0.8.0 fallback icons (256 px png and one svg), copied from each app's repo at the time, removed because every one differed from the owner's current icon. Replaced by 23 webp files at 256 px with alpha, resized from the owner's 1024 px form-icons.zip with the aspect ratio kept; the zip's `form-md`, `formDAM`, `formMCP` and `formpth` files are named `formmd`, `formdam`, `formmcp` and `formpath` here. formhub is left out until it launches (see core/HASHOUT_LOG.md, apps.json).
