@@ -12,7 +12,7 @@ Last updated: 2026-10-22 · live app names and icons (identity.rs), 24 apps, dis
 ```
 core/
 ├── Cargo.toml                 formtray-core, no window
-├── data/apps.json             the 24 apps: ids, canonical names, hues, fallback icons, every identifier and name
+├── data/apps.json             the 23 apps and the excluded list: ids, canonical names, hues, fallback icons, every identifier and name
 └── src/
     ├── lib.rs                 Engine, Snapshot, AppState, display_name, discovered entries
     ├── registry.rs            loads apps.json, lookup by id or any name

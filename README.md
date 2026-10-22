@@ -12,9 +12,9 @@
   <img src="https://img.shields.io/badge/license-Apache--2.0-555555" alt="license Apache 2.0" />
 </p>
 
-FormTray is a launcher and switching station for the 19 built Form apps. You pin one icon instead of nineteen. Click it in the Dock and a Stack pops up above it. Press a hotkey and the Switcher, the Apps panel, the open-app cards or your Widgets board appears in one frame. It opens and switches apps only; installing and updating stay in FormPortal.
+FormTray is a launcher and switching station for the 23 Form apps. You pin one icon instead of twenty-three. Click it in the Dock and a Stack pops up above it. Press a hotkey and the Switcher, the Apps panel, the open-app cards or your Widgets board appears in one frame. It opens and switches apps only; installing and updating stay in FormPortal.
 
-**Stack:** Rust (`formtray-core`, `formtray-cli`) · Tauri 2 shell · vanilla TypeScript + Vite interface with zero runtime dependencies · **Scale:** 19 apps from one registry, 5 views plus Settings, 3 operating systems
+**Stack:** Rust (`formtray-core`, `formtray-cli`) · Tauri 2 shell · vanilla TypeScript + Vite interface with zero runtime dependencies · **Scale:** 23 apps from one registry, 5 views plus Settings, 3 operating systems
 
 ## Highlights
 
@@ -29,6 +29,7 @@ FormTray is a launcher and switching station for the 19 built Form apps. You pin
 - **Real Liquid Glass.** On macOS 26 each panel's web content sits inside an `NSGlassEffectView`, not a CSS imitation. Older macOS gets vibrancy, Windows gets acrylic, and Linux gets solid themed panels.
 - **Hotkeys that do not fight the system.** Defaults are chosen per OS around the reserved chords, including FormRef's. Problems are reported in Settings rather than failing silently.
 - **Finds the apps however they were built.** FormTray reads FormPortal's install record first. Each app also carries every bundle identifier and name it has shipped under, so drift between an app and FormPortal's catalogue does not hide it.
+- **Names and icons come from the apps themselves.** Each installed app's own name and icon are read from its bundle (macOS), desktop entry (Linux) or executable (Windows) every time FormTray looks for apps, so a redrawn or renamed app shows up without a FormTray release. Names are always the form* name, lowercase except formDAM and formMCP. The bundled icons are only a fallback for apps that are not installed. On macOS, a family app FormTray has never heard of appears under More by itself.
 - **Widgets you arrange.** The board holds:
   - app tiles in three sizes
   - groups of apps that open as a pop-over
@@ -36,7 +37,7 @@ FormTray is a launcher and switching station for the 19 built Form apps. You pin
 
   The Updates tile reads FormPortal's files and never fetches.
 - **Rebind any hotkey in Settings.** Click it and press the new chord. FormTray refuses a chord the system or another FormTray action already uses, and Default puts the original back.
-- **Idles in the menu bar.** Once opened, FormTray waits until a hotkey, the Dock icon or the menu bar calls it. Open at login is off by default.
+- **Idles in the menu bar.** Once opened, FormTray waits until a hotkey, the Dock icon or the menu bar calls it. Open at login is off by default. The menu bar icon is a 3x3 grid (a template on macOS, white or black to match the taskbar on Windows and Linux), and its menu opens your pinned apps directly.
 - **Never touches the network.**
 
 ## Quick start
@@ -104,7 +105,7 @@ Preferences and usage are JSON files under the OS config folder; `./formtray cli
 
 ## Adding a Form app
 
-Add one entry to `core/data/apps.json`, with its id, name, category, hue, icon, every bundle identifier and every bundle or executable name. Then put its 256 px icon in `frontend/public/apps/`. No code changes are needed.
+Add one entry to `core/data/apps.json`, with its id, its form* display name, category, hue, fallback icon, every bundle identifier and every bundle or executable name. Then put a 256 px fallback icon in `frontend/public/apps/`. No code changes are needed. Once the app is installed, FormTray shows the app's own icon instead. To hold an app back, list its id under `excluded`; formhub is there until it launches.
 
 ## Licence
 
