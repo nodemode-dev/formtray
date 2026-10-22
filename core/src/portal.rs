@@ -14,6 +14,7 @@ pub struct PortalState {
     pub found: bool,
     pub installs: Vec<(String, PathBuf)>,
     pub updates: Vec<PortalUpdate>,
+    pub names: std::collections::HashMap<String, String>,
 }
 
 #[derive(Deserialize)]
@@ -44,6 +45,8 @@ struct Catalog {
 #[derive(Deserialize)]
 struct Product {
     id: String,
+    #[serde(default)]
+    name: String,
     #[serde(default)]
     channels: std::collections::HashMap<String, Release>,
 }
@@ -118,6 +121,9 @@ pub fn read_at(root: &Path) -> PortalState {
     };
     let catalog = std::fs::read_to_string(root.join("catalog/apps.json")).ok().and_then(|t| serde_json::from_str::<Catalog>(&t).ok());
     let mut state = PortalState { found: true, ..PortalState::default() };
+    for product in catalog.iter().flat_map(|c| c.products.iter()).filter(|p| !p.name.trim().is_empty()) {
+        state.names.insert(family_id(&product.id), product.name.trim().to_string());
+    }
     for install in installed.installs.iter().filter(|i| i.channel == "stable") {
         let id = family_id(&install.product);
         state.installs.push((id.clone(), install.current.path.clone()));

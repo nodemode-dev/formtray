@@ -76,7 +76,7 @@ fn list(json: bool) -> i32 {
     for app in &snapshot.apps {
         let state = if app.running { "running" } else if app.installed { "installed" } else { "not found" };
         let place = app.path.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
-        println!("{:<14} {:<12} {:<10} {}", app.id, app.name, state, place);
+        println!("{:<14} {:<14} {:<9} {:<10} {}", app.id, app.name, app.name_source, state, place);
     }
     0
 }

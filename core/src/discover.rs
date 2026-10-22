@@ -122,3 +122,40 @@ fn which(program: &Path) -> Option<PathBuf> {
     }
     std::env::var_os("PATH").and_then(|paths| std::env::split_paths(&paths).map(|d| d.join(program)).find(|p| p.is_file()))
 }
+
+pub const FAMILY_PREFIXES: [&str; 3] = ["ai.nodemode.", "dev.formai.", "app.formcut."];
+pub const SELF_IDENTIFIER: &str = "ai.nodemode.formtray";
+
+#[cfg(target_os = "macos")]
+pub fn unknown_family(roots: &[PathBuf], known: &crate::registry::Registry) -> Vec<(String, String, PathBuf)> {
+    let mut found: Vec<(String, String, PathBuf)> = Vec::new();
+    let mut visit = |path: PathBuf| {
+        let Ok(value) = plist::Value::from_file(path.join("Contents/Info.plist")) else { return };
+        let Some(id) = value.as_dictionary().and_then(|d| d.get("CFBundleIdentifier")).and_then(|v| v.as_string()).map(str::to_string) else { return };
+        let Some(rest) = FAMILY_PREFIXES.iter().find_map(|p| id.strip_prefix(p)) else { return };
+        let short = rest.rsplit('.').next().unwrap_or(rest).to_ascii_lowercase();
+        let listed = known.apps.iter().any(|a| a.identifiers.iter().any(|i| i == &id) || a.id == short || a.matches_name(&short) || a.matches_name(&stem(&path)));
+        if id == SELF_IDENTIFIER || listed || found.iter().any(|(s, _, _)| s == &short) {
+            return;
+        }
+        found.push((short, id, path));
+    };
+    for root in roots {
+        let Ok(entries) = std::fs::read_dir(root) else { continue };
+        for path in entries.flatten().map(|e| e.path()) {
+            if is_bundle(&path) {
+                visit(path);
+            } else if path.is_dir() {
+                for inner in std::fs::read_dir(&path).into_iter().flatten().flatten().map(|e| e.path()).filter(|p| is_bundle(p)) {
+                    visit(inner);
+                }
+            }
+        }
+    }
+    found
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn unknown_family(_roots: &[PathBuf], _known: &crate::registry::Registry) -> Vec<(String, String, PathBuf)> {
+    Vec::new()
+}

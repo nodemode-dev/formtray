@@ -1,5 +1,6 @@
 pub mod discover;
 pub mod hotkeys;
+pub mod identity;
 pub mod launch;
 pub mod portal;
 pub mod prefs;
@@ -23,6 +24,8 @@ pub struct AppState {
     pub category: String,
     pub hue: String,
     pub icon: String,
+    pub live_icon: String,
+    pub name_source: &'static str,
     pub installed: bool,
     pub path: Option<PathBuf>,
     pub running: bool,
@@ -50,6 +53,7 @@ pub struct Engine {
     pub usage: Usage,
     portal: portal::PortalState,
     paths: HashMap<String, Option<PathBuf>>,
+    identities: HashMap<String, identity::Identity>,
     running: HashMap<String, running::Running>,
     watcher: running::Watcher,
 }
@@ -68,6 +72,7 @@ impl Engine {
             usage: Usage::load(),
             portal: portal::PortalState::default(),
             paths: HashMap::new(),
+            identities: HashMap::new(),
             running: HashMap::new(),
             watcher: running::Watcher::new(),
         };
@@ -88,7 +93,30 @@ impl Engine {
 
     pub fn rediscover(&mut self) {
         self.portal = portal::read();
+        self.registry = Registry::load();
         let roots = discover::search_roots(&self.prefs.locations);
+        let mut extra: Vec<(AppEntry, PathBuf)> = discover::unknown_family(&roots, &self.registry)
+            .into_iter()
+            .map(|(id, identifier, path)| (discovered(&id, vec![identifier]), path))
+            .collect();
+        for (id, path) in &self.portal.installs {
+            if self.registry.get(id).is_none() && !extra.iter().any(|(e, _)| &e.id == id) && id != "formtray" {
+                extra.push((discovered(id, Vec::new()), path.clone()));
+            }
+        }
+        let cache = identity::cache_dir();
+        for (mut entry, path) in extra {
+            if let Some(found) = discover::resolve(&entry, &path).or(Some(path)) {
+                let id = identity::read_into(&entry, &found, &cache);
+                if let Some(hue) = id.icon.as_deref().and_then(|i| identity::hue(&cache, i)) {
+                    entry.hue = hue;
+                }
+                self.registry.apps.push(entry);
+            }
+        }
+        if self.registry.apps.iter().any(|a| a.category == "more") {
+            self.registry.categories.push(Category { id: "more".into(), name: "More".into() });
+        }
         let portal = &self.portal;
         self.paths = self
             .registry
@@ -99,6 +127,28 @@ impl Engine {
                 (a.id.clone(), managed.or_else(|| discover::find(a, &roots)))
             })
             .collect();
+        self.identities = self
+            .registry
+            .apps
+            .iter()
+            .filter_map(|a| self.paths.get(&a.id).cloned().flatten().map(|p| (a.id.clone(), identity::read_into(a, &p, &cache))))
+            .collect();
+    }
+
+    pub fn display_name(&self, app: &AppEntry) -> (String, &'static str) {
+        let live = self.identities.get(&app.id).and_then(|i| i.name.as_deref()).and_then(|n| identity::form_name(Some(app), n));
+        if let Some(name) = live {
+            return (name, "app");
+        }
+        if let Some(name) = self.portal.names.get(&app.id).and_then(|n| identity::form_name(Some(app), n)) {
+            return (name, "portal");
+        }
+        (app.name.clone(), "registry")
+    }
+
+    pub fn menu_icon(&self, id: &str) -> Option<PathBuf> {
+        let icon = self.identities.get(id)?.icon.as_deref()?;
+        identity::menu_icon(&identity::cache_dir(), icon)
     }
 
     pub fn set_hotkey(&mut self, action: &str, chord: &str) -> Result<(), String> {
@@ -138,13 +188,16 @@ impl Engine {
                 let run = self.running.get(&a.id);
                 let used = self.usage.apps.get(&a.id);
                 let path = self.paths.get(&a.id).cloned().flatten();
+                let (name, name_source) = self.display_name(a);
                 AppState {
                     id: a.id.clone(),
-                    name: a.name.clone(),
+                    name,
                     alt_of: a.alt_of.clone(),
                     category: a.category.clone(),
                     hue: a.hue.clone(),
                     icon: a.icon.clone(),
+                    live_icon: self.identities.get(&a.id).and_then(|i| i.icon.clone()).unwrap_or_default(),
+                    name_source,
                     installed: path.is_some() || run.is_some(),
                     path,
                     running: run.is_some(),
@@ -210,5 +263,18 @@ impl Engine {
         } else {
             self.prefs.default_view.clone()
         }
+    }
+}
+
+fn discovered(id: &str, identifiers: Vec<String>) -> AppEntry {
+    AppEntry {
+        id: id.to_string(),
+        name: identity::form_name(None, id).unwrap_or_else(|| id.to_string()),
+        alt_of: String::new(),
+        category: "more".to_string(),
+        hue: "#b46aa7".to_string(),
+        icon: String::new(),
+        identifiers,
+        names: vec![id.to_string()],
     }
 }

@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.8.0
-Last updated: 2026-10-21 · renamed FormTray, prefs folder
+Current build version: v0.9.0
+Last updated: 2026-10-22 · live app names and icons (identity.rs), 24 apps, discovered family apps
 
 ---
 
@@ -12,11 +12,12 @@ Last updated: 2026-10-21 · renamed FormTray, prefs folder
 ```
 core/
 ├── Cargo.toml                 formtray-core, no window
-├── data/apps.json             the 19 apps: ids, names, hues, icons, every identifier and name
+├── data/apps.json             the 24 apps: ids, canonical names, hues, fallback icons, every identifier and name
 └── src/
-    ├── lib.rs                 Engine, Snapshot, AppState
+    ├── lib.rs                 Engine, Snapshot, AppState, display_name, discovered entries
     ├── registry.rs            loads apps.json, lookup by id or any name
-    ├── discover.rs            per-OS search roots and candidate matching
+    ├── identity.rs            live name and icon per OS, icon cache, form_name, menu icons, hue
+    ├── discover.rs            per-OS search roots, candidate matching, unknown family bundles
     ├── launch.rs              open, focus, quit per OS
     ├── portal.rs              read-only FormPortal installed.json and cached catalogue
     ├── running.rs             sysinfo process scan mapped to apps
@@ -29,6 +30,7 @@ cli/
 ## Table of contents
 
 - [data/apps.json](#apps-json)
+- [src/identity.rs](#identity)
 - [src/discover.rs](#discover)
 - [src/launch.rs](#launch)
 - [src/portal.rs](#portal)
@@ -45,8 +47,39 @@ cli/
 - kind: rationale
 - logged: v0.4.0 · 2026-10-12
 - Eleven apps ship a bundle id that differs from FormPortal's catalogue or are missing from it, so every entry lists both. The shipped id goes first, because `open -b` tries the ids in order. FormDAM's productName is "DAM", so DAM.app is matched through `names`. FormHub, Form.md and FormSurface have no Tauri config in their repos yet, so their identifiers are guesses that will be confirmed once they are compiled. FormSkills and FormMCP are excluded on the owner's instruction.
+- refers-to: name, icon
+- kind: rationale
+- logged: v0.9.0 · 2026-10-22
+- `name` is the canonical display casing the owner set: every app is a lowercase form* name except formDAM and formMCP (form.md keeps its dot). It is used as is whenever an app's own name matches the entry (see identity.rs `form_name`), so the casing survives an app that calls itself FormVis or DAM. `icon` is only the fallback in `frontend/public/apps/`, used when the app is not installed; an installed app's own icon always wins. formcel, formtxt, formranker, formMCP and formskills joined on the owner's word (this reverses the v0.4.0 exclusion). Their identifiers `ai.nodemode.<id>`, categories and empty `alt_of` are guesses until those apps ship; hues are the average colour of their new icons. FormPath now ships as formpath, so `ai.nodemode.formpath` goes first and the old `formpth` id stays as an alias.
+- refers-to: formmcp names
+- kind: warning-context
+- A bare `MCP` alias was tried and removed: on Linux it matched an unrelated `/usr/local/bin/mcp`. Keep aliases form-prefixed.
+
+## src/identity.rs {#identity}
+
+- refers-to: form_name
+- kind: rationale
+- logged: v0.9.0 · 2026-10-22
+- The owner's rule: always the form* name. A live name gets `form` in front when it lacks it (DAM becomes formDAM). If that matches the entry's name or any alias, case-insensitively, the entry's canonical casing is shown; any other live name (a real rename) is shown in lowercase.
+- refers-to: read_into, locate (per OS)
+- kind: rationale
+- macOS: CFBundleDisplayName, then CFBundleName, then the bundle file name; icon from CFBundleIconFile in Resources. Linux: the desktop entry whose Exec program (or file name) matches, its Name and Icon; Icon is an absolute path or looked up in hicolor under ~/.icons, XDG_DATA_HOME and XDG_DATA_DIRS (largest png first, including Tauri's `256x256@2` folder), then scalable svg, then /usr/share/pixmaps. Only hicolor is searched, not the user's current theme, because Form apps install their icons there. Windows: ProductName (then FileDescription) from the version resource, icon from SHDefExtractIconW at 256 px, converted from BGRA.
+- refers-to: icns_png, sips_png
+- kind: rationale
+- Modern .icns files carry PNG payloads; the largest one at or under 512 px is used, larger ones are scaled down. If a file has none (old ARGB or JPEG 2000 types), macOS falls back to the built-in `sips`. Not run on a Mac in this session.
+- refers-to: cached, stamp, prune
+- kind: rationale
+- Cache files are `<id>-<stamp>.<ext>` in `<prefs dir>/icons`, the stamp hashing the source path, size and modification time. An unchanged app is never decoded again, and a changed one gets a new file name, so the webview URL changes only when the icon really changed. Writes go through a `.part` file and a rename. Older files of the same id are removed, along with their `-m` menu copies.
+- refers-to: menu_icon, MENU_PX
+- kind: rationale
+- Menu icons are 36 px copies, sized for an 18 pt slot at 2x like the tray icon; how muda scales menu images was not checked against its source. SVG icons (some Linux apps) get no menu icon, since nothing here rasterises SVG.
 
 ## src/discover.rs {#discover}
+
+- refers-to: unknown_family, FAMILY_PREFIXES, SELF_IDENTIFIER
+- kind: rationale
+- logged: v0.9.0 · 2026-10-22
+- macOS only: any bundle under the search roots (and one folder down) whose identifier starts with a family prefix but matches no registry entry becomes a discovered app, id from the identifier's last part. FormTray's own identifier is skipped. Windows and Linux have no bundle identifier, so there discovery relies on FormPortal's installed.json (lib.rs rediscover).
 
 - refers-to: candidate (macOS)
 - kind: rationale
@@ -88,6 +121,10 @@ cli/
 - refers-to: newer
 - kind: rationale
 - A numeric dotted compare; pre-release suffixes are ignored, which is enough for a count.
+- refers-to: Product.name, PortalState.names
+- kind: rationale
+- logged: v0.9.0 · 2026-10-22
+- The catalogue's product names are the second name source, after the app itself and before apps.json. They are read for every product, installed or not, and keyed by FormTray's family id.
 
 ## src/lib.rs {#lib}
 
@@ -95,6 +132,13 @@ cli/
 - kind: rationale
 - logged: v0.5.0 · 2026-10-12
 - FormPortal's install path is tried first and resolved to the .app or executable inside it; the OS folders and extra folders come after.
+- refers-to: rediscover (registry reload, extra entries, identities)
+- kind: rationale
+- logged: v0.9.0 · 2026-10-22
+- The registry is reloaded from apps.json on every rediscover so discovered entries do not pile up. Discovered apps go into a "More" category, added only when one exists, with the hue of their icon. Identities are read here and only here (start, Find Apps Again, a change of extra folders), never on the running poll.
+- refers-to: display_name, AppState.live_icon, AppState.name_source
+- kind: rationale
+- Name order: the app itself, FormPortal's catalogue, apps.json. `live_icon` is the cache file name or empty; the interface turns it into an `appicon` URL. `name_source` is `app`, `portal` or `registry`, shown by `formtray-cli list`.
 - refers-to: set_hotkey
 - kind: rationale
 - The order of checks: is the action known, is the chord reserved, and is it already another FormTray action. An empty chord removes the override.
