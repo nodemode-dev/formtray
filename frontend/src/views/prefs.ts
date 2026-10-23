@@ -134,7 +134,7 @@ export function prefsView(): ViewModule {
     if (info.wayland) {
       keys.append(el("p", "pf-hint", "Wayland has no global hotkeys for apps. Bind these commands in your desktop's keyboard settings: formtray --view apps, formtray --view switcher, formtray --view stack, formtray --view windows, formtray --view widgets."));
     }
-    about.textContent = `FormTray ${info.version} · ${info.glass === "liquid" ? "Liquid Glass" : info.glass === "vibrancy" ? "macOS vibrancy" : info.glass === "acrylic" ? "Windows acrylic" : "solid panels"} · ${native ? snap.platform : "browser preview"}`;
+    about.textContent = `FormTray ${info.version} · ${info.glass === "liquid" ? "Glass" : info.glass === "vibrancy" ? "macOS vibrancy" : info.glass === "acrylic" ? "Windows acrylic" : "solid panels"} · ${native ? snap.platform : "browser preview"}`;
   }
 
   function syncRows(snap: Snapshot) {

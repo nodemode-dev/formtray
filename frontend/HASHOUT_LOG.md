@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.1
-Last updated: 2026-10-22 · checks only in the repository, releases through formcompiler, formsculpt fallback icon
+Current build version: v0.9.2
+Last updated: 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
 
 ---
 
@@ -57,6 +57,13 @@ frontend/
 - Without `window.__TAURI__` the page uses preview data built from core/data/apps.json, so the views can be developed and checked in a browser. It is loaded by dynamic import, so the app bundle only carries it as a separate chunk.
 
 ## src/views {#views}
+
+### src/views/prefs.ts · the About line's material name
+- refers-to: src/views/prefs.ts :: the about text built from info.glass
+- kind: rationale
+- logged: v0.9.2 · 2026-10-23
+
+The owner's approved rename table (2026-10-23) uses FormTray's own word for Apple's macOS 26 material: the About line says "Glass" where it said "Liquid Glass". The value `info.glass === "liquid"` from the shell is unchanged; "macOS vibrancy", "Windows acrylic" and "solid panels" stay.
 
 - refers-to: every view, update()
 - kind: rationale
