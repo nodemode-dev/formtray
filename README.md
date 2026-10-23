@@ -5,7 +5,7 @@
 <p align="center"><b>One dock icon for every Form app. Switch, launch and arrange the whole family from five views, on glass.</b></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.9.2-eef0f4" alt="version v0.9.2" />
+  <img src="https://img.shields.io/badge/version-v0.9.3-eef0f4" alt="version v0.9.3" />
   <img src="https://img.shields.io/badge/Tauri-2-24C8DB" alt="Tauri 2" />
   <img src="https://img.shields.io/badge/Rust-stable-B7410E" alt="Rust stable" />
   <img src="https://img.shields.io/badge/Node.js-20.19%2B-339933?logo=nodedotjs&logoColor=white" alt="Node.js 20.19+" />
