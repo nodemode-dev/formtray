@@ -1068,7 +1068,7 @@ dependencies = [
 
 [[package]]
 name = "formtray"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "formtray-core",
  "gdkx11",
@@ -1088,7 +1088,7 @@ dependencies = [
 
 [[package]]
 name = "formtray-cli"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "formtray-core",
  "serde_json",
@@ -1096,7 +1096,7 @@ dependencies = [
 
 [[package]]
 name = "formtray-core"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "dirs 6.0.0",
  "image",
