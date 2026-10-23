@@ -2,7 +2,7 @@
 
 <h1 align="center">FormTray</h1>
 
-<p align="center"><b>One dock icon for every Form app. Switch, launch and arrange the whole family from five views, on Liquid Glass.</b></p>
+<p align="center"><b>One dock icon for every Form app. Switch, launch and arrange the whole family from five views, on glass.</b></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-v0.9.1-eef0f4" alt="version v0.9.1" />
@@ -26,7 +26,7 @@ FormTray is a launcher and switching station for the 23 Form apps. You pin one i
   - Widgets: a board you arrange.
 
   Every view reads the same state, so pins, recents and running dots always agree.
-- **Real Liquid Glass.** On macOS 26 each panel's web content sits inside an `NSGlassEffectView`, not a CSS imitation. Older macOS gets vibrancy, Windows gets acrylic, and Linux gets solid themed panels.
+- **Real system glass.** On macOS 26 each panel's web content sits inside an `NSGlassEffectView`, not a CSS imitation. Older macOS gets vibrancy, Windows gets acrylic, and Linux gets solid themed panels.
 - **Hotkeys that do not fight the system.** Defaults are chosen per OS around the reserved chords, including FormRef's. Problems are reported in Settings rather than failing silently.
 - **Finds the apps however they were built.** FormTray reads FormPortal's install record first. Each app also carries every bundle identifier and name it has shipped under, so drift between an app and FormPortal's catalogue does not hide it.
 - **Names and icons come from the apps themselves.** Each installed app's own name and icon are read from its bundle (macOS), desktop entry (Linux) or executable (Windows) every time FormTray looks for apps, so a redrawn or renamed app shows up without a FormTray release. Names are always the form* name, lowercase except formDAM and formMCP. The bundled icons are only a fallback for apps that are not installed. On macOS, a family app FormTray has never heard of appears under More by itself.
@@ -109,4 +109,8 @@ Add one entry to `core/data/apps.json`, with its id, its form* display name, cat
 
 ## Licence
 
-Apache-2.0. Dependencies are MIT or Apache-2.0; see `src-tauri/Cargo.toml` and `core/Cargo.toml`.
+Apache-2.0. Dependencies are MIT or Apache-2.0; see `NOTICE.md`, `src-tauri/Cargo.toml` and `core/Cargo.toml`.
+
+## Trademarks
+
+Apple, macOS and Liquid Glass are trademarks of Apple Inc. Windows is a trademark of the Microsoft group of companies. FormTray is not affiliated with or endorsed by Apple or Microsoft.
