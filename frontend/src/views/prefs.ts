@@ -202,6 +202,8 @@ export function prefsView(): ViewModule {
 
       keys = el("div", "pf-keys");
       about = el("p", "pf-hint");
+      const credit = el("p", "pf-hint", "by nodemode.ai");
+      credit.translate = false;
 
       const body = el("div", "pf-body");
       body.append(
@@ -209,7 +211,7 @@ export function prefsView(): ViewModule {
         section("Apps", list),
         section("Where to look", locations, rescan),
         section("Hotkeys", keys),
-        section("About", about, updates),
+        section("About", about, credit, updates),
       );
       root.append(head, body);
       window.addEventListener("keydown", onCapture, true);

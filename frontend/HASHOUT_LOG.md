@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.2
-Last updated: 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
+Current build version: v0.9.4
+Last updated: 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
 
 ---
 
@@ -57,6 +57,13 @@ frontend/
 - Without `window.__TAURI__` the page uses preview data built from core/data/apps.json, so the views can be developed and checked in a browser. It is loaded by dynamic import, so the app bundle only carries it as a separate chunk.
 
 ## src/views {#views}
+
+### src/views/prefs.ts · by nodemode.ai under the About line
+- refers-to: src/views/prefs.ts :: credit, section("About", ...)
+- kind: decision
+- logged: v0.9.4 · 2026-10-24
+
+Owner decision of 2026-10-23 for the form family: an app's About carries "by nodemode.ai". Settings' About section already holds the version line, so the credit is a second `pf-hint` paragraph under it, built once in mount() with the other nodes and never touched by update(), and marked `translate = false`. Checked in the preview build in Chromium at 4x CPU and a slow network: the line shows above the FormPortal button, CLS 0, no page error.
 
 ### src/views/prefs.ts · the About line's material name
 - refers-to: src/views/prefs.ts :: the about text built from info.glass
