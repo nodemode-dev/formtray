@@ -109,7 +109,7 @@ Add one entry to `core/data/apps.json`, with its id, its form* display name, cat
 
 ## Licence
 
-Apache-2.0. Dependencies are MIT or Apache-2.0; see `NOTICE.md`, `src-tauri/Cargo.toml` and `core/Cargo.toml`.
+Apache-2.0. Copyright 2026 NodeAgentc, Inc. Dependencies are MIT or Apache-2.0; see `NOTICE.md`, `src-tauri/Cargo.toml` and `core/Cargo.toml`.
 
 ## Trademarks
 
