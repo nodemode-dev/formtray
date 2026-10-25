@@ -122,3 +122,10 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 - kind: rationale
 - logged: v0.4.0 · 2026-10-12
 - With native glass, the panel is a near-clear fill with an inset sheen line, so the system material does the blur and adapts to light and dark. With `data-glass="css"` (Linux) it uses `--glass-solid`, because blur cannot reach the desktop through a transparent webview.
+
+## package.json {#vite-pin}
+
+- refers-to: vite
+- kind: rationale
+- logged: v0.9.5 · 2026-10-25
+- Family rule from `FAMILY_DEV_PLAN.md` v0.4.x Phase 2b (formai_dev sidecar): every frontend installs with zero `npm audit` findings. Vite 8.3.2 carries a `launch-editor` with two command-injection advisories in the dev server (ledger FB-004); 8.3.5 clears them. Dev dependency only, nothing in the shipped bundle changed. Verified: `npm install` then `npm audit` reports 0 vulnerabilities, `npm run typecheck` passes, `vite build` succeeds, and `vite` serves 200 on localhost with no Network address printed.
