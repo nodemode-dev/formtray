@@ -103,7 +103,7 @@ fn candidate(app: &AppEntry, path: &Path) -> Option<PathBuf> {
         let exec = text.lines().find_map(|l| l.strip_prefix("Exec="))?;
         let program = exec.split_whitespace().next()?;
         let program_stem = stem(Path::new(program));
-        return app.matches_name(&program_stem).then(|| PathBuf::from(program)).filter(|p| p.is_absolute() || which(p).is_some()).map(|p| which(&p).unwrap_or(p));
+        return app.matches_name(&program_stem).then(|| PathBuf::from(program)).and_then(|p| which(&p));
     }
     if path.is_file() && (ext.is_empty() || ext == "appimage") {
         let name = stem(path);
