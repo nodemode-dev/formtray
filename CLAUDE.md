@@ -2,6 +2,10 @@
 
 Rules for agents working in this repository. Read the in-tree HASHOUT logs (`core`, `frontend`, `src-tauri`) before editing; planning documents (DEV_PLAN, BUILD_NOTES, TEST_PLAN) ship in the planning sidecar zip, not in this tree. Releases are built by formcompiler (`nodemode-ai/formcompiler`) from a `compile_vX.Y.Z` branch; this repository's GitHub workflow only runs checks.
 
+## Tests
+
+- Tests live in `tests/` folders and run in CI; write only tests this plan or its successor names. The plan is `FAMILY_TEST_PLAN.md` in the formai_dev sidecar; `cargo test --locked -p formtray-core -p formtray-cli` runs them.
+
 ## Trademarks, copyright and licences
 
 - Apple's and other vendors' names appear only to say which system material or platform is in use, or for compatibility; FormTray's own label for the macOS 26 material is Glass. The notice in `README.md` and `NOTICE.md` covers the marks named.
