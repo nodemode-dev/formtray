@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.1
-Last updated: 2026-10-22 · the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
+Current build version: v0.9.7
+Last updated: 2026-10-26 · the test suite and FB-041 (a desktop entry needs its program); the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
 
 ---
 
@@ -38,6 +38,7 @@ cli/
 - [src/lib.rs](#lib)
 - [src/prefs.rs](#prefs)
 - [src/hotkeys.rs](#hotkeys)
+- [tests](#tests)
 
 ---
 
@@ -98,6 +99,10 @@ cli/
 - refers-to: scan depth
 - kind: rationale
 - Roots are scanned one level deep (for example /Applications/Form/FormVis.app). Bundles are never descended into.
+- refers-to: candidate (Linux), which
+- kind: decision
+- logged: v0.9.7 · 2026-10-26
+- A `.desktop` entry counts only when its Exec program is a file: `which` answers for absolute names (is it a file) and for bare names (the first PATH folder holding it). Before 0.9.7 an absolute Exec was accepted even when missing, so a deleted AppImage's leftover entry showed the app as installed and Open failed (FB-041).
 
 ## src/launch.rs {#launch}
 
@@ -183,3 +188,18 @@ cli/
 - refers-to: effective
 - kind: rationale
 - An override that hits a reserved chord is ignored and the default is kept.
+
+## tests {#tests}
+
+- refers-to: core/tests/registry_and_settings.rs :: ORDER, Config
+- kind: decision
+- logged: v0.9.7 · 2026-10-26
+- FAMILY_TEST_PLAN v0.3.0 P1. The registry yields the 23 apps in the order apps.json gives them (ORDER is that order, so a reordered or dropped app fails), each once, in a known category, never formtray or an excluded id; lookup by id, name or any name ignores case. Settings tests point XDG_CONFIG_HOME and HOME at a fresh temporary folder and take one lock, because the environment is shared by the tests of one file; no test touches the person's own prefs. Covered: defaults with no file, every field saved and read back with no temporary file left, a corrupt file (bad JSON, empty, wrong type, NUL bytes) falling back to defaults, a partial file keeping its valid fields and an unknown view falling back to `apps`, usage counts.
+- refers-to: cli/tests/launch_linux.rs :: Sandbox, only_ours_running, running_copy_of_sleep
+- kind: decision
+- logged: v0.9.7 · 2026-10-26
+- The platform layer is faked for Linux, the one platform CI runs: each test runs the built `formtray-cli` with a cleared environment (HOME, XDG folders and FORMPORTAL_ROOT in a temporary folder, PATH with a fake `xdotool` that records its arguments first). An app that is not running is started from its own folder; a running one (a copy of `sleep` named after the app, so the process scan sees it) is brought forward through `xdotool search --onlyvisible --pid N windowactivate` and not started again; quit ends it. A `.desktop` entry counts only once its program exists (FB-041). Each test uses its own app and the tests take turns, and every test first checks that no other copy of its app runs, because open and quit act on every matching process on the computer: the test stops with a message rather than act on a real app. The macOS (`open -b`, `osascript`) and Windows (window focus) branches are compiled only there and are not run in CI.
+- refers-to: core/tests/family_contract.rs :: VERSION_SITES
+- kind: decision
+- logged: v0.9.7 · 2026-10-26
+- The family template (F4 and F9) with formtray's four version sites (no wiki version line).
