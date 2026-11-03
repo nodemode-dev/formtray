@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.4
-Last updated: 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
+Current build version: v0.9.9
+Last updated: 2026-11-03 · v0.9.9 Copyright 2026 NodeAgentc, Inc. and the licence in Settings, About; 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
 
 ---
 
@@ -57,6 +57,13 @@ frontend/
 - Without `window.__TAURI__` the page uses preview data built from core/data/apps.json, so the views can be developed and checked in a browser. It is loaded by dynamic import, so the app bundle only carries it as a separate chunk.
 
 ## src/views {#views}
+
+### src/views/prefs.ts · NodeAgentc, Inc. and the licence under the About line
+- refers-to: src/views/prefs.ts :: credit, section("About", ...)
+- kind: decision
+- logged: v0.9.9 · 2026-11-03
+
+The launch punch list (2026-11-03): the About of a downloaded app says NodeAgentc, Inc., not nodemode-ai, and lists the licence. The credit paragraph under the About line now reads "Copyright 2026 NodeAgentc, Inc. Apache License 2.0; the LICENSE file is beside the app." (still `translate = false`, still built once in mount()). It is text, not a link: the bridge has no command that opens an address, and a plain anchor opens nothing in the window.
 
 ### src/views/prefs.ts · by nodemode.ai under the About line
 - refers-to: src/views/prefs.ts :: credit, section("About", ...)

@@ -202,7 +202,7 @@ export function prefsView(): ViewModule {
 
       keys = el("div", "pf-keys");
       about = el("p", "pf-hint");
-      const credit = el("p", "pf-hint", "by nodemode.ai");
+      const credit = el("p", "pf-hint", "Copyright 2026 NodeAgentc, Inc. Apache License 2.0; the LICENSE file is beside the app.");
       credit.translate = false;
 
       const body = el("div", "pf-body");
