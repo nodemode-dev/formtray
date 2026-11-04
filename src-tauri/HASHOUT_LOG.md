@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.1
-Last updated: 2026-10-22 · no shell change; bundles are built by formcompiler, not this repository's desktop.yml
+Current build version: v0.9.9
+Last updated: 2026-11-03 · v0.9.9 the bundle names the publisher and the licence; 2026-10-22 · no shell change; bundles are built by formcompiler, not this repository's desktop.yml
 
 ---
 
@@ -29,6 +29,7 @@ src-tauri/
 - [src/keys.rs](#keys)
 - [src/theme.rs](#theme)
 - [icons/](#icons)
+- [tauri.conf.json](#conf)
 
 ---
 
@@ -142,3 +143,12 @@ src-tauri/
 - kind: rationale
 - logged: v0.6.0 · 2026-10-20
 - The launcher's copies of the redrawn siblings are replaced with their new full-bleed icons at the same 256 px, so the views do not show the old marks next to the new ones.
+
+## tauri.conf.json {#conf}
+
+### tauri.conf.json, ../Cargo.toml · publisher, copyright, license, licenseFile, authors
+- refers-to: src-tauri/tauri.conf.json :: bundle.publisher, bundle.copyright, bundle.license, bundle.licenseFile; Cargo.toml :: workspace.package.authors
+- kind: decision
+- logged: v0.9.9 · 2026-11-03
+
+The launch punch list (2026-11-03): the About of a downloaded app says NodeAgentc, Inc., not nodemode-ai, and lists the licence. The bundle's copyright was "nodemode-ai, Apache-2.0"; it is now "Copyright 2026 NodeAgentc, Inc. Apache-2.0" as in formMCP and formskills, with `publisher`, `license` and `licenseFile` (`../LICENSE` from `src-tauri`) beside it. The macOS About panel reads the copyright, Tauri's default About metadata takes its authors from `bundle.publisher`, tauri-build writes `CompanyName` from it into the Windows version resource, and the workspace `authors` (the company now) is the .deb's Maintainer. Checked here: the JSON parses; no build was run.
