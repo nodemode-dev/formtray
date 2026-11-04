@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.9
-Last updated: 2026-11-03 · v0.9.9 the About and the bundle name NodeAgentc, Inc. (no engine change); 2026-11-02 · v0.9.8, the first build through formcompiler (no code change); 2026-10-26 · the test suite and FB-041 (a desktop entry needs its program); the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
+Current build version: v0.10.1
+Last updated: 2026-11-04 · v0.10.1, the README and screenshots (no code change); 2026-11-04 · v0.10.0, the unified v3 app icon, CODEOWNERS (no code change); 2026-11-03 · v0.9.9 the About and the bundle name NodeAgentc, Inc. (no engine change); 2026-11-02 · v0.9.8, the first build through formcompiler (no code change); 2026-10-26 · the test suite and FB-041 (a desktop entry needs its program); the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
 
 ---
 
