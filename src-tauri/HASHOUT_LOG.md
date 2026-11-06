@@ -35,6 +35,11 @@ src-tauri/
 
 ## src/lib.rs {#lib}
 
+- refers-to: handle_args, RunEvent::Reopen
+- kind: rationale
+- logged: v0.9.9 · 2026-11-06
+- Clicking the Dock icon, and any later launch while FormTray is already running, now opens the view the user last switched to (`Engine::last_view`, which falls back to the default view when the stored one is invalid). Both used a hard-coded "stack". The first launch still uses the default view preference. The tray menu's explicit view items and the `view-*` hotkeys name their view on purpose and are unchanged. The tray menu reads the engine snapshot, so it only lists the apps the engine exposes. Not compiled here: the Linux box lacks gdk-3.0.
+
 - refers-to: show_view, panel_size, place
 - kind: rationale
 - logged: v0.4.0 · 2026-10-12

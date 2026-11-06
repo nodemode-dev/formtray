@@ -432,7 +432,7 @@ fn handle_args(app: &AppHandle, args: &[String], first: bool) {
     if first && args.iter().any(|a| a == BACKGROUND_FLAG) {
         return;
     }
-    let view = if first { with_engine(app, |e| e.prefs.default_view.clone()) } else { "stack".to_string() };
+    let view = if first { with_engine(app, |e| e.prefs.default_view.clone()) } else { with_engine(app, |e| e.last_view()) };
     show_view(app, &view, if first { "launch" } else { "dock" });
 }
 
@@ -615,7 +615,10 @@ pub fn run() {
     app.run(|_app, event| match event {
         RunEvent::ExitRequested { api, code, .. } if code.is_none() => api.prevent_exit(),
         #[cfg(target_os = "macos")]
-        RunEvent::Reopen { .. } => show_view(_app, "stack", "dock"),
+        RunEvent::Reopen { .. } => {
+            let view = with_engine(_app, |e| e.last_view());
+            show_view(_app, &view, "dock");
+        }
         _ => {}
     });
 }
