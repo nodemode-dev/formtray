@@ -1,6 +1,6 @@
 import type { AppState } from "../bridge";
 import { icons } from "../icons";
-import { appIcon, appName, brandMark, el, iconButton, runDot, viewBar, visible } from "../ui";
+import { appIcon, appName, el, iconButton, runDot, viewBar, visible } from "../ui";
 import type { Ctx, ViewModule } from "./types";
 
 const COLS = 7;
@@ -95,7 +95,12 @@ export function apps(): ViewModule {
       root.classList.add("v-apps");
       const head = el("header", "ap-head");
       head.setAttribute("data-tauri-drag-region", "");
-      const mark = brandMark("ap-mark", "formtray", 26);
+      const mark = el("span", "ap-mark");
+      mark.innerHTML = icons.search;
+      const glass = mark.firstElementChild as SVGElement;
+      glass.setAttribute("width", "26");
+      glass.setAttribute("height", "26");
+      mark.addEventListener("click", () => search.focus());
       search = el("input", "ap-search");
       search.type = "search";
       search.placeholder = "Search apps";

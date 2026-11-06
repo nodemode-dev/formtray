@@ -128,6 +128,11 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 - logged: v0.9.9 · 2026-11-06
 - The owner's icon pack (35 apps, dark `<id>.webp` and light `<id>-light.webp`, 256 px, 70 files) replaces the 23 earlier files; formranker.webp is gone. An app with an `icon` now renders both images in its fixed box and CSS shows one by `prefers-color-scheme`, the same signal tokens.css uses, so a system appearance change swaps them with no script, no re-render and no flash. The bundled pack icon is preferred over `live_icon`; the live icon is the fallback only when `icon` is empty, or when the pack file fails to load. syncIdentity still patches `src` in place on the existing images. The search bar mark in the Apps view is the FormTray icon in the same pair technique at 26 px, and the old triangle glyph (`icons.launcher`) was unused elsewhere and removed.
 
+- refers-to: .ap-mark, icons.search, brandMark
+- kind: removed-code
+- logged: v0.12.0 · 2026-11-06
+- The owner disliked the FormTray icon as the search mark; it is the magnifying glass glyph (`icons.search`, currentColor, `--ink-faint`) and clicking it focuses the field. `brandMark()` and the `.ap-mark img` light/dark rules had no other user and were removed.
+
 ## src/styles/app.css {#css}
 
 - refers-to: .panel

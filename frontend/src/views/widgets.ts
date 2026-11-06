@@ -4,15 +4,21 @@ import { ago, appIcon, appName, el, iconButton, runDot, viewBar } from "../ui";
 import type { Ctx, ViewModule } from "./types";
 
 const SIZES: Tile["size"][] = ["s", "m", "l"];
+const GRIP =
+  '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
 
 export function widgets(): ViewModule {
   let ctx: Ctx;
   let root: HTMLElement;
   let board: HTMLElement;
   let editBtn: HTMLButtonElement;
+  let editIcon: HTMLElement;
+  let editLabel: HTMLElement;
   let addMenu: HTMLElement;
+  let addBar: HTMLElement;
+  let hint: HTMLElement;
   let empty: HTMLElement;
-  type Entry = { node: HTMLElement; meta: HTMLElement; size: Tile["size"]; tile: Tile; minis?: HTMLElement; name?: HTMLElement; icon?: HTMLElement };
+  type Entry = { node: HTMLElement; meta: HTMLElement; size: Tile["size"]; tile: Tile; minis?: HTMLElement; name?: HTMLElement; icon?: HTMLElement; input?: HTMLInputElement; fit?: () => void; ro?: ResizeObserver; commit?: () => void };
   type Want = { key: string; label: string; build: () => HTMLElement };
   const tiles = new Map<string, Entry>();
   let pending: Tile[] = [];
@@ -33,6 +39,15 @@ export function widgets(): ViewModule {
     return app.last ? `Opened ${ago(app.last)}` : "Not opened yet";
   }
 
+  function dispose(t: Entry) {
+    t.ro?.disconnect();
+    if (marked === t.node) {
+      window.clearTimeout(markTimer);
+      marked = null;
+    }
+    t.node.remove();
+  }
+
   function toolsFor(key: string, extra: HTMLButtonElement[] = []): HTMLElement {
     const tools = el("div", "wg-tools");
     tools.append(
@@ -42,6 +57,7 @@ export function widgets(): ViewModule {
         if (!t) return;
         t.size = SIZES[(SIZES.indexOf(t.size) + 1) % SIZES.length];
         t.node.dataset.size = t.size;
+        t.fit?.();
         if (t.icon) {
           const want = t.size === "s" ? "m" : "l";
           t.icon.classList.remove("app-icon-s", "app-icon-m", "app-icon-l");
@@ -54,7 +70,7 @@ export function widgets(): ViewModule {
         if (!t) return;
         const hadFocus = t.node.contains(document.activeElement);
         const near = (t.node.nextElementSibling ?? t.node.previousElementSibling)?.querySelector<HTMLElement>(".wg-face");
-        t.node.remove();
+        dispose(t);
         tiles.delete(key);
         if (addingTo === key) addingTo = null;
         if (hadFocus) near?.focus();
@@ -66,8 +82,13 @@ export function widgets(): ViewModule {
   }
 
   function wireDrag(node: HTMLElement) {
+    const grip = el("span", "wg-grip");
+    grip.title = "Drag to reorder";
+    grip.innerHTML = GRIP;
+    node.append(grip);
     node.addEventListener("dragstart", (e) => {
-      if (!editing || (e.target as HTMLElement).isContentEditable) return e.preventDefault();
+      const active = document.activeElement;
+      if (!editing || (e.target as HTMLElement).closest("input") || (active instanceof HTMLInputElement && node.contains(active))) return e.preventDefault();
       dragging = node;
       dragFrom = order().map((t) => t.id).join(",");
       node.classList.add("is-dragging");
@@ -118,29 +139,84 @@ export function widgets(): ViewModule {
     face.addEventListener("click", () => {
       if (!editing) openPop(tile.id);
     });
-    name.addEventListener("blur", () => {
-      const entry = tiles.get(tile.id);
-      if (!entry) return;
-      const next = (name.textContent ?? "").trim() || "Group";
-      if (name.textContent !== next) name.textContent = next;
-      if (entry.tile.name === next) return;
-      entry.tile.name = next;
-      save();
-      syncAdd();
-    });
-    name.addEventListener("keydown", (e) => {
+    const input = el("input", "wg-name-input");
+    input.type = "text";
+    input.maxLength = 40;
+    input.value = tile.name || "Group";
+    input.spellcheck = false;
+    input.autocomplete = "off";
+    input.setAttribute("aria-label", "Group name");
+    let revert = false;
+    const fit = () => {
+      if (!editing) return;
+      const show = name.offsetWidth > 0;
+      const box = show
+        ? {
+            left: `${name.offsetLeft}px`,
+            top: `${name.offsetTop}px`,
+            width: `${Math.max(0, node.clientWidth - name.offsetLeft - 16)}px`,
+            height: `${name.offsetHeight}px`,
+          }
+        : {
+            left: "6px",
+            top: `${Math.max(0, node.clientHeight - 26)}px`,
+            width: `${Math.max(0, node.clientWidth - 12)}px`,
+            height: "20px",
+          };
+      for (const k of Object.keys(box) as (keyof typeof box)[]) {
+        if (input.style[k] !== box[k]) input.style[k] = box[k];
+      }
+    };
+    const lock = () => {
+      node.draggable = false;
+    };
+    node.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (e.target === input) lock();
+      },
+      true,
+    );
+    input.addEventListener("mousedown", lock);
+    input.addEventListener("focus", lock);
+    input.addEventListener("keydown", (e) => {
+      e.stopPropagation();
       if (e.key === "Enter") {
         e.preventDefault();
-        name.blur();
+        input.blur();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        revert = true;
+        input.blur();
       }
     });
+    const commit = () => {
+      node.draggable = editing;
+      const entry = tiles.get(tile.id);
+      if (!entry) return;
+      if (revert) {
+        revert = false;
+        input.value = entry.tile.name || "Group";
+        return;
+      }
+      const next = input.value.trim() || "Group";
+      if (input.value !== next) input.value = next;
+      if (entry.tile.name === next) return;
+      entry.tile.name = next;
+      name.textContent = next;
+      save();
+      syncAdd();
+    };
+    input.addEventListener("blur", commit);
     const add = iconButton(icons.plus, "Add apps to this group", () => {
       addingTo = tile.id;
       syncAdd();
     });
-    node.append(face, toolsFor(tile.id, [add]));
+    node.append(face, input, toolsFor(tile.id, [add]));
     wireDrag(node);
-    const entry: Entry = { node, meta, size: tile.size, tile: { ...tile, apps: [...tile.apps] }, minis, name };
+    const entry: Entry = { node, meta, size: tile.size, tile: { ...tile, apps: [...tile.apps] }, minis, name, input, fit, commit };
+    entry.ro = new ResizeObserver(fit);
+    entry.ro.observe(node);
     fillGroup(entry);
     return entry;
   }
@@ -280,7 +356,7 @@ export function widgets(): ViewModule {
       const gone = t.tile.kind === "app" ? !byId(t.tile.app) : t.tile.kind === "updates" ? !byId("formportal") : false;
       if (!gone) continue;
       pending.push({ ...t.tile, size: t.size });
-      t.node.remove();
+      dispose(t);
       tiles.delete(key);
       if (addingTo === key) addingTo = null;
     }
@@ -313,7 +389,22 @@ export function widgets(): ViewModule {
     tiles.set(entry.tile.kind === "app" ? entry.tile.app : entry.tile.id, entry);
     entry.node.draggable = editing;
     board.append(entry.node);
-    if (entry.name) entry.name.contentEditable = editing ? "plaintext-only" : "false";
+    entry.fit?.();
+  }
+
+  let markTimer = 0;
+  let marked: HTMLElement | null = null;
+
+  function reveal(entry: Entry) {
+    marked?.classList.remove("is-new");
+    marked = entry.node;
+    entry.node.classList.add("is-new");
+    entry.node.scrollIntoView({ block: "nearest" });
+    window.clearTimeout(markTimer);
+    markTimer = window.setTimeout(() => {
+      entry.node.classList.remove("is-new");
+      if (marked === entry.node) marked = null;
+    }, 1600);
   }
 
   function save() {
@@ -386,28 +477,8 @@ export function widgets(): ViewModule {
       reconcileAdd(want);
       return;
     }
-    want.push({
-      key: "new-group",
-      label: "New group",
-      build: () => chip(glyph(icons.grid), "New group", () => {
-        const entry = makeGroup({ kind: "group", id: `group-${Date.now().toString(36)}`, app: "", name: "Group", apps: [], size: "m" });
-        place(entry);
-        addingTo = entry.tile.id;
-        save();
-        syncAdd();
-      }),
-    });
-    if (!tiles.has("updates") && byId("formportal")) {
-      want.push({
-        key: "updates",
-        label: "FormPortal updates",
-        build: () => chip(glyph(icons.enter), "FormPortal updates", () => {
-          place(makeUpdates({ kind: "updates", id: "updates", app: "", name: "", apps: [], size: "m" }));
-          save();
-          syncAdd();
-        }),
-      });
-    }
+    const sep = (key: string, label: string): Want => ({ key, label, build: () => el("span", "wg-add-sep", label) });
+    want.push(sep("sep:apps", "Apps"));
     const missing = ctx.snap.apps.filter((a) => !tiles.has(a.id) && !a.hidden);
     for (const app of missing) {
       const id = app.id;
@@ -417,30 +488,71 @@ export function widgets(): ViewModule {
         build: () => chip(appIcon(app, "s"), app.name, () => {
           const cur = byId(id);
           if (!cur || tiles.has(id)) return;
-          place(make(cur, "m"));
+          const entry = make(cur, "m");
+          place(entry);
           save();
           syncAdd();
+          reveal(entry);
         }),
       });
     }
     if (!missing.length) {
       want.push({ key: "none", label: "", build: () => el("p", "wg-add-none", "Every app is on the board.") });
     }
+    want.push(sep("sep:more", "Group and FormPortal updates"));
+    want.push({
+      key: "new-group",
+      label: "New group",
+      build: () => chip(glyph(icons.grid), "New group", () => {
+        const entry = makeGroup({ kind: "group", id: `group-${Date.now().toString(36)}`, app: "", name: "Group", apps: [], size: "m" });
+        place(entry);
+        addingTo = entry.tile.id;
+        save();
+        syncAdd();
+        reveal(entry);
+        entry.fit?.();
+        entry.input?.focus();
+        entry.input?.select();
+      }),
+    });
+    if (!tiles.has("updates") && byId("formportal")) {
+      want.push({
+        key: "updates",
+        label: "FormPortal updates",
+        build: () => chip(glyph(icons.enter), "FormPortal updates", () => {
+          const entry = makeUpdates({ kind: "updates", id: "updates", app: "", name: "", apps: [], size: "m" });
+          place(entry);
+          save();
+          syncAdd();
+          reveal(entry);
+        }),
+      });
+    }
     reconcileAdd(want);
   }
 
   function setEditing(on: boolean) {
+    if (!on) {
+      tiles.forEach((t) => {
+        if (t.input && document.activeElement === t.input) {
+          t.input.blur();
+          t.commit?.();
+        }
+      });
+    }
     editing = on;
     root.classList.toggle("is-editing", on);
     if (editBtn.dataset.on !== String(on)) {
       editBtn.dataset.on = String(on);
-      editBtn.innerHTML = on ? icons.check : icons.edit;
+      editIcon.innerHTML = on ? icons.check : icons.edit;
+      editLabel.textContent = on ? "Done" : "Edit";
     }
-    editBtn.title = on ? "Done" : "Edit board";
+    editBtn.title = on ? "Finish editing" : "Edit board";
     editBtn.setAttribute("aria-pressed", String(on));
+    hint.setAttribute("aria-hidden", String(!on));
     tiles.forEach((t) => {
-      t.node.draggable = on;
-      if (t.name) t.name.contentEditable = on ? "plaintext-only" : "false";
+      t.node.draggable = on && document.activeElement !== t.input;
+      t.fit?.();
     });
     if (!on) addingTo = null;
     closePop();
@@ -454,12 +566,22 @@ export function widgets(): ViewModule {
       root.classList.add("v-widgets");
       const head = el("header", "pn-head");
       head.setAttribute("data-tauri-drag-region", "");
-      editBtn = iconButton(icons.edit, "Edit board", () => setEditing(!editing), "wg-edit");
+      editBtn = el("button", "btn wg-edit");
+      editBtn.type = "button";
+      editBtn.title = "Edit board";
+      editIcon = el("span", "wg-edit-icon");
+      editIcon.innerHTML = icons.edit;
+      editLabel = el("span", "wg-edit-label", "Edit");
+      editBtn.append(editIcon, editLabel);
+      editBtn.addEventListener("click", () => setEditing(!editing));
+      hint = el("p", "wg-hint", "Drag to reorder. Resize or remove from each tile's corner. Add from the bar below.");
       head.append(el("h1", "pn-title", "Widgets"), viewBar("widgets", (v) => ctx.go(v)), editBtn, iconButton(icons.gear, "Settings", () => ctx.go("prefs")));
       board = el("div", "wg-board");
       empty = el("p", "pn-empty", "The board is empty. Choose Edit to add apps.");
+      addBar = el("section", "wg-addbar");
+      addBar.setAttribute("aria-label", "Add a widget");
       addMenu = el("div", "wg-add");
-      addMenu.setAttribute("aria-label", "Add to board");
+      addBar.append(el("h2", "wg-add-title", "Add a widget"), addMenu);
       pop = el("div", "wg-pop");
       pop.hidden = true;
       pop.setAttribute("role", "dialog");
@@ -473,7 +595,7 @@ export function widgets(): ViewModule {
         if (!admit(t)) pending.push({ ...t });
       }
       empty.hidden = tiles.size > 0;
-      root.append(head, board, empty, addMenu, pop);
+      root.append(head, hint, board, empty, addBar, pop);
       syncAdd();
       root.addEventListener("pointerdown", (e) => {
         if (!pop.hidden && !pop.contains(e.target as Node) && !(e.target as HTMLElement).closest(".wg-group")) closePop();
@@ -506,8 +628,7 @@ export function widgets(): ViewModule {
     },
     key(e) {
       if (e.key === "Escape" && !pop.hidden) return closePop(), true;
-      if (e.key === "Escape" && editing) return setEditing(false), true;
-      if ((e.target as HTMLElement).isContentEditable) return true;
+      if (e.key === "Escape" && editing && !(document.activeElement instanceof HTMLInputElement)) return setEditing(false), true;
       return false;
     },
   };

@@ -174,7 +174,7 @@ export function prefsView(): ViewModule {
     for (const app of apps) {
       const r = rows.get(app.id) ?? buildRow(app);
       r.show.setAttribute("aria-label", `Show ${app.name}`);
-      r.pin.setAttribute("aria-label", `${app.name} in Stack`);
+      r.pin.setAttribute("aria-label", `${app.name} in menu bar`);
       if (document.activeElement !== r.show) r.show.checked = !app.hidden;
       if (document.activeElement !== r.pin) r.pin.checked = snap.prefs.pinned.includes(app.id);
       const where = app.running ? "Open now" : app.installed ? (app.path ?? "Installed") : "Not found on this computer";
@@ -212,7 +212,7 @@ export function prefsView(): ViewModule {
       const list = el("div", "pf-apps");
       appList = list;
       const legend = el("div", "pf-app pf-legend");
-      legend.append(el("span", "", ""), el("span", "", "App"), el("span", "", "Show"), el("span", "", "In Stack"));
+      legend.append(el("span", "", ""), el("span", "", "App"), el("span", "", "Show"), el("span", "", "In menu bar"));
       list.append(legend);
 
       locations = el("textarea", "pf-text");

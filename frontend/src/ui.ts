@@ -72,21 +72,6 @@ export function appIcon(app: AppState, size: "s" | "m" | "l"): HTMLSpanElement {
   return box;
 }
 
-export function brandMark(cls: string, id: string, px: number): HTMLSpanElement {
-  const box = el("span", cls);
-  for (const [tone, file] of [["ai-dark", `${id}.webp`], ["ai-light", `${id}-light.webp`]]) {
-    const img = el("img", tone);
-    img.alt = "";
-    img.width = px;
-    img.height = px;
-    img.decoding = "async";
-    img.draggable = false;
-    img.src = `/apps/${file}`;
-    box.append(img);
-  }
-  return box;
-}
-
 export function appName<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, app: AppState): HTMLElementTagNameMap[K] {
   const node = el(tag, cls, app.name);
   node.dataset.nameApp = app.id;
