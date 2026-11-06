@@ -30,7 +30,7 @@
 <p align="center">
   <img src="docs/images/formtray-hero.webp" alt="FormTray's Apps view: a search box, category chips, a Recent row and a grid of Form app icons with running dots" width="100%">
   <br>
-  <sub>The Apps view, with sample running and recent state: search, categories, recents and every app in one panel.</sub>
+  <sub>The Apps view, with sample running and recent state: a search field, categories, recents and every app in one panel.</sub>
 </p>
 
 <p align="center">
@@ -46,7 +46,7 @@
 
 <table>
   <tr>
-    <td width="25%" valign="top"><h3>One icon, every released app</h3>Pin FormTray instead of an icon per app. It lists only released Form family apps, so unreleased and non-family apps never show. Every view reads one state, so pins, recents and running dots agree.</td>
+    <td width="25%" valign="top"><h3>One icon, every released app</h3>Pin FormTray instead of an icon per app. It lists only released Form family apps, so unreleased and non-family apps never show. Every view reads one state, so recents and running dots agree. The menu bar menu lists open apps and the apps chosen "In menu bar" in Settings.</td>
     <td width="25%" valign="top"><h3>Real system glass</h3>macOS 26 gets a native glass material, older macOS vibrancy, Windows acrylic and Linux solid themed panels.</td>
     <td width="25%" valign="top"><h3>Hotkeys that behave</h3>Defaults avoid each system's reserved chords. Rebind any of them in Settings; clashes are refused, not ignored.</td>
     <td width="25%" valign="top"><h3>Agent-ready</h3>The same engine runs from the window and from a command line that lists, opens and quits apps.</td>
@@ -61,8 +61,8 @@
   <tr>
     <td width="50%" valign="top"><img src="docs/images/formtray-switcher.webp" alt="The Switcher: a horizontal strip of app icons with the selected app named below" width="100%"><br><sub>The Switcher, a Cmd+Tab-style strip.</sub>
       <h3>Switch in one frame</h3>Hold the modifier and tap to move along the strip. The view appears the instant the hotkey is pressed.</td>
-    <td width="50%" valign="top"><img src="docs/images/formtray-stack.webp" alt="The Stack: a three-column grid of pinned app icons with an All Apps button" width="100%"><br><sub>The Stack, a Dock folder grid.</sub>
-      <h3>A Stack above the Dock</h3>Pick the Stack and clicking the Dock icon opens it, with your pinned apps above the Dock and All Apps one click away. The Dock icon always opens the view you last chose; Widgets is the default.</td>
+    <td width="50%" valign="top"><img src="docs/images/formtray-stack.webp" alt="The Stack: a three-column grid of app icons with an All Apps button" width="100%"><br><sub>The Stack, the Form apps open right now.</sub>
+      <h3>A Stack of what is open</h3>The Stack shows the Form apps that are open right now, in launch order, with a Quit button on each: FormTray in place of the Dock for the family. Apps opened from FormTray are launched with `--formtray-hosted` (and `FORMTRAY_HOSTED=1`), so family apps that support it stay out of the Dock; macOS lets only the app itself hide its Dock icon. The Dock icon opens the view you last chose; Widgets is the default.</td>
   </tr>
   <tr>
     <td width="50%" valign="top"><img src="docs/images/formtray-widgets.webp" alt="The Widgets board: large and small app tiles showing running state and last opened time" width="100%"><br><sub>The Widgets board, arranged by you.</sub>
