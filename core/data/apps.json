@@ -1,5 +1,5 @@
 {
-  "excluded": ["formhub", "formtray"],
+  "excluded": ["formhub", "formtray", "formcompiler"],
   "categories": [
     { "id": "image", "name": "Image" },
     { "id": "motion", "name": "Video and Audio" },
@@ -33,7 +33,6 @@
     { "id": "formmcp", "name": "FormMCP", "alt_of": "", "category": "build", "hue": "#9fe7ff", "icon": "formmcp.webp", "identifiers": ["ai.nodemode.formmcp"], "names": ["FormMCP", "formmcp"], "opens": "2026-11-03T17:00:00Z" },
     { "id": "formskills", "name": "FormSkills", "alt_of": "", "category": "build", "hue": "#ffc069", "icon": "formskills.webp", "identifiers": ["ai.nodemode.formskills"], "names": ["FormSkills", "formskills"], "opens": "2026-11-03T17:00:00Z" },
     { "id": "formportal", "name": "FormPortal", "alt_of": "Creative Cloud", "category": "family", "hue": "#f3ebe3", "icon": "formportal.webp", "identifiers": ["studio.formai.portal", "dev.formai.portal", "dev.formai.hub"], "names": ["FormPortal", "formportal"], "opens": "2026-11-03T17:00:00Z" },
-    { "id": "formcompiler", "name": "FormCompiler", "alt_of": "", "category": "build", "hue": "#9aa6b8", "icon": "formcompiler.webp", "identifiers": ["ai.nodemode.formcompiler"], "names": ["FormCompiler", "formcompiler"], "opens": "2026-11-03T17:00:00Z" },
     { "id": "formtools", "name": "FormTools", "alt_of": "", "category": "more", "hue": "#de6c94", "icon": "formtools.webp", "identifiers": ["ai.nodemode.formtools"], "names": ["FormTools", "formtools"], "opens": "2026-11-13T17:00:00Z" },
     { "id": "formfabric", "name": "FormFabric", "alt_of": "Marvelous Designer", "category": "3d", "hue": "#eda146", "icon": "formfabric.webp", "identifiers": ["ai.nodemode.formfabric"], "names": ["FormFabric", "formfabric"], "opens": "2026-11-19T17:00:00Z" },
     { "id": "formmorpheus", "name": "FormMorpheus", "alt_of": "Procreate Dreams", "category": "motion", "hue": "#857cf3", "icon": "formmorpheus.webp", "identifiers": ["ai.nodemode.formmorpheus"], "names": ["FormMorpheus", "formmorpheus"], "opens": "2026-11-22T17:00:00Z" },

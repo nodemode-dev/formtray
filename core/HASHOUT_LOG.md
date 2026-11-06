@@ -224,3 +224,11 @@ cli/
 - An app that is not running is started with the argument `--formtray-hosted` and the environment variable `FORMTRAY_HOSTED=1`. On macOS: `open --env FORMTRAY_HOSTED=1 <path> --args --formtray-hosted`, or `open -b <id> --env FORMTRAY_HOSTED=1 --args --formtray-hosted`. If that exits non-zero (older macOS without `open --env`), the same call is retried without `--env`, then the plain `open`, one target after another in the existing order (path, then each identifier). Linux and Windows spawn the program directly with the argument and the variable.
 - An app that is already running is only focused: on macOS a plain `open` with no flag, elsewhere the existing window focus. The names are public constants so the shell can reuse them.
 - why: the owner's request of 2026-11-06, so apps opened from FormTray stay out of the Dock.
+
+## formcompiler is not an app 2026-11-06 {#formcompiler-removed}
+
+- refers-to: data/apps.json :: apps, excluded; tests/registry_and_settings.rs :: ORDER
+- kind: removed-code
+- logged: v0.13.0 · 2026-11-06
+- The formcompiler entry and its icon pair (formcompiler.webp, formcompiler-light.webp) are gone, and "formcompiler" joined the excluded list so nothing can surface it. formcompiler is only the GitHub repository that compiles and releases builds; it is never downloaded or installed, so it is not a Form family app and is not listed, shown, scheduled, iconed or counted. The registry now holds 33 apps and the icon pack is 34 pairs (33 apps and FormTray itself). Mentions of formcompiler as the build and release pipeline stay.
+- why: the owner's request of 2026-11-06, since formcompiler was shown as an app.

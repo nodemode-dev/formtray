@@ -4,10 +4,10 @@ use std::sync::{Mutex, MutexGuard};
 
 use formtray_core::{prefs, Prefs, Registry, Tile, Usage};
 
-const ORDER: [&str; 34] = [
+const ORDER: [&str; 33] = [
     "formvis", "formlit", "formpath", "formdam", "formref", "formcut", "formvfx", "formencoder", "formwav", "formdesign", "formpdf", "formdeck",
     "formmd", "formsculpt", "formsurface", "formweb", "format", "formcel", "formtxt", "formbench", "formmcp", "formskills", "formportal",
-    "formcompiler", "formtools", "formfabric", "formmorpheus", "formcraft", "formpromo", "formrig", "formcad", "formnet", "formslot", "subform",
+    "formtools", "formfabric", "formmorpheus", "formcraft", "formpromo", "formrig", "formcad", "formnet", "formslot", "subform",
 ];
 
 static ENV: Mutex<()> = Mutex::new(());
@@ -40,7 +40,7 @@ impl Drop for Config {
 }
 
 #[test]
-fn the_registry_yields_the_34_apps_in_order() {
+fn the_registry_yields_the_33_apps_in_order() {
     let registry = Registry::load();
     let ids: Vec<&str> = registry.apps.iter().map(|a| a.id.as_str()).collect();
     assert_eq!(ids, ORDER);
