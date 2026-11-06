@@ -1073,6 +1073,7 @@ dependencies = [
  "formtray-core",
  "gdkx11",
  "gtk",
+ "objc2",
  "objc2-app-kit",
  "serde",
  "serde_json",

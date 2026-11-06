@@ -365,10 +365,28 @@ fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     Menu::with_items(app, &refs)
 }
 
+#[cfg(target_os = "macos")]
+fn show_menu_images(tray: &tauri::tray::TrayIcon) {
+    let _ = tray.with_inner_tray_icon(|t| {
+        use objc2::runtime::NSObjectProtocol;
+        let Some(mtm) = objc2::MainThreadMarker::new() else { return };
+        let Some(menu) = t.ns_status_item().and_then(|s| s.menu(mtm)) else { return };
+        for item in menu.itemArray().iter() {
+            if item.respondsToSelector(objc2::sel!(setPreferredImageVisibility:)) {
+                unsafe { objc2::msg_send![&*item, setPreferredImageVisibility: 1isize] }
+            }
+        }
+    });
+}
+
+#[cfg(not(target_os = "macos"))]
+fn show_menu_images(_tray: &tauri::tray::TrayIcon) {}
+
 fn refresh_tray(app: &AppHandle) {
     let Some(tray) = app.tray_by_id("formtray") else { return };
     if let Ok(menu) = tray_menu(app) {
         let _ = tray.set_menu(Some(menu));
+        show_menu_images(&tray);
     }
     if !cfg!(target_os = "macos") {
         if let Ok(image) = Image::from_bytes(theme::tray_png().0) {
@@ -395,7 +413,7 @@ fn icon_response(path: &str) -> tauri::http::Response<Vec<u8>> {
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let menu = tray_menu(app)?;
     let (tray_png, template) = theme::tray_png();
-    TrayIconBuilder::with_id("formtray")
+    let tray = TrayIconBuilder::with_id("formtray")
         .icon(Image::from_bytes(tray_png)?)
         .icon_as_template(template)
         .tooltip("FormTray")
@@ -437,6 +455,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             }
         })
         .build(app)?;
+    show_menu_images(&tray);
     Ok(())
 }
 
@@ -628,16 +647,15 @@ pub fn run() {
                 loop {
                     let visible = poller.state::<Shell>().shown.lock().unwrap().is_some() || panel(&poller, "prefs").and_then(|w| w.is_visible().ok()).unwrap_or(false);
                     std::thread::sleep(Duration::from_millis(if visible { 1000 } else { 3000 }));
-                    if with_engine(&poller, |e| e.refresh_running()) {
-                        if visible {
-                            broadcast(&poller);
-                        }
-                        let now = open_ids(&poller);
-                        if now != last {
-                            last = now;
-                            let inner = poller.clone();
-                            let _ = poller.run_on_main_thread(move || refresh_tray(&inner));
-                        }
+                    let changed = with_engine(&poller, |e| e.refresh_running());
+                    if changed && visible {
+                        broadcast(&poller);
+                    }
+                    let now = open_ids(&poller);
+                    if now != last {
+                        last = now;
+                        let inner = poller.clone();
+                        let _ = poller.run_on_main_thread(move || refresh_tray(&inner));
                     }
                 }
             });

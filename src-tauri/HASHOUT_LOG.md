@@ -35,6 +35,11 @@ src-tauri/
 
 ## src/lib.rs {#lib}
 
+- refers-to: show_menu_images, refresh_tray, build_tray, the poller thread, menu_icons::bytes, icons/menu
+- kind: rationale
+- logged: v0.13.0 · 2026-11-06
+- macOS 27 hides menu item images unless each NSMenuItem has `preferredImageVisibility` set to Visible (raw NSInteger 1, macOS 27 only), and muda never sets it (electron/electron#54514, duckduckgo/apple-browsers#6816). `show_menu_images` runs after build_tray and after every `set_menu` in refresh_tray: it reads the status item through `with_inner_tray_icon`, walks the menu's `itemArray` and sends `setPreferredImageVisibility:` to each item that responds to it, so older macOS versions are untouched. It is a no-op off macOS and was not compiled here. The poller used to rebuild the menu only when its own `refresh_running` returned true, but the panel's snapshot polling usually refreshes running state first, so the menu never gained Open now. It now compares the ordered open ids on every tick and rebuilds when they differ, and still broadcasts to visible panels only when `refresh_running` reports a change. formcompiler is no longer an app here: it is gone from `menu_icons` and its two icons are deleted from `icons/menu`, because it is only the build and release pipeline and is never installed.
+
 - refers-to: tray_menu, refresh_tray, build_tray, menu_icons::bytes, the poller thread
 - kind: rationale
 - logged: v0.12.0 · 2026-11-06
