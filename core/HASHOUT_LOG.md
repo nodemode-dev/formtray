@@ -214,3 +214,13 @@ cli/
 - C. The opening view is widgets (default and invalid-value fallback). Installs saved before layout 2 move default_view apps to widgets, rename formslide to formdeck and formranker to formbench in hidden, pinned, widget tiles and usage, then save with layout 2. The default board is formvis, formcut, formwav, formdeck, formlit, formmd, formvfx, formpdf.
 - D. form_name returns the registry display name unchanged for family apps (form.md, FormVis); it lowercases only when there is no registry entry.
 - why: the owner's request of 2026-11-06, so the tray shows only the released Form family.
+
+## hosted launch 2026-11-06 {#hosted-launch}
+
+- refers-to: launch.rs :: open, HOSTED_FLAG, HOSTED_ENV, HOSTED_ENV_VALUE
+- kind: decision
+- logged: 2026-11-06
+- Apps opened from FormTray should stay out of the Dock. macOS lets only an app hide its own Dock icon (Accessory activation policy), so FormTray cannot do it from outside; it signals the app instead and family apps honour the signal in their own code.
+- An app that is not running is started with the argument `--formtray-hosted` and the environment variable `FORMTRAY_HOSTED=1`. On macOS: `open --env FORMTRAY_HOSTED=1 <path> --args --formtray-hosted`, or `open -b <id> --env FORMTRAY_HOSTED=1 --args --formtray-hosted`. If that exits non-zero (older macOS without `open --env`), the same call is retried without `--env`, then the plain `open`, one target after another in the existing order (path, then each identifier). Linux and Windows spawn the program directly with the argument and the variable.
+- An app that is already running is only focused: on macOS a plain `open` with no flag, elsewhere the existing window focus. The names are public constants so the shell can reuse them.
+- why: the owner's request of 2026-11-06, so apps opened from FormTray stay out of the Dock.
