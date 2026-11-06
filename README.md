@@ -100,7 +100,7 @@
 - **Shell:** a Tauri 2 shell for panels, glass, the menu bar, hotkeys, Dock reopen, single instance and autostart.
 - **Interface:** vanilla TypeScript and Vite with zero runtime dependencies.
 - **Finds apps by name:** reads FormPortal's install record first, then every bundle identifier and name each app has shipped under.
-- **Release gated:** only Form family apps whose release wave has opened (or that FormPortal's catalogue shows as released) are listed, under their canonical names (FormVis, FormCut, FormWav, form.md, FormDeck, FormBench, FormAT, FormMCP, FormSkills, FormDAM and the rest). Icons are the owner's 35-app pack, dark and light, following the system appearance.
+- **Release gated:** only Form family apps whose release wave has opened (or that FormPortal's catalogue shows as released) are listed, under their canonical names (FormVis, FormCut, FormWav, form.md, FormDeck, FormBench, FormAT, FormMCP, FormSkills, FormDAM and the rest). Icons are the owner's 34-app pack, dark and light, following the system appearance.
 - **Offline:** FormTray never touches the network. It reads, but never writes, FormPortal's data at `studio.formai.portal` (falling back to `dev.formai.portal`): `installed.json` and the catalogue.
 - **Tested:** 17 Rust tests (registry, settings and the family contract).
 

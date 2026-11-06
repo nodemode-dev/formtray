@@ -7,7 +7,7 @@ Licensed under the Apache License, Version 2.0. See `LICENSE`.
 
 ## Dependencies
 
-FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons in `assets/` and `src-tauri/icons/`, and the 35-app family icon pack in dark and light) is the owner's own artwork (NodeAgentc, Inc. / nodemode). Its dependencies are mostly MIT, Apache-2.0 or dual MIT and Apache-2.0, with some BSD, ISC, Zlib, Unicode and CC0 crates, as their manifests declare. Four linked Tauri crates are MPL-2.0 (see "Desktop shell: crates under other licences" below). The main dependencies:
+FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons in `assets/` and `src-tauri/icons/`, and the 34-app family icon pack in dark and light) is the owner's own artwork (NodeAgentc, Inc. / nodemode). Its dependencies are mostly MIT, Apache-2.0 or dual MIT and Apache-2.0, with some BSD, ISC, Zlib, Unicode and CC0 crates, as their manifests declare. Four linked Tauri crates are MPL-2.0 (see "Desktop shell: crates under other licences" below). The main dependencies:
 
 | Package | Used for |
 | --- | --- |
