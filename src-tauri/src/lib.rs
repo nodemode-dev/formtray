@@ -1,5 +1,6 @@
 mod glass;
 mod keys;
+mod menu_icons;
 mod theme;
 
 use std::collections::HashMap;
@@ -304,24 +305,37 @@ fn sync_login(app: &AppHandle, on: bool) {
 }
 
 fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
-    let (login_on, pinned) = with_engine(app, |e| {
+    let light = panel(app, PANEL).and_then(|w| w.theme().ok()) == Some(tauri::Theme::Light);
+    let (login_on, running, pinned) = with_engine(app, |e| {
         let snap = e.snapshot();
+        let mut running: Vec<&formtray_core::AppState> = snap.apps.iter().filter(|a| a.running && !a.hidden).collect();
+        running.sort_by_key(|a| a.since);
+        let entry = |a: &formtray_core::AppState| (a.id.clone(), a.name.clone(), e.menu_icon(&a.id));
+        let open: Vec<(String, String, Option<std::path::PathBuf>)> = running.iter().map(|a| entry(a)).collect();
         let pinned: Vec<(String, String, Option<std::path::PathBuf>)> = e
             .prefs
             .pinned
             .iter()
+            .filter(|id| !running.iter().any(|a| &a.id == *id))
             .filter_map(|id| snap.apps.iter().find(|a| &a.id == id && a.installed && !a.hidden))
-            .map(|a| (a.id.clone(), a.name.clone(), e.menu_icon(&a.id)))
+            .map(entry)
             .collect();
-        (e.prefs.open_at_login, pinned)
+        (e.prefs.open_at_login, open, pinned)
     });
-    let apps: Vec<IconMenuItem<tauri::Wry>> = pinned
-        .iter()
-        .map(|(id, name, icon)| {
-            let image = icon.as_ref().and_then(|p| std::fs::read(p).ok()).and_then(|b| Image::from_bytes(&b).ok());
-            IconMenuItem::with_id(app, format!("open-{id}"), name, true, image, None::<&str>)
-        })
-        .collect::<tauri::Result<_>>()?;
+    let build = |list: &[(String, String, Option<std::path::PathBuf>)]| -> tauri::Result<Vec<IconMenuItem<tauri::Wry>>> {
+        list.iter()
+            .map(|(id, name, icon)| {
+                let image = menu_icons::bytes(id, light)
+                    .and_then(|b| Image::from_bytes(b).ok())
+                    .or_else(|| icon.as_ref().and_then(|p| std::fs::read(p).ok()).and_then(|b| Image::from_bytes(&b).ok()));
+                IconMenuItem::with_id(app, format!("open-{id}"), name, true, image, None::<&str>)
+            })
+            .collect()
+    };
+    let open_header = MenuItem::with_id(app, "section-open", "Open now", false, None::<&str>)?;
+    let open_items = build(&running)?;
+    let apps = build(&pinned)?;
+    let sep_open = PredefinedMenuItem::separator(app)?;
     let items: Vec<MenuItem<tauri::Wry>> = [("view-switcher", "Switcher"), ("view-stack", "Stack"), ("view-apps", "Apps"), ("view-windows", "Windows"), ("view-widgets", "Widgets")]
         .iter()
         .map(|(id, label)| MenuItem::with_id(app, *id, *label, true, None::<&str>))
@@ -334,7 +348,15 @@ fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let sep0 = PredefinedMenuItem::separator(app)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
-    let mut refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = apps.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>).collect();
+    let mut refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = Vec::new();
+    if !open_items.is_empty() {
+        refs.push(&open_header);
+        refs.extend(open_items.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>));
+        if !apps.is_empty() {
+            refs.push(&sep_open);
+        }
+    }
+    refs.extend(apps.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>));
     if !refs.is_empty() {
         refs.push(&sep0);
     }
@@ -593,11 +615,30 @@ pub fn run() {
             register_hotkeys(&handle);
             build_tray(&handle)?;
             let poller = handle.clone();
-            std::thread::spawn(move || loop {
-                std::thread::sleep(Duration::from_millis(1000));
-                let visible = poller.state::<Shell>().shown.lock().unwrap().is_some() || panel(&poller, "prefs").and_then(|w| w.is_visible().ok()).unwrap_or(false);
-                if visible && with_engine(&poller, |e| e.refresh_running()) {
-                    broadcast(&poller);
+            std::thread::spawn(move || {
+                let open_ids = |app: &AppHandle| {
+                    with_engine(app, |e| {
+                        let snap = e.snapshot();
+                        let mut open: Vec<&formtray_core::AppState> = snap.apps.iter().filter(|a| a.running && !a.hidden).collect();
+                        open.sort_by_key(|a| a.since);
+                        open.iter().map(|a| a.id.clone()).collect::<Vec<String>>()
+                    })
+                };
+                let mut last = open_ids(&poller);
+                loop {
+                    let visible = poller.state::<Shell>().shown.lock().unwrap().is_some() || panel(&poller, "prefs").and_then(|w| w.is_visible().ok()).unwrap_or(false);
+                    std::thread::sleep(Duration::from_millis(if visible { 1000 } else { 3000 }));
+                    if with_engine(&poller, |e| e.refresh_running()) {
+                        if visible {
+                            broadcast(&poller);
+                        }
+                        let now = open_ids(&poller);
+                        if now != last {
+                            last = now;
+                            let inner = poller.clone();
+                            let _ = poller.run_on_main_thread(move || refresh_tray(&inner));
+                        }
+                    }
                 }
             });
             let args: Vec<String> = std::env::args().collect();
