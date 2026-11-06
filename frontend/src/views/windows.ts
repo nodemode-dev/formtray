@@ -57,25 +57,34 @@ export function windowsView(): ViewModule {
         cards.delete(id);
       }
     }
+    let ref: ChildNode | null = grid.firstChild;
     for (const app of running) {
       let c = cards.get(app.id);
       if (!c) {
         c = make(app);
         cards.set(app.id, c);
       }
-      c.meta.textContent = runningFor(app.since);
-      grid.append(c.card);
+      const plate = c.card.firstElementChild as HTMLElement;
+      if (plate.dataset.label !== app.name) {
+        plate.dataset.label = app.name;
+        plate.setAttribute("aria-label", `Bring ${app.name} forward`);
+        c.quit.setAttribute("aria-label", `Quit ${app.name}`);
+        c.quit.title = `Quit ${app.name}`;
+      }
+      const meta = runningFor(app.since);
+      if (c.meta.textContent !== meta) c.meta.textContent = meta;
+      if (c.card === ref) ref = ref.nextSibling;
+      else grid.insertBefore(c.card, ref);
     }
     empty.hidden = running.length > 0;
     select(Math.min(index, Math.max(0, running.length - 1)));
   }
 
   function select(i: number) {
-    const list = [...cards.values()].map((c) => c.card).filter((c) => c.isConnected);
-    list.forEach((c) => c.classList.remove("is-selected"));
+    const list = [...grid.children] as HTMLElement[];
     if (!list.length) return;
     index = (i + list.length) % list.length;
-    list[index].classList.add("is-selected");
+    list.forEach((c, n) => c.classList.toggle("is-selected", n === index));
   }
 
   return {

@@ -1,6 +1,6 @@
 import type { AppState } from "../bridge";
 import { icons } from "../icons";
-import { appIcon, appName, el, runDot, viewBar } from "../ui";
+import { appIcon, appName, el, iconButton, runDot, viewBar } from "../ui";
 import type { Ctx, ViewModule } from "./types";
 
 export function stack(): ViewModule {
@@ -35,6 +35,7 @@ export function stack(): ViewModule {
         cells.delete(id);
       }
     }
+    let ref: ChildNode | null = grid.firstChild;
     for (const app of apps) {
       let cell = cells.get(app.id);
       if (!cell) {
@@ -47,7 +48,9 @@ export function stack(): ViewModule {
       }
       cell.classList.toggle("is-running", app.running);
       cell.classList.toggle("is-missing", !app.installed);
-      grid.insertBefore(cell, more);
+      cell.setAttribute("aria-label", app.name);
+      if (cell === ref) ref = ref.nextSibling;
+      else grid.insertBefore(cell, ref);
     }
   }
 
@@ -57,7 +60,7 @@ export function stack(): ViewModule {
       root.classList.add("v-stack");
       const head = el("header", "st-head");
       head.setAttribute("data-tauri-drag-region", "");
-      head.append(el("h1", "st-title", "FormTray"), viewBar("stack", (v) => ctx.go(v)));
+      head.append(el("h1", "pn-title", "FormTray"), viewBar("stack", (v) => ctx.go(v)), iconButton(icons.gear, "Settings", () => ctx.go("prefs")));
       grid = el("div", "st-grid");
       more = el("button", "st-cell st-more");
       more.type = "button";
@@ -70,11 +73,15 @@ export function stack(): ViewModule {
       build();
     },
     update(snap) {
-      for (const app of snap.apps) {
-        const cell = cells.get(app.id);
-        cell?.classList.toggle("is-running", app.running);
-        cell?.classList.toggle("is-missing", !app.installed);
+      ctx.snap = snap;
+      const prev = index >= 0 ? items()[index] : undefined;
+      const focused = document.activeElement;
+      build();
+      if (index >= 0) {
+        const at = prev ? items().indexOf(prev) : -1;
+        select(at >= 0 ? at : Math.min(index, items().length - 1));
       }
+      if (focused instanceof HTMLElement && focused !== document.activeElement && grid.contains(focused)) focused.focus({ preventScroll: true });
     },
     shown() {
       build();

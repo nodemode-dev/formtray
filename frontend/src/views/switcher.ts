@@ -18,10 +18,13 @@ export function switcher(): ViewModule {
   }
 
   function select(i: number) {
-    if (!order.length) return;
+    if (!order.length) {
+      if (label.textContent) label.textContent = "";
+      return;
+    }
     index = (i + order.length) % order.length;
     cells.forEach((cell, id) => cell.classList.toggle("is-selected", id === order[index].id));
-    label.textContent = order[index].name;
+    if (label.textContent !== order[index].name) label.textContent = order[index].name;
   }
 
   function build() {
@@ -33,6 +36,7 @@ export function switcher(): ViewModule {
         cells.delete(id);
       }
     }
+    let ref: ChildNode | null = strip.firstChild;
     for (const app of order) {
       let cell = cells.get(app.id);
       if (!cell) {
@@ -49,8 +53,10 @@ export function switcher(): ViewModule {
         cells.set(app.id, cell);
       }
       cell.classList.toggle("is-running", app.running);
+      cell.classList.toggle("is-missing", !app.installed);
       cell.setAttribute("aria-label", app.name);
-      strip.append(cell);
+      if (cell === ref) ref = ref.nextSibling;
+      else strip.insertBefore(cell, ref);
     }
   }
 
@@ -72,7 +78,12 @@ export function switcher(): ViewModule {
       select(0);
     },
     update(snap) {
-      for (const app of snap.apps) cells.get(app.id)?.classList.toggle("is-running", app.running);
+      ctx.snap = snap;
+      const current = order[index]?.id;
+      const focused = document.activeElement;
+      build();
+      select(Math.max(0, order.findIndex((a) => a.id === current)));
+      if (focused instanceof HTMLElement && focused !== document.activeElement && strip.contains(focused)) focused.focus({ preventScroll: true });
     },
     shown(reason) {
       committed = false;

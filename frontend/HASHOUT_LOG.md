@@ -123,6 +123,11 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 - logged: v0.9.0 · 2026-10-22
 - The 17 v0.1.0 to v0.8.0 fallback icons (256 px png and one svg), copied from each app's repo at the time, removed because every one differed from the owner's current icon. Replaced by 23 webp files at 256 px with alpha, resized from the owner's 1024 px form-icons.zip with the aspect ratio kept; the zip's `form-md`, `formDAM`, `formMCP` and `formpth` files are named `formmd`, `formdam`, `formmcp` and `formpath` here. formhub is left out until it launches (see core/HASHOUT_LOG.md, apps.json).
 
+- refers-to: ai-dark, ai-light, iconLightSrc, brandMark, .ap-mark
+- kind: rationale
+- logged: v0.9.9 · 2026-11-06
+- The owner's icon pack (35 apps, dark `<id>.webp` and light `<id>-light.webp`, 256 px, 70 files) replaces the 23 earlier files; formranker.webp is gone. An app with an `icon` now renders both images in its fixed box and CSS shows one by `prefers-color-scheme`, the same signal tokens.css uses, so a system appearance change swaps them with no script, no re-render and no flash. The bundled pack icon is preferred over `live_icon`; the live icon is the fallback only when `icon` is empty, or when the pack file fails to load. syncIdentity still patches `src` in place on the existing images. The search bar mark in the Apps view is the FormTray icon in the same pair technique at 26 px, and the old triangle glyph (`icons.launcher`) was unused elsewhere and removed.
+
 ## src/styles/app.css {#css}
 
 - refers-to: .panel

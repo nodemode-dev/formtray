@@ -1,4 +1,4 @@
-import { native, VIEWS, call, type Prefs, type ShellInfo, type Snapshot, type View } from "../bridge";
+import { native, VIEWS, call, type AppState, type Prefs, type ShellInfo, type Snapshot, type View } from "../bridge";
 import { icons } from "../icons";
 import { appIcon, appName, el, iconButton, prettyChord } from "../ui";
 import type { Ctx, ViewModule } from "./types";
@@ -13,6 +13,14 @@ const ACTION_NAMES: Record<string, string> = {
   "view-widgets": "Widgets view",
 };
 
+const VIEW_LABELS: Partial<Record<View, string>> = {
+  widgets: "Widgets",
+  apps: "Apps",
+  switcher: "Switcher",
+  stack: "Stack",
+  windows: "Windows",
+};
+
 export function prefsView(): ViewModule {
   let ctx: Ctx;
   let defaultView: HTMLSelectElement;
@@ -20,6 +28,7 @@ export function prefsView(): ViewModule {
   let locations: HTMLTextAreaElement;
   let keys: HTMLElement;
   let about: HTMLElement;
+  let appList: HTMLElement;
   let capturing: string | null = null;
   let keySignature = "";
   const rows = new Map<string, { row: HTMLElement; show: HTMLInputElement; pin: HTMLInputElement; where: HTMLElement }>();
@@ -137,14 +146,46 @@ export function prefsView(): ViewModule {
     about.textContent = `FormTray ${info.version} · ${info.glass === "liquid" ? "Glass" : info.glass === "vibrancy" ? "macOS vibrancy" : info.glass === "acrylic" ? "Windows acrylic" : "solid panels"} · ${native ? snap.platform : "browser preview"}`;
   }
 
+  function buildRow(app: AppState) {
+    const row = el("div", "pf-app");
+    const show = el("input", "switch");
+    show.type = "checkbox";
+    show.addEventListener("change", save);
+    const pin = el("input", "switch");
+    pin.type = "checkbox";
+    pin.addEventListener("change", save);
+    const where = el("span", "pf-where");
+    const name = el("span", "pf-app-name");
+    name.append(appName("strong", "", app), where);
+    row.append(appIcon(app, "s"), name, show, pin);
+    rows.set(app.id, { row, show, pin, where });
+    appList.append(row);
+    return rows.get(app.id)!;
+  }
+
   function syncRows(snap: Snapshot) {
-    for (const app of snap.apps) {
-      const r = rows.get(app.id);
-      if (!r) continue;
-      r.show.checked = !app.hidden;
-      r.pin.checked = snap.prefs.pinned.includes(app.id);
-      r.where.textContent = app.running ? "Open now" : app.installed ? (app.path ?? "Installed") : "Not found on this computer";
+    const apps = snap.apps.filter((a) => a.id !== "formtray");
+    const live = new Set(apps.map((a) => a.id));
+    for (const [id, r] of rows) {
+      if (live.has(id)) continue;
+      r.row.remove();
+      rows.delete(id);
+    }
+    for (const app of apps) {
+      const r = rows.get(app.id) ?? buildRow(app);
+      r.show.setAttribute("aria-label", `Show ${app.name}`);
+      r.pin.setAttribute("aria-label", `${app.name} in Stack`);
+      if (document.activeElement !== r.show) r.show.checked = !app.hidden;
+      if (document.activeElement !== r.pin) r.pin.checked = snap.prefs.pinned.includes(app.id);
+      const where = app.running ? "Open now" : app.installed ? (app.path ?? "Installed") : "Not found on this computer";
+      if (r.where.textContent !== where) r.where.textContent = where;
       r.row.classList.toggle("is-missing", !app.installed);
+    }
+    let prev: Element = appList.firstElementChild as Element;
+    for (const app of apps) {
+      const r = rows.get(app.id)!;
+      if (prev.nextElementSibling !== r.row) prev.after(r.row);
+      prev = r.row;
     }
   }
 
@@ -157,8 +198,9 @@ export function prefsView(): ViewModule {
       head.append(el("h1", "pn-title", "FormTray Settings"), iconButton(icons.close, "Close", () => ctx.dismiss(), "pf-close"));
 
       defaultView = el("select", "pf-select");
-      for (const v of VIEWS) {
-        const o = el("option", "", v[0].toUpperCase() + v.slice(1));
+      const ordered = ["widgets", ...VIEWS.filter((v) => v !== "widgets")] as View[];
+      for (const v of ordered) {
+        const o = el("option", "", VIEW_LABELS[v] ?? v);
         o.value = v;
         defaultView.append(o);
       }
@@ -168,26 +210,10 @@ export function prefsView(): ViewModule {
       login.addEventListener("change", save);
 
       const list = el("div", "pf-apps");
+      appList = list;
       const legend = el("div", "pf-app pf-legend");
       legend.append(el("span", "", ""), el("span", "", "App"), el("span", "", "Show"), el("span", "", "In Stack"));
       list.append(legend);
-      for (const app of ctx.snap.apps) {
-        const row = el("div", "pf-app");
-        const show = el("input", "switch");
-        show.type = "checkbox";
-        show.setAttribute("aria-label", `Show ${app.name}`);
-        show.addEventListener("change", save);
-        const pin = el("input", "switch");
-        pin.type = "checkbox";
-        pin.setAttribute("aria-label", `${app.name} in Stack`);
-        pin.addEventListener("change", save);
-        const where = el("span", "pf-where");
-        const name = el("span", "pf-app-name");
-        name.append(appName("strong", "", app), where);
-        row.append(appIcon(app, "s"), name, show, pin);
-        rows.set(app.id, { row, show, pin, where });
-        list.append(row);
-      }
 
       locations = el("textarea", "pf-text");
       locations.rows = 3;
@@ -220,7 +246,7 @@ export function prefsView(): ViewModule {
     update(snap) {
       ctx.snap = snap;
       if (document.activeElement !== defaultView) defaultView.value = snap.prefs.default_view;
-      login.checked = snap.prefs.open_at_login;
+      if (document.activeElement !== login) login.checked = snap.prefs.open_at_login;
       if (document.activeElement !== locations) locations.value = snap.prefs.locations.join("\n");
       syncRows(snap);
       void renderKeys(snap);

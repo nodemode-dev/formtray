@@ -9,11 +9,12 @@ import { widgets } from "./views/widgets";
 import { windowsView } from "./views/windows";
 
 const params = new URLSearchParams(location.search);
-const view = (params.get("view") ?? "apps") as View;
+const requested = params.get("view") as View | null;
+const view = (requested ?? "widgets") as View;
 const root = document.getElementById("panel") as HTMLElement;
 const toastBox = document.getElementById("toast") as HTMLElement;
-document.documentElement.dataset.view = view;
 document.documentElement.dataset.native = String(native);
+if (requested) document.documentElement.dataset.view = requested;
 
 const factories: Record<View, () => ViewModule> = { switcher, stack, apps, windows: windowsView, widgets, prefs: prefsView };
 const panelMode = view !== "prefs";
@@ -25,7 +26,7 @@ for (const v of panelMode ? VIEWS : [view]) {
   if (panelMode) {
     pane.className = "pane";
     pane.dataset.pane = v;
-    pane.hidden = v !== active;
+    pane.hidden = !requested || v !== active;
     root.append(pane);
   }
   panes.set(v, { module: factories[v](), pane });
@@ -69,6 +70,13 @@ async function start() {
   document.documentElement.dataset.glass = info.glass;
   document.documentElement.dataset.platform = snap.platform;
   syncIdentity(snap);
+
+  if (!requested) {
+    const first = (VIEWS as readonly string[]).includes(snap.last_view) && panes.has(snap.last_view as View) ? (snap.last_view as View) : "widgets";
+    active = first;
+    document.documentElement.dataset.view = first;
+    panes.get(first)!.pane.hidden = false;
+  }
 
   const ctx: Ctx = {
     snap,
@@ -121,7 +129,7 @@ async function start() {
     afterPaint(() => call("settle", { view: p.view }));
   });
   await on<string>("view:placed", () => afterPaint(() => afterPaint(() => document.documentElement.classList.remove("is-moving"))));
-  if (native && panelMode) {
+  if (native && panelMode && requested) {
     const now = await call<View | null>("current_view");
     if (now && now !== active) activate(now, "launch");
   }
@@ -153,7 +161,7 @@ async function start() {
     });
   }
 
-  if (!native) current().shown(view === "switcher" ? "switcher" : "preview");
+  if (!native) current().shown(active === "switcher" ? "switcher" : "preview");
   document.documentElement.classList.add("is-ready");
 }
 
