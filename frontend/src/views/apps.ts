@@ -96,7 +96,11 @@ export function apps(): ViewModule {
       const head = el("header", "ap-head");
       head.setAttribute("data-tauri-drag-region", "");
       const mark = el("span", "ap-mark");
-      mark.innerHTML = icons.launcher;
+      mark.innerHTML = icons.search;
+      const glass = mark.firstElementChild as SVGElement;
+      glass.setAttribute("width", "26");
+      glass.setAttribute("height", "26");
+      mark.addEventListener("click", () => search.focus());
       search = el("input", "ap-search");
       search.type = "search";
       search.placeholder = "Search apps";

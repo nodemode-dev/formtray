@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.10.2
-Last updated: 2026-11-04 · v0.10.2, the version test reads the README badge of the family template; 2026-11-04 · v0.10.1, the README and screenshots (no code change); 2026-11-04 · v0.10.0, the unified v3 app icon, CODEOWNERS (no code change); 2026-11-03 · v0.9.9 the About and the bundle name NodeAgentc, Inc. (no engine change); 2026-11-02 · v0.9.8, the first build through formcompiler (no code change); 2026-10-26 · the test suite and FB-041 (a desktop entry needs its program); the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
+Current build version: v0.13.0
+Last updated: 2026-11-06 · v0.13.0, formcompiler removed as an app (excluded); 2026-11-06 · v0.12.0, hosted launches (--formtray-hosted, FORMTRAY_HOSTED=1); 2026-11-06 · v0.11.0, released Form family apps only (no adoption of other ai.nodemode. bundles), the owner's names and release waves in apps.json, FormPortal's studio.formai.portal root, Widgets by default and the last view on reopen; 2026-11-04 · v0.10.2, the version test reads the README badge of the family template; 2026-11-04 · v0.10.1, the README and screenshots (no code change); 2026-11-04 · v0.10.0, the unified v3 app icon, CODEOWNERS (no code change); 2026-11-03 · v0.9.9 the About and the bundle name NodeAgentc, Inc. (no engine change); 2026-11-02 · v0.9.8, the first build through formcompiler (no code change); 2026-10-26 · the test suite and FB-041 (a desktop entry needs its program); the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
 
 ---
 
@@ -203,3 +203,32 @@ cli/
 - kind: decision
 - logged: v0.9.7 · 2026-10-26
 - The family template (F4 and F9) with formtray's four version sites (no wiki version line).
+
+## owner request 2026-11-06 {#released-only}
+
+- refers-to: discover.rs :: unknown_family, lib.rs :: rediscover, snapshot, open, quit, prefs.rs :: Prefs::load, Usage::load
+- kind: decision
+- logged: 2026-11-06
+- A. FormTray no longer adopts apps that are not in the registry. unknown_family, the discovered entry, the portal-install adoption and the dynamic "more" category are gone; apps.json declares the More category itself. The owner saw Ollama Harness, deduplakit, TopNotch and DAMp in the tray because their bundle ids start with ai.nodemode. On macOS a bundle with a family prefix whose identifier is not in an app's list is still not a match.
+- B. Only released apps are listed. An app is released when its opens time has passed or FormPortal's catalogue has a published release for it; formtray itself is never listed. open and quit refuse an id that is not released with NotFound.
+- C. The opening view is widgets (default and invalid-value fallback). Installs saved before layout 2 move default_view apps to widgets, rename formslide to formdeck and formranker to formbench in hidden, pinned, widget tiles and usage, then save with layout 2. The default board is formvis, formcut, formwav, formdeck, formlit, formmd, formvfx, formpdf.
+- D. form_name returns the registry display name unchanged for family apps (form.md, FormVis); it lowercases only when there is no registry entry.
+- why: the owner's request of 2026-11-06, so the tray shows only the released Form family.
+
+## hosted launch 2026-11-06 {#hosted-launch}
+
+- refers-to: launch.rs :: open, HOSTED_FLAG, HOSTED_ENV, HOSTED_ENV_VALUE
+- kind: decision
+- logged: 2026-11-06
+- Apps opened from FormTray should stay out of the Dock. macOS lets only an app hide its own Dock icon (Accessory activation policy), so FormTray cannot do it from outside; it signals the app instead and family apps honour the signal in their own code.
+- An app that is not running is started with the argument `--formtray-hosted` and the environment variable `FORMTRAY_HOSTED=1`. On macOS: `open --env FORMTRAY_HOSTED=1 <path> --args --formtray-hosted`, or `open -b <id> --env FORMTRAY_HOSTED=1 --args --formtray-hosted`. If that exits non-zero (older macOS without `open --env`), the same call is retried without `--env`, then the plain `open`, one target after another in the existing order (path, then each identifier). Linux and Windows spawn the program directly with the argument and the variable.
+- An app that is already running is only focused: on macOS a plain `open` with no flag, elsewhere the existing window focus. The names are public constants so the shell can reuse them.
+- why: the owner's request of 2026-11-06, so apps opened from FormTray stay out of the Dock.
+
+## formcompiler is not an app 2026-11-06 {#formcompiler-removed}
+
+- refers-to: data/apps.json :: apps, excluded; tests/registry_and_settings.rs :: ORDER
+- kind: removed-code
+- logged: v0.13.0 · 2026-11-06
+- The formcompiler entry and its icon pair (formcompiler.webp, formcompiler-light.webp) are gone, and "formcompiler" joined the excluded list so nothing can surface it. formcompiler is only the GitHub repository that compiles and releases builds; it is never downloaded or installed, so it is not a Form family app and is not listed, shown, scheduled, iconed or counted. The registry now holds 33 apps and the icon pack is 34 pairs (33 apps and FormTray itself). Mentions of formcompiler as the build and release pipeline stay.
+- why: the owner's request of 2026-11-06, since formcompiler was shown as an app.

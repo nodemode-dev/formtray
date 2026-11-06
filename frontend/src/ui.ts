@@ -8,34 +8,54 @@ export function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = "", text
   return node;
 }
 
+function liveSrc(app: AppState): string {
+  if (!app.live_icon) return "";
+  if (!native) return `/apps/${app.live_icon}`;
+  return document.documentElement.dataset.platform === "windows" ? `http://appicon.localhost/${app.live_icon}` : `appicon://localhost/${app.live_icon}`;
+}
+
 export function iconSrc(app: AppState): string {
-  if (app.live_icon) {
-    if (!native) return `/apps/${app.live_icon}`;
-    return document.documentElement.dataset.platform === "windows" ? `http://appicon.localhost/${app.live_icon}` : `appicon://localhost/${app.live_icon}`;
-  }
-  return app.icon ? `/apps/${app.icon}` : "";
+  return app.icon ? `/apps/${app.icon}` : liveSrc(app);
+}
+
+export function iconLightSrc(app: AppState): string {
+  return app.icon ? `/apps/${app.icon.replace(/\.webp$/, "")}-light.webp` : "";
 }
 
 function initials(app: AppState): string {
   return app.name.replace(/^form\.?/i, "").slice(0, 2);
 }
 
-function iconImg(box: HTMLElement, src: string, fallback: string, app: AppState): HTMLImageElement {
-  const img = el("img");
+function iconImg(box: HTMLElement, sources: string[], app: AppState, tone = ""): HTMLImageElement {
+  const queue = sources.filter(Boolean);
+  const img = el("img", tone);
   img.alt = "";
   img.decoding = "async";
   img.draggable = false;
   img.addEventListener("error", () => {
-    if (fallback && !img.src.endsWith(fallback)) {
-      img.src = fallback;
-    } else {
-      img.remove();
+    const next = queue.shift();
+    if (next) {
+      img.src = next;
+      return;
+    }
+    img.remove();
+    if (!box.querySelector("img")) {
       box.classList.add("app-icon-mono");
       box.textContent = initials(app);
     }
   });
-  img.src = src;
+  img.src = queue.shift() ?? "";
   return img;
+}
+
+function fillIcon(box: HTMLElement, app: AppState): void {
+  const dark = iconSrc(app);
+  const light = iconLightSrc(app);
+  if (light) {
+    box.append(iconImg(box, [dark, liveSrc(app), light], app, "ai-dark"), iconImg(box, [light, dark], app, "ai-light"));
+  } else {
+    box.append(iconImg(box, [dark], app));
+  }
 }
 
 export function appIcon(app: AppState, size: "s" | "m" | "l"): HTMLSpanElement {
@@ -44,7 +64,7 @@ export function appIcon(app: AppState, size: "s" | "m" | "l"): HTMLSpanElement {
   box.dataset.iconApp = app.id;
   const src = iconSrc(app);
   if (src) {
-    box.append(iconImg(box, src, app.icon ? `/apps/${app.icon}` : "", app));
+    fillIcon(box, app);
   } else {
     box.classList.add("app-icon-mono");
     box.textContent = initials(app);
@@ -78,14 +98,17 @@ export function syncIdentity(snap: Snapshot): void {
         .decode()
         .then(() => {
           if (seen.get(app.id)?.src !== src) return;
+          const light = iconLightSrc(app);
           document.querySelectorAll<HTMLElement>(`[data-icon-app="${app.id}"]`).forEach((box) => {
-            const img = box.querySelector("img");
-            if (img) {
-              img.src = src;
+            const imgs = box.querySelectorAll("img");
+            if (imgs.length === (light ? 2 : 1)) {
+              imgs.forEach((img) => {
+                img.src = light && img.classList.contains("ai-light") ? light : src;
+              });
             } else {
               box.classList.remove("app-icon-mono");
               box.textContent = "";
-              box.append(iconImg(box, src, app.icon ? `/apps/${app.icon}` : "", app));
+              fillIcon(box, app);
             }
           });
         })

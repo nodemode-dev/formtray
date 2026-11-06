@@ -53,6 +53,7 @@ export interface Snapshot {
   platform: "macos" | "windows" | "linux";
   portal: boolean;
   updates: PortalUpdate[];
+  last_view: string;
 }
 
 export interface ShellInfo {
@@ -75,10 +76,11 @@ const previewListeners = new Map<string, ((payload: unknown) => void)[]>();
 
 async function previewSnapshot(): Promise<Snapshot> {
   if (preview) return preview;
-  const data = (await import("../../core/data/apps.json")).default as { categories: Snapshot["categories"]; apps: Omit<AppState, "installed" | "path" | "running" | "processes" | "since" | "count" | "last" | "hidden" | "live_icon" | "name_source">[] };
-  const board = ["formvis", "formcut", "formwav", "formdeck", "formlit", "formdam", "formweb", "formportal"];
+  const data = (await import("../../core/data/apps.json")).default as { excluded?: string[]; categories: Snapshot["categories"]; apps: (Omit<AppState, "installed" | "path" | "running" | "processes" | "since" | "count" | "last" | "hidden" | "live_icon" | "name_source"> & { opens?: string })[] };
+  const board = ["formvis", "formcut", "formwav", "formdeck", "formlit", "formmd", "formvfx", "formpdf"];
   const now = Math.floor(Date.now() / 1000);
-  const apps = data.apps.map((a, i) => ({
+  const released = data.apps.filter((a) => a.id !== "formtray" && !(data.excluded ?? []).includes(a.id) && (!a.opens || Date.parse(a.opens) <= Date.now()));
+  const apps = released.map(({ opens: _opens, ...a }, i) => ({
     ...a,
     live_icon: "",
     name_source: "registry" as const,
@@ -96,9 +98,10 @@ async function previewSnapshot(): Promise<Snapshot> {
     apps,
     platform: "macos",
     portal: true,
+    last_view: "widgets",
     updates: [{ id: "formvis", from: "1.60.0", to: "1.66.1" }, { id: "formcut", from: "2.6.2", to: "2.8.8" }],
     hotkeys: { switcher: "Alt+Tab", summon: "Control+Alt+Super+Space", "view-switcher": "Control+Alt+Super+Digit1", "view-stack": "Control+Alt+Super+Digit2", "view-apps": "Control+Alt+Super+Digit3", "view-windows": "Control+Alt+Super+Digit4", "view-widgets": "Control+Alt+Super+Digit5" },
-    prefs: { default_view: "apps", open_at_login: false, hidden: [], pinned: board, locations: [], widgets: board.map((app, i) => ({ kind: "app" as const, id: app, app, name: "", apps: [], size: i < 2 ? ("l" as const) : ("m" as const) })), hotkeys: {} },
+    prefs: { default_view: "widgets", open_at_login: false, hidden: [], pinned: board, locations: [], widgets: board.map((app, i) => ({ kind: "app" as const, id: app, app, name: "", apps: [], size: i < 2 ? ("l" as const) : ("m" as const) })), hotkeys: {} },
   };
   return preview;
 }

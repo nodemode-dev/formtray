@@ -45,6 +45,7 @@ pub struct Snapshot {
     pub platform: &'static str,
     pub portal: bool,
     pub updates: Vec<portal::PortalUpdate>,
+    pub last_view: String,
 }
 
 pub struct Engine {
@@ -95,28 +96,7 @@ impl Engine {
         self.portal = portal::read();
         self.registry = Registry::load();
         let roots = discover::search_roots(&self.prefs.locations);
-        let mut extra: Vec<(AppEntry, PathBuf)> = discover::unknown_family(&roots, &self.registry)
-            .into_iter()
-            .map(|(id, identifier, path)| (discovered(&id, vec![identifier]), path))
-            .collect();
-        for (id, path) in &self.portal.installs {
-            if self.registry.get(id).is_none() && !self.registry.excluded.contains(id) && !extra.iter().any(|(e, _)| &e.id == id) && id != "formtray" {
-                extra.push((discovered(id, Vec::new()), path.clone()));
-            }
-        }
         let cache = identity::cache_dir();
-        for (mut entry, path) in extra {
-            if let Some(found) = discover::resolve(&entry, &path).or(Some(path)) {
-                let id = identity::read_into(&entry, &found, &cache);
-                if let Some(hue) = id.icon.as_deref().and_then(|i| identity::hue(&cache, i)) {
-                    entry.hue = hue;
-                }
-                self.registry.apps.push(entry);
-            }
-        }
-        if self.registry.apps.iter().any(|a| a.category == "more") {
-            self.registry.categories.push(Category { id: "more".into(), name: "More".into() });
-        }
         let portal = &self.portal;
         self.paths = self
             .registry
@@ -184,6 +164,7 @@ impl Engine {
             .registry
             .apps
             .iter()
+            .filter(|a| self.is_released(a))
             .map(|a| {
                 let run = self.running.get(&a.id);
                 let used = self.usage.apps.get(&a.id);
@@ -217,11 +198,20 @@ impl Engine {
             platform: Self::platform(),
             portal: self.portal.found,
             updates: self.portal.updates.clone(),
+            last_view: self.last_view(),
         }
     }
 
+    fn is_released(&self, app: &AppEntry) -> bool {
+        if app.id == "formtray" {
+            return false;
+        }
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+        app.released_at(now) || self.portal.released.contains(&app.id)
+    }
+
     fn entry(&self, id: &str) -> Result<AppEntry, LaunchError> {
-        self.registry.get(id).cloned().ok_or_else(|| LaunchError::NotFound(id.to_string()))
+        self.registry.get(id).filter(|a| self.is_released(a)).cloned().ok_or_else(|| LaunchError::NotFound(id.to_string()))
     }
 
     pub fn open(&mut self, id: &str) -> Result<String, LaunchError> {
@@ -263,18 +253,5 @@ impl Engine {
         } else {
             self.prefs.default_view.clone()
         }
-    }
-}
-
-fn discovered(id: &str, identifiers: Vec<String>) -> AppEntry {
-    AppEntry {
-        id: id.to_string(),
-        name: identity::form_name(None, id).unwrap_or_else(|| id.to_string()),
-        alt_of: String::new(),
-        category: "more".to_string(),
-        hue: "#b46aa7".to_string(),
-        icon: String::new(),
-        identifiers,
-        names: vec![id.to_string()],
     }
 }

@@ -1,5 +1,6 @@
 mod glass;
 mod keys;
+mod menu_icons;
 mod theme;
 
 use std::collections::HashMap;
@@ -304,24 +305,37 @@ fn sync_login(app: &AppHandle, on: bool) {
 }
 
 fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
-    let (login_on, pinned) = with_engine(app, |e| {
+    let light = panel(app, PANEL).and_then(|w| w.theme().ok()) == Some(tauri::Theme::Light);
+    let (login_on, running, pinned) = with_engine(app, |e| {
         let snap = e.snapshot();
+        let mut running: Vec<&formtray_core::AppState> = snap.apps.iter().filter(|a| a.running && !a.hidden).collect();
+        running.sort_by_key(|a| a.since);
+        let entry = |a: &formtray_core::AppState| (a.id.clone(), a.name.clone(), e.menu_icon(&a.id));
+        let open: Vec<(String, String, Option<std::path::PathBuf>)> = running.iter().map(|a| entry(a)).collect();
         let pinned: Vec<(String, String, Option<std::path::PathBuf>)> = e
             .prefs
             .pinned
             .iter()
+            .filter(|id| !running.iter().any(|a| &a.id == *id))
             .filter_map(|id| snap.apps.iter().find(|a| &a.id == id && a.installed && !a.hidden))
-            .map(|a| (a.id.clone(), a.name.clone(), e.menu_icon(&a.id)))
+            .map(entry)
             .collect();
-        (e.prefs.open_at_login, pinned)
+        (e.prefs.open_at_login, open, pinned)
     });
-    let apps: Vec<IconMenuItem<tauri::Wry>> = pinned
-        .iter()
-        .map(|(id, name, icon)| {
-            let image = icon.as_ref().and_then(|p| std::fs::read(p).ok()).and_then(|b| Image::from_bytes(&b).ok());
-            IconMenuItem::with_id(app, format!("open-{id}"), name, true, image, None::<&str>)
-        })
-        .collect::<tauri::Result<_>>()?;
+    let build = |list: &[(String, String, Option<std::path::PathBuf>)]| -> tauri::Result<Vec<IconMenuItem<tauri::Wry>>> {
+        list.iter()
+            .map(|(id, name, icon)| {
+                let image = menu_icons::bytes(id, light)
+                    .and_then(|b| Image::from_bytes(b).ok())
+                    .or_else(|| icon.as_ref().and_then(|p| std::fs::read(p).ok()).and_then(|b| Image::from_bytes(&b).ok()));
+                IconMenuItem::with_id(app, format!("open-{id}"), name, true, image, None::<&str>)
+            })
+            .collect()
+    };
+    let open_header = MenuItem::with_id(app, "section-open", "Open now", false, None::<&str>)?;
+    let open_items = build(&running)?;
+    let apps = build(&pinned)?;
+    let sep_open = PredefinedMenuItem::separator(app)?;
     let items: Vec<MenuItem<tauri::Wry>> = [("view-switcher", "Switcher"), ("view-stack", "Stack"), ("view-apps", "Apps"), ("view-windows", "Windows"), ("view-widgets", "Widgets")]
         .iter()
         .map(|(id, label)| MenuItem::with_id(app, *id, *label, true, None::<&str>))
@@ -334,7 +348,15 @@ fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let sep0 = PredefinedMenuItem::separator(app)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
-    let mut refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = apps.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>).collect();
+    let mut refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = Vec::new();
+    if !open_items.is_empty() {
+        refs.push(&open_header);
+        refs.extend(open_items.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>));
+        if !apps.is_empty() {
+            refs.push(&sep_open);
+        }
+    }
+    refs.extend(apps.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>));
     if !refs.is_empty() {
         refs.push(&sep0);
     }
@@ -343,10 +365,28 @@ fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     Menu::with_items(app, &refs)
 }
 
+#[cfg(target_os = "macos")]
+fn show_menu_images(tray: &tauri::tray::TrayIcon) {
+    let _ = tray.with_inner_tray_icon(|t| {
+        use objc2::runtime::NSObjectProtocol;
+        let Some(mtm) = objc2::MainThreadMarker::new() else { return };
+        let Some(menu) = t.ns_status_item().and_then(|s| s.menu(mtm)) else { return };
+        for item in menu.itemArray().iter() {
+            if item.respondsToSelector(objc2::sel!(setPreferredImageVisibility:)) {
+                unsafe { objc2::msg_send![&*item, setPreferredImageVisibility: 1isize] }
+            }
+        }
+    });
+}
+
+#[cfg(not(target_os = "macos"))]
+fn show_menu_images(_tray: &tauri::tray::TrayIcon) {}
+
 fn refresh_tray(app: &AppHandle) {
     let Some(tray) = app.tray_by_id("formtray") else { return };
     if let Ok(menu) = tray_menu(app) {
         let _ = tray.set_menu(Some(menu));
+        show_menu_images(&tray);
     }
     if !cfg!(target_os = "macos") {
         if let Ok(image) = Image::from_bytes(theme::tray_png().0) {
@@ -373,7 +413,7 @@ fn icon_response(path: &str) -> tauri::http::Response<Vec<u8>> {
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let menu = tray_menu(app)?;
     let (tray_png, template) = theme::tray_png();
-    TrayIconBuilder::with_id("formtray")
+    let tray = TrayIconBuilder::with_id("formtray")
         .icon(Image::from_bytes(tray_png)?)
         .icon_as_template(template)
         .tooltip("FormTray")
@@ -415,6 +455,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             }
         })
         .build(app)?;
+    show_menu_images(&tray);
     Ok(())
 }
 
@@ -432,7 +473,7 @@ fn handle_args(app: &AppHandle, args: &[String], first: bool) {
     if first && args.iter().any(|a| a == BACKGROUND_FLAG) {
         return;
     }
-    let view = if first { with_engine(app, |e| e.prefs.default_view.clone()) } else { "stack".to_string() };
+    let view = if first { with_engine(app, |e| e.prefs.default_view.clone()) } else { with_engine(app, |e| e.last_view()) };
     show_view(app, &view, if first { "launch" } else { "dock" });
 }
 
@@ -593,11 +634,29 @@ pub fn run() {
             register_hotkeys(&handle);
             build_tray(&handle)?;
             let poller = handle.clone();
-            std::thread::spawn(move || loop {
-                std::thread::sleep(Duration::from_millis(1000));
-                let visible = poller.state::<Shell>().shown.lock().unwrap().is_some() || panel(&poller, "prefs").and_then(|w| w.is_visible().ok()).unwrap_or(false);
-                if visible && with_engine(&poller, |e| e.refresh_running()) {
-                    broadcast(&poller);
+            std::thread::spawn(move || {
+                let open_ids = |app: &AppHandle| {
+                    with_engine(app, |e| {
+                        let snap = e.snapshot();
+                        let mut open: Vec<&formtray_core::AppState> = snap.apps.iter().filter(|a| a.running && !a.hidden).collect();
+                        open.sort_by_key(|a| a.since);
+                        open.iter().map(|a| a.id.clone()).collect::<Vec<String>>()
+                    })
+                };
+                let mut last = open_ids(&poller);
+                loop {
+                    let visible = poller.state::<Shell>().shown.lock().unwrap().is_some() || panel(&poller, "prefs").and_then(|w| w.is_visible().ok()).unwrap_or(false);
+                    std::thread::sleep(Duration::from_millis(if visible { 1000 } else { 3000 }));
+                    let changed = with_engine(&poller, |e| e.refresh_running());
+                    if changed && visible {
+                        broadcast(&poller);
+                    }
+                    let now = open_ids(&poller);
+                    if now != last {
+                        last = now;
+                        let inner = poller.clone();
+                        let _ = poller.run_on_main_thread(move || refresh_tray(&inner));
+                    }
                 }
             });
             let args: Vec<String> = std::env::args().collect();
@@ -615,7 +674,10 @@ pub fn run() {
     app.run(|_app, event| match event {
         RunEvent::ExitRequested { api, code, .. } if code.is_none() => api.prevent_exit(),
         #[cfg(target_os = "macos")]
-        RunEvent::Reopen { .. } => show_view(_app, "stack", "dock"),
+        RunEvent::Reopen { .. } => {
+            let view = with_engine(_app, |e| e.last_view());
+            show_view(_app, &view, "dock");
+        }
         _ => {}
     });
 }

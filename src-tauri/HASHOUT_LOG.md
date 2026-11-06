@@ -35,6 +35,21 @@ src-tauri/
 
 ## src/lib.rs {#lib}
 
+- refers-to: show_menu_images, refresh_tray, build_tray, the poller thread, menu_icons::bytes, icons/menu
+- kind: rationale
+- logged: v0.13.0 · 2026-11-06
+- macOS 27 hides menu item images unless each NSMenuItem has `preferredImageVisibility` set to Visible (raw NSInteger 1, macOS 27 only), and muda never sets it (electron/electron#54514, duckduckgo/apple-browsers#6816). `show_menu_images` runs after build_tray and after every `set_menu` in refresh_tray: it reads the status item through `with_inner_tray_icon`, walks the menu's `itemArray` and sends `setPreferredImageVisibility:` to each item that responds to it, so older macOS versions are untouched. It is a no-op off macOS and was not compiled here. The poller used to rebuild the menu only when its own `refresh_running` returned true, but the panel's snapshot polling usually refreshes running state first, so the menu never gained Open now. It now compares the ordered open ids on every tick and rebuilds when they differ, and still broadcasts to visible panels only when `refresh_running` reports a change. formcompiler is no longer an app here: it is gone from `menu_icons` and its two icons are deleted from `icons/menu`, because it is only the build and release pipeline and is never installed.
+
+- refers-to: tray_menu, refresh_tray, build_tray, menu_icons::bytes, the poller thread
+- kind: rationale
+- logged: v0.12.0 · 2026-11-06
+- The macOS menu bar icon broke because `icons/tray.png` was replaced by the colour app icon in e219727 while build_tray still draws it with `icon_as_template(true)`; the template PNGs were restored. build_tray and refresh_tray were checked: refresh_tray only calls `set_icon` off macOS, and nothing else sets the tray icon or a badge. The menu gains an "Open now" section (running, released, not hidden, ordered by `since`, each item using the existing `open-<id>` path), then the pinned apps not already listed, with separators only between non-empty sections. Items use the bundled pack icons in `icons/menu` (dark or light by the panel theme, rebuilt on ThemeChanged), falling back to the live bundle icon. The poller runs `refresh_running` always, not only while a panel is visible, every 1 s while a panel is visible and every 3 s otherwise. It rebuilds the menu on the main thread only when the ordered list of running, non-hidden app ids (the Open now section) changes, because `set_menu` can close an open macOS menu and a helper process count change must not trigger it; panel views are still notified on every running change. The "Open now" header is a disabled item with id `section-open` so it never matches the `open-` prefix. macOS arms not compiled here.
+
+- refers-to: handle_args, RunEvent::Reopen
+- kind: rationale
+- logged: v0.9.9 · 2026-11-06
+- Clicking the Dock icon, and any later launch while FormTray is already running, now opens the view the user last switched to (`Engine::last_view`, which falls back to the default view when the stored one is invalid). Both used a hard-coded "stack". The first launch still uses the default view preference. The tray menu's explicit view items and the `view-*` hotkeys name their view on purpose and are unchanged. The tray menu reads the engine snapshot, so it only lists the apps the engine exposes. Not compiled here: the Linux box lacks gdk-3.0.
+
 - refers-to: show_view, panel_size, place
 - kind: rationale
 - logged: v0.4.0 · 2026-10-12
