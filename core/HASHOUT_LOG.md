@@ -203,3 +203,14 @@ cli/
 - kind: decision
 - logged: v0.9.7 · 2026-10-26
 - The family template (F4 and F9) with formtray's four version sites (no wiki version line).
+
+## owner request 2026-11-06 {#released-only}
+
+- refers-to: discover.rs :: unknown_family, lib.rs :: rediscover, snapshot, open, quit, prefs.rs :: Prefs::load, Usage::load
+- kind: decision
+- logged: 2026-11-06
+- A. FormTray no longer adopts apps that are not in the registry. unknown_family, the discovered entry, the portal-install adoption and the dynamic "more" category are gone; apps.json declares the More category itself. The owner saw Ollama Harness, deduplakit, TopNotch and DAMp in the tray because their bundle ids start with ai.nodemode. On macOS a bundle with a family prefix whose identifier is not in an app's list is still not a match.
+- B. Only released apps are listed. An app is released when its opens time has passed or FormPortal's catalogue has a published release for it; formtray itself is never listed. open and quit refuse an id that is not released with NotFound.
+- C. The opening view is widgets (default and invalid-value fallback). Installs saved before layout 2 move default_view apps to widgets, rename formslide to formdeck and formranker to formbench in hidden, pinned, widget tiles and usage, then save with layout 2. The default board is formvis, formcut, formwav, formdeck, formlit, formmd, formvfx, formpdf.
+- D. form_name returns the registry display name unchanged for family apps (form.md, FormVis); it lowercases only when there is no registry entry.
+- why: the owner's request of 2026-11-06, so the tray shows only the released Form family.

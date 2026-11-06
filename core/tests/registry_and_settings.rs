@@ -4,9 +4,10 @@ use std::sync::{Mutex, MutexGuard};
 
 use formtray_core::{prefs, Prefs, Registry, Tile, Usage};
 
-const ORDER: [&str; 23] = [
+const ORDER: [&str; 34] = [
     "formvis", "formlit", "formpath", "formdam", "formref", "formcut", "formvfx", "formencoder", "formwav", "formdesign", "formpdf", "formdeck",
-    "formmd", "formsculpt", "formsurface", "formweb", "format", "formcel", "formtxt", "formranker", "formmcp", "formskills", "formportal",
+    "formmd", "formsculpt", "formsurface", "formweb", "format", "formcel", "formtxt", "formbench", "formmcp", "formskills", "formportal",
+    "formcompiler", "formtools", "formfabric", "formmorpheus", "formcraft", "formpromo", "formrig", "formcad", "formnet", "formslot", "subform",
 ];
 
 static ENV: Mutex<()> = Mutex::new(());
@@ -39,7 +40,7 @@ impl Drop for Config {
 }
 
 #[test]
-fn the_registry_yields_the_23_apps_in_order() {
+fn the_registry_yields_the_34_apps_in_order() {
     let registry = Registry::load();
     let ids: Vec<&str> = registry.apps.iter().map(|a| a.id.as_str()).collect();
     assert_eq!(ids, ORDER);
@@ -77,7 +78,7 @@ fn settings_default_when_no_file_exists() {
     let c = Config::new("defaults");
     assert!(!c.file("prefs.json").exists());
     let p = Prefs::load();
-    assert_eq!(p.default_view, "apps");
+    assert_eq!(p.default_view, "widgets");
     assert!(!p.open_at_login);
     assert_eq!(p.pinned.len(), 8);
     assert_eq!(p.widgets.len(), 8);
@@ -113,7 +114,7 @@ fn a_corrupt_settings_file_falls_back_to_defaults() {
     for bad in ["{not json", "", "[]", "\u{0}\u{0}"] {
         std::fs::write(c.file("prefs.json"), bad).unwrap();
         let p = Prefs::load();
-        assert_eq!(p.default_view, "apps", "{bad:?}");
+        assert_eq!(p.default_view, "widgets", "{bad:?}");
         assert_eq!(p.pinned.len(), 8, "{bad:?}");
     }
     std::fs::write(c.file("usage.json"), "{oops").unwrap();
@@ -126,7 +127,7 @@ fn a_partial_or_unknown_view_keeps_what_is_valid() {
     std::fs::create_dir_all(prefs::dir()).unwrap();
     std::fs::write(c.file("prefs.json"), r#"{"default_view":"nowhere","hidden":["formcut"],"unknown_field":1}"#).unwrap();
     let p = Prefs::load();
-    assert_eq!(p.default_view, "apps");
+    assert_eq!(p.default_view, "widgets");
     assert_eq!(p.hidden, vec!["formcut".to_string()]);
     assert_eq!(p.pinned.len(), 8);
 }

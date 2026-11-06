@@ -15,6 +15,7 @@ pub struct PortalState {
     pub installs: Vec<(String, PathBuf)>,
     pub updates: Vec<PortalUpdate>,
     pub names: std::collections::HashMap<String, String>,
+    pub released: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -69,7 +70,14 @@ pub fn root() -> PathBuf {
     }
     let home = dirs::home_dir().unwrap_or_default();
     if cfg!(target_os = "macos") {
-        home.join("Library/Application Support/dev.formai.portal")
+        let support = home.join("Library/Application Support");
+        let current = support.join("studio.formai.portal");
+        let legacy = support.join("dev.formai.portal");
+        if !current.exists() && legacy.exists() {
+            legacy
+        } else {
+            current
+        }
     } else if cfg!(target_os = "windows") {
         std::env::var_os("LOCALAPPDATA").map(PathBuf::from).unwrap_or_else(|| home.join("AppData/Local")).join("FormPortal")
     } else {
@@ -81,6 +89,8 @@ pub fn family_id(product: &str) -> String {
     match product {
         "formai" => "formportal".to_string(),
         "formslide" => "formdeck".to_string(),
+        "formranker" => "formbench".to_string(),
+        "formskill" => "formskills".to_string(),
         other => other.to_string(),
     }
 }
@@ -123,6 +133,14 @@ pub fn read_at(root: &Path) -> PortalState {
     let mut state = PortalState { found: true, ..PortalState::default() };
     for product in catalog.iter().flat_map(|c| c.products.iter()).filter(|p| !p.name.trim().is_empty()) {
         state.names.insert(family_id(&product.id), product.name.trim().to_string());
+    }
+    for product in catalog.iter().flat_map(|c| c.products.iter()) {
+        if product.channels.get("stable").is_some_and(|r| r.artifacts.iter().any(|a| a.platform == platform())) {
+            let id = family_id(&product.id);
+            if !state.released.contains(&id) {
+                state.released.push(id);
+            }
+        }
     }
     for install in installed.installs.iter().filter(|i| i.channel == "stable") {
         let id = family_id(&install.product);
