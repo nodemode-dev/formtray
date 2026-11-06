@@ -606,7 +606,7 @@ html[data-native="false"][data-view="prefs"] .panel { width: 640px; height: 600p
   grid-auto-rows: 104px;
   grid-auto-flow: dense;
   gap: var(--sp-3);
-  padding: 0 var(--sp-5) var(--sp-5);
+  padding: var(--sp-2) var(--sp-5) var(--sp-6);
   overflow-y: auto;
   align-content: start;
   flex: 0 1 auto;
@@ -710,9 +710,35 @@ html[data-native="false"][data-view="prefs"] .panel { width: 640px; height: 600p
   box-shadow: inset 0 1px 0 var(--sheen), inset 0 0 0 1px var(--edge-strong);
 }
 
-.wg-tile.is-dragging {
-  opacity: 0.45;
+.is-editing .wg-tile {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
+
+.wg-tile img {
+  -webkit-user-drag: none;
+}
+
+.wg-tile.is-dragging {
+  position: fixed;
+  margin: 0;
+  opacity: 0.92;
+  cursor: grabbing;
+  z-index: var(--z-drag);
+  box-shadow: inset 0 1px 0 var(--sheen), inset 0 0 0 1px var(--edge-strong), 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.wg-ph {
+  border-radius: var(--radius-l);
+  background: var(--control);
+  box-shadow: inset 0 0 0 1px var(--edge-strong);
+  opacity: 0.5;
+}
+
+.wg-ph[data-size="s"] { grid-column: span 1; }
+.wg-ph[data-size="m"] { grid-column: span 2; }
+.wg-ph[data-size="l"] { grid-column: span 2; grid-row: span 2; }
 
 .wg-addbar {
   display: none;
@@ -756,13 +782,26 @@ html[data-native="false"][data-view="prefs"] .panel { width: 640px; height: 600p
   white-space: nowrap;
 }
 
+.wg-headtext {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.v-widgets .pn-title {
+  margin-right: 0;
+}
+
 .wg-hint {
-  flex: none;
-  height: 24px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   margin: 0;
-  padding: 0 var(--sp-5);
+  padding: 0;
   font-size: var(--fs-s);
-  line-height: 24px;
+  line-height: 16px;
   color: var(--ink-faint);
   white-space: nowrap;
   overflow: hidden;

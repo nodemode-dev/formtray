@@ -102,6 +102,10 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 - refers-to: prefs.ts onCapture
 - kind: rationale
 - It listens in the capture phase and stops propagation, so the shared keys in main.ts (1 to 5, Esc) do not act while a chord is being recorded. The chord is built from `e.code`, so Option on macOS does not turn the letter into a symbol.
+- refers-to: widgets.ts wireReorder, reposition, shift, .wg-ph, .wg-hint, .wg-board
+- kind: removed-code
+- logged: v0.13.0 · 2026-11-06
+- The owner could not reorder widgets in v0.12.0. HTML5 drag and drop (draggable, dragstart, dragover) is fragile in the macOS WKWebView and was replaced by pointer events. In edit mode, a press that moves more than 4 px lifts the tile: it follows the pointer by transform while a `.wg-ph` placeholder with the same grid span keeps its slot. The placeholder moves by insertBefore using a 2D reading-order test, with hysteresis (8 px or leaving the tile) so dense-grid reflow cannot make it flip-flop. The board autoscrolls within 40 px of its edges. The drop saves once, only if the order changed. Escape, pointercancel, lost capture or leaving edit mode restore the order. Alt+Arrow moves a focused tile, except during a drag. The dragged tile sits on `--z-drag` above the tool pills. The edit hint moved into the fixed-height header, so view mode no longer keeps an empty band above the board. The board has padding on every side, larger at the bottom.
 
 ## src/ui.ts {#ui}
 

@@ -22,10 +22,10 @@ export function widgets(): ViewModule {
   type Want = { key: string; label: string; build: () => HTMLElement };
   const tiles = new Map<string, Entry>();
   let pending: Tile[] = [];
-  let dragFrom = "";
+  type Drag = { node: HTMLElement; ph: HTMLElement; id: number; sx: number; sy: number; active: boolean; from: string; next: Element | null; px: number; py: number; raf: number; hold: { x: number; y: number; t: HTMLElement } | null };
+  let drag: Drag | null = null;
   let appsSig = "";
   let editing = false;
-  let dragging: HTMLElement | null = null;
   let addingTo: string | null = null;
   let pop: HTMLElement;
   let popTitle: HTMLElement;
@@ -81,37 +81,148 @@ export function widgets(): ViewModule {
     return tools;
   }
 
-  function wireDrag(node: HTMLElement) {
+  function orderKey(): string {
+    return order().map((t) => t.id).join(",");
+  }
+
+  function reposition(px: number, py: number) {
+    if (!drag) return;
+    const d = drag;
+    const { node, ph } = d;
+    if (d.hold) {
+      const h = d.hold.t.getBoundingClientRect();
+      const inside = px >= h.left && px <= h.right && py >= h.top && py <= h.bottom;
+      if (inside && Math.hypot(px - d.hold.x, py - d.hold.y) < 8) return;
+      d.hold = null;
+    }
+    for (const t of [...board.children] as HTMLElement[]) {
+      if (t === node || t === ph || !t.classList.contains("wg-tile")) continue;
+      const r = t.getBoundingClientRect();
+      if (px < r.left || px > r.right || py < r.top || py > r.bottom) continue;
+      const midX = r.left + r.width / 2;
+      const midY = r.top + r.height / 2;
+      const before = py < midY || (py <= midY + r.height / 4 && px < midX);
+      if (before ? ph.nextSibling === t : ph.previousSibling === t) return;
+      board.insertBefore(ph, before ? t : t.nextSibling);
+      d.hold = { x: px, y: py, t };
+      return;
+    }
+  }
+
+  function autoscroll() {
+    const d = drag;
+    if (!d || !d.active) return;
+    const r = board.getBoundingClientRect();
+    const edge = 40;
+    const top = edge - (d.py - r.top);
+    const bottom = edge - (r.bottom - d.py);
+    let step = 0;
+    if (top > 0) step = -Math.min(1, top / edge) * 18;
+    else if (bottom > 0) step = Math.min(1, bottom / edge) * 18;
+    if (step) {
+      const before = board.scrollTop;
+      board.scrollTop += step;
+      if (board.scrollTop !== before) reposition(d.px, d.py);
+    }
+    d.raf = requestAnimationFrame(autoscroll);
+  }
+
+  function startDrag(d: Drag, e: PointerEvent) {
+    const { node, ph } = d;
+    const r = node.getBoundingClientRect();
+    d.from = orderKey();
+    d.next = node.nextElementSibling;
+    ph.dataset.size = node.dataset.size ?? "m";
+    board.insertBefore(ph, node);
+    node.style.setProperty("left", `${r.left}px`);
+    node.style.setProperty("top", `${r.top}px`);
+    node.style.setProperty("width", `${r.width}px`);
+    node.style.setProperty("height", `${r.height}px`);
+    node.classList.add("is-dragging");
+    const a = node.getBoundingClientRect();
+    if (Math.abs(a.left - r.left) > 0.5 || Math.abs(a.top - r.top) > 0.5) {
+      node.style.setProperty("left", `${r.left + (r.left - a.left)}px`);
+      node.style.setProperty("top", `${r.top + (r.top - a.top)}px`);
+    }
+    try {
+      node.setPointerCapture(e.pointerId);
+    } catch {
+      void 0;
+    }
+    d.active = true;
+    d.px = e.clientX;
+    d.py = e.clientY;
+    d.raf = requestAnimationFrame(autoscroll);
+  }
+
+  function endDrag(commit: boolean) {
+    const d = drag;
+    drag = null;
+    if (d) cancelAnimationFrame(d.raf);
+    if (!d || !d.active) return;
+    const { node, ph } = d;
+    try {
+      node.releasePointerCapture(d.id);
+    } catch {
+      void 0;
+    }
+    if (!commit) board.insertBefore(ph, d.next);
+    board.insertBefore(node, ph);
+    ph.remove();
+    node.classList.remove("is-dragging");
+    for (const p of ["transform", "left", "top", "width", "height"]) node.style.removeProperty(p);
+    if (commit && orderKey() !== d.from) save();
+  }
+
+  function shift(node: HTMLElement, dir: -1 | 1) {
+    if (drag?.active) return;
+    const sib = (dir < 0 ? node.previousElementSibling : node.nextElementSibling) as HTMLElement | null;
+    if (!sib || !sib.classList.contains("wg-tile")) return;
+    board.insertBefore(node, dir < 0 ? sib : sib.nextSibling);
+    node.querySelector<HTMLElement>(".wg-face")?.focus();
+    node.scrollIntoView({ block: "nearest" });
+    save();
+  }
+
+  function wireReorder(node: HTMLElement) {
     const grip = el("span", "wg-grip");
     grip.title = "Drag to reorder";
     grip.innerHTML = GRIP;
     node.append(grip);
-    node.addEventListener("dragstart", (e) => {
-      const active = document.activeElement;
-      if (!editing || (e.target as HTMLElement).closest("input") || (active instanceof HTMLInputElement && node.contains(active))) return e.preventDefault();
-      dragging = node;
-      dragFrom = order().map((t) => t.id).join(",");
-      node.classList.add("is-dragging");
-      if (e.dataTransfer) {
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", node.dataset.id ?? "");
+    node.addEventListener("pointerdown", (e) => {
+      if (!editing || drag?.active || e.button !== 0 || !e.isPrimary) return;
+      if ((e.target as HTMLElement).closest(".wg-tools, .wg-name-input")) return;
+      drag = { node, ph: el("div", "wg-ph"), id: e.pointerId, sx: e.clientX, sy: e.clientY, active: false, from: "", next: null, px: e.clientX, py: e.clientY, raf: 0, hold: null };
+    });
+    node.addEventListener("pointermove", (e) => {
+      const d = drag;
+      if (!d || d.node !== node || e.pointerId !== d.id) return;
+      const dx = e.clientX - d.sx;
+      const dy = e.clientY - d.sy;
+      if (!d.active) {
+        if (Math.hypot(dx, dy) <= 4) return;
+        startDrag(d, e);
       }
+      node.style.setProperty("transform", `translate(${dx}px, ${dy}px)`);
+      d.px = e.clientX;
+      d.py = e.clientY;
+      reposition(e.clientX, e.clientY);
     });
-    node.addEventListener("dragend", () => {
-      node.classList.remove("is-dragging");
-      dragging = null;
-      if (order().map((t) => t.id).join(",") !== dragFrom) save();
+    node.addEventListener("pointerup", (e) => {
+      if (drag && drag.node === node && e.pointerId === drag.id) endDrag(true);
     });
-    node.addEventListener("dragover", (e) => {
-      if (!dragging) return;
+    node.addEventListener("pointercancel", (e) => {
+      if (drag && drag.node === node && e.pointerId === drag.id) endDrag(false);
+    });
+    node.addEventListener("lostpointercapture", () => {
+      if (drag && drag.node === node) endDrag(false);
+    });
+    node.addEventListener("keydown", (e) => {
+      if (!editing || !e.altKey || (e.target as HTMLElement).closest(".wg-name-input")) return;
+      const dir = e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : 0;
+      if (!dir) return;
       e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-      if (dragging === node) return;
-      const r = node.getBoundingClientRect();
-      const before = e.clientX < r.left + r.width / 2;
-      const forward = Boolean(dragging.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING);
-      if (forward && !before) board.insertBefore(dragging, node.nextSibling);
-      else if (!forward && before) board.insertBefore(dragging, node);
+      shift(node, dir);
     });
   }
 
@@ -167,18 +278,6 @@ export function widgets(): ViewModule {
         if (input.style[k] !== box[k]) input.style[k] = box[k];
       }
     };
-    const lock = () => {
-      node.draggable = false;
-    };
-    node.addEventListener(
-      "pointerdown",
-      (e) => {
-        if (e.target === input) lock();
-      },
-      true,
-    );
-    input.addEventListener("mousedown", lock);
-    input.addEventListener("focus", lock);
     input.addEventListener("keydown", (e) => {
       e.stopPropagation();
       if (e.key === "Enter") {
@@ -191,7 +290,6 @@ export function widgets(): ViewModule {
       }
     });
     const commit = () => {
-      node.draggable = editing;
       const entry = tiles.get(tile.id);
       if (!entry) return;
       if (revert) {
@@ -213,7 +311,7 @@ export function widgets(): ViewModule {
       syncAdd();
     });
     node.append(face, input, toolsFor(tile.id, [add]));
-    wireDrag(node);
+    wireReorder(node);
     const entry: Entry = { node, meta, size: tile.size, tile: { ...tile, apps: [...tile.apps] }, minis, name, input, fit, commit };
     entry.ro = new ResizeObserver(fit);
     entry.ro.observe(node);
@@ -260,7 +358,7 @@ export function widgets(): ViewModule {
     if (portal) face.append(appIcon(portal, "m"));
     face.append(text, badge);
     node.append(face, toolsFor("updates"));
-    wireDrag(node);
+    wireReorder(node);
     const entry: Entry = { node, meta, size: tile.size, tile: { ...tile, id: "updates" }, minis: list };
     fillUpdates(entry);
     return entry;
@@ -313,7 +411,7 @@ export function widgets(): ViewModule {
     const icon = appIcon(app, size === "s" ? "m" : "l");
     face.append(icon, runDot(), text);
     node.append(face, toolsFor(id));
-    wireDrag(node);
+    wireReorder(node);
     const entry: Entry = { node, meta, size, tile: { kind: "app", id, app: id, name: "", apps: [], size }, icon };
     refreshApp(entry, app);
     return entry;
@@ -387,7 +485,6 @@ export function widgets(): ViewModule {
 
   function place(entry: Entry) {
     tiles.set(entry.tile.kind === "app" ? entry.tile.app : entry.tile.id, entry);
-    entry.node.draggable = editing;
     board.append(entry.node);
     entry.fit?.();
   }
@@ -540,6 +637,7 @@ export function widgets(): ViewModule {
         }
       });
     }
+    if (!on) endDrag(false);
     editing = on;
     root.classList.toggle("is-editing", on);
     if (editBtn.dataset.on !== String(on)) {
@@ -551,7 +649,6 @@ export function widgets(): ViewModule {
     editBtn.setAttribute("aria-pressed", String(on));
     hint.setAttribute("aria-hidden", String(!on));
     tiles.forEach((t) => {
-      t.node.draggable = on && document.activeElement !== t.input;
       t.fit?.();
     });
     if (!on) addingTo = null;
@@ -574,8 +671,10 @@ export function widgets(): ViewModule {
       editLabel = el("span", "wg-edit-label", "Edit");
       editBtn.append(editIcon, editLabel);
       editBtn.addEventListener("click", () => setEditing(!editing));
-      hint = el("p", "wg-hint", "Drag to reorder. Resize or remove from each tile's corner. Add from the bar below.");
-      head.append(el("h1", "pn-title", "Widgets"), viewBar("widgets", (v) => ctx.go(v)), editBtn, iconButton(icons.gear, "Settings", () => ctx.go("prefs")));
+      hint = el("p", "wg-hint", "Drag tiles to reorder. Resize or remove from a tile's corner.");
+      const headText = el("div", "wg-headtext");
+      headText.append(el("h1", "pn-title", "Widgets"), hint);
+      head.append(headText, viewBar("widgets", (v) => ctx.go(v)), editBtn, iconButton(icons.gear, "Settings", () => ctx.go("prefs")));
       board = el("div", "wg-board");
       empty = el("p", "pn-empty", "The board is empty. Choose Edit to add apps.");
       addBar = el("section", "wg-addbar");
@@ -595,8 +694,13 @@ export function widgets(): ViewModule {
         if (!admit(t)) pending.push({ ...t });
       }
       empty.hidden = tiles.size > 0;
-      root.append(head, hint, board, empty, addBar, pop);
+      root.append(head, board, empty, addBar, pop);
       syncAdd();
+      const clearStale = () => {
+        if (drag && !drag.active) drag = null;
+      };
+      window.addEventListener("pointerup", clearStale);
+      window.addEventListener("pointercancel", clearStale);
       root.addEventListener("pointerdown", (e) => {
         if (!pop.hidden && !pop.contains(e.target as Node) && !(e.target as HTMLElement).closest(".wg-group")) closePop();
       });
@@ -627,6 +731,7 @@ export function widgets(): ViewModule {
       setEditing(false);
     },
     key(e) {
+      if (e.key === "Escape" && drag?.active) return endDrag(false), true;
       if (e.key === "Escape" && !pop.hidden) return closePop(), true;
       if (e.key === "Escape" && editing && !(document.activeElement instanceof HTMLInputElement)) return setEditing(false), true;
       return false;
