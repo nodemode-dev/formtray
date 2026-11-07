@@ -23,7 +23,7 @@ FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons i
 | gtk, gdkx11, x11 (Linux) | the panel window on Linux |
 | Vite, TypeScript, @tauri-apps/cli, @types/node (build only) | building the interface and the app; not shipped |
 | `demo/` (no new packages) | the browser demo is built with the same Vite and TypeScript from `frontend/package-lock.json`; it ships the app's own interface code, `core/data/apps.json` and the family icon pack, and adds no font, binary or third-party code |
-| `demo/src/shots/`, `demo/assets/*.webp` (v0.14.1) | one Pexels photograph (Pexels License) used as the desktop wallpaper, and nine window screenshots from the Apache-2.0 sibling Form app repositories; each file, its source page and licence is listed in `demo/CREDITS.md` |
+| `demo/src/shots/`, `demo/assets/*.webp` (v0.14.1) | one Pexels photograph (Pexels License) used as the desktop wallpaper, and nine window screenshots taken from the demos of the Apache-2.0 sibling Form apps (their own interface; every photograph, clip or recording visible in them is Pexels, CC0 or public domain and is credited in `demo/CREDITS.md`) |
 
 Every new dependency, binary, font or data file gets a row here before it is used.
 
