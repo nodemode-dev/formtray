@@ -6,6 +6,8 @@ A browser demo of FormTray that runs offline. Double-click `index.html` (file://
 
 The six real views (Switcher, Stack, Apps, Windows, Widgets, Settings) built from `frontend/src`, with the app's own tokens, layers, styles, icon module and 35-app icon pack, over the repo's own catalog `core/data/apps.json`. Only `frontend/src/bridge.ts` is replaced: `src/engine.ts` is a TypeScript port of `formtray-core` that answers the same commands the Tauri shell does.
 
+The panel floats over a desktop: a night sky photograph, a menu bar, and a dock of the family's real icons. Each Form app that is running shows its real window (a screenshot) on the desktop; open or quit an app from any view or from the dock and its window comes and goes. The Windows view and the large Widgets tiles show the same screenshots. Where every image came from is in `CREDITS.md`.
+
 It works with zero files (a built-in sample FormPortal record, with a few apps not installed and two updates waiting), and on your own files:
 
 - **FormPortal files.** Drop or open `installed.json` and `catalog/apps.json` from FormPortal's data folder. Installed state, paths, names, the Updates tile and the release gate follow them, using the engine's `family_id`, `newer` and platform rules. "Save sample" downloads the built-in pair so you can edit them and drop them back.
