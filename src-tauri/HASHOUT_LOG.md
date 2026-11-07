@@ -178,7 +178,7 @@ The launch punch list (2026-11-03): the About of a downloaded app says NodeAgent
 
 - refers-to: src/extensions.rs :: respond, split, decode, base; lib.rs :: register_uri_scheme_protocol("formext"); tauri.conf.json :: security.csp frame-src
 - kind: decision
-- logged: v0.15.0 (unreleased) · 2026-11-07
+- logged: v0.15.0 · 2026-11-07
 - formtray has no HTTP server, so extension files are served by the Tauri custom protocol the contract names: `formext://{id}/{version}/{path}` on macOS and Linux, `http://formext.localhost/{id}/{version}/{path}` on Windows (Tauri's custom-scheme form there); a request to `formext://localhost/{id}/...` is read the same way. The path is percent-decoded, then `formtray_core::extensions::file_for` decides; every answer, 404s included, carries nosniff, no-store, CORP cross-origin and ACAO `*`, and HTML gets the contract CSP with BASE set to the extension's own absolute prefix (`csp_for` takes the formext:// or http:// prefix as the source). Only GET and HEAD are served. The window's CSP gains `frame-src formext: http://formext.localhost`. The resolved list is cached against `stamp` (enabled.json and dev.json modification times) so a file request does not read every manifest.
 - refers-to: src/extensions.rs :: poll, reload, current; lib.rs :: the poller thread
 - kind: rationale
