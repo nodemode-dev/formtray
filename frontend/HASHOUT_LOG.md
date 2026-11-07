@@ -35,6 +35,11 @@ frontend/
 
 ## src/main.ts {#main}
 
+- refers-to: start (last lines), public/splash.html, public/favicon.png
+- kind: rationale
+- logged: v0.14.2 · 2026-11-07
+- When the panel is native, start() ends by calling `app_ready` once through afterPaint (two frames, 60 ms timer as the fallback because a hidden webview may not run animation frames), after `is-ready` is set and every view is mounted. The shell holds the splash until then and for at least 2.6 s. Settings does not call it. `public/splash.html` is formvis's card with the app name, `favicon.png` (the 256 px app icon from assets/app-icon) and the done hook `formtraySplashDone`; the commented SVG in the reference is not copied.
+
 - refers-to: panes, activate
 - kind: rationale
 - logged: v0.7.0 · 2026-10-20

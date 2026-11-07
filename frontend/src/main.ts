@@ -163,6 +163,7 @@ async function start() {
 
   if (!native) current().shown(active === "switcher" ? "switcher" : "preview");
   document.documentElement.classList.add("is-ready");
+  if (native && panelMode) afterPaint(() => call("app_ready").catch(() => undefined));
 }
 
 start().catch((e) => toast(String(e)));

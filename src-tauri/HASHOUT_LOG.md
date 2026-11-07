@@ -35,6 +35,12 @@ src-tauri/
 
 ## src/lib.rs {#lib}
 
+- refers-to: src/reveal.rs, tauri.conf.json splash window, first_view, run, setup, capabilities/default.json, Cargo.toml objc2-app-kit features
+- kind: rationale
+- logged: v0.14.2 · 2026-11-07
+- FormTray now opens with the same splash as formvis: a 360 x 200 transparent window (label splash, url splash.html, built hidden) holding the 16 px rounded card, the app icon, "Starting formtray" and the 2.6 s family-gradient bar. formtray has no main window, so the reveal differs from formvis in what it releases: the first launch no longer opens its default view 350 ms after setup; the panel page calls `app_ready` two frames after its first content is mounted (main.ts), and `reveal::show_main` waits until 2600 ms since `mark_launch`, runs `formtraySplashDone` so the bar completes in 220 ms, then runs `first_view` (the old handle_args(first = true), same default view) and destroys the splash in one main-thread step. Only the panel calls `app_ready`; Settings (prefs) does not. FALLBACK is 20 s from setup, so a panel page that never loads still gets its view. `REVEALED` makes all of it run once.
+- The splash is destroyed, not closed, because this app's CloseRequested handler prevents close and hides the window. A launch with `--background` (open at login) shows no splash: `reveal::skip` marks the reveal done and destroys the window, and the old 350 ms start runs as before, so nothing pops up at login. No BUILD_VISIBLE, BACKGROUND or alpha-0 concealment: those guard formvis's main window, and the panel and Settings are already hidden, transparent and shown by `settle_view`. `round_splash` is formvis's: on macOS non-opaque, clear background, content layer radius 16 with masksToBounds, invalidateShadow, then show; elsewhere just show. objc2-app-kit gains NSWindow, NSView, NSColor, NSResponder and objc2-core-foundation. The splash page keeps its inline script, which Tauri hashes into the CSP at build; if it were blocked the bar would only stop at 92 percent before the window goes. `app_ready` needs no permission entry (build.rs has no app manifest); "splash" is listed in the capability windows as in formvis. Not compiled: cargo check was not run on this shared machine; the Rust was read against formvis's reveal.rs and main.rs.
+
 - refers-to: show_menu_images, refresh_tray, build_tray, the poller thread, menu_icons::bytes, icons/menu
 - kind: rationale
 - logged: v0.13.0 · 2026-11-06

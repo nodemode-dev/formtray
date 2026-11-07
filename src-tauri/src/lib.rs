@@ -1,6 +1,7 @@
 mod glass;
 mod keys;
 mod menu_icons;
+mod reveal;
 mod theme;
 
 use std::collections::HashMap;
@@ -477,6 +478,11 @@ fn handle_args(app: &AppHandle, args: &[String], first: bool) {
     show_view(app, &view, if first { "launch" } else { "dock" });
 }
 
+pub(crate) fn first_view(app: &AppHandle) {
+    let args: Vec<String> = std::env::args().collect();
+    handle_args(app, &args, true);
+}
+
 #[tauri::command]
 fn snapshot(app: AppHandle) -> Snapshot {
     with_engine(&app, |e| e.snapshot())
@@ -582,6 +588,7 @@ fn rescan(app: AppHandle) {
 }
 
 pub fn run() {
+    reveal::mark_launch();
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
             handle_args(app, &argv, false);
@@ -598,7 +605,7 @@ pub fn run() {
         )
         .manage(Shell::default())
         .register_uri_scheme_protocol("appicon", |_ctx, request| icon_response(request.uri().path()))
-        .invoke_handler(tauri::generate_handler![snapshot, open_app, quit_app, set_prefs, show, settle, current_view, dismiss, shell_info, updates, rescan, set_hotkey, pause_hotkeys])
+        .invoke_handler(tauri::generate_handler![snapshot, open_app, quit_app, set_prefs, show, settle, current_view, dismiss, shell_info, updates, rescan, set_hotkey, pause_hotkeys, reveal::app_ready])
         .on_window_event(|window, event| match event {
             WindowEvent::Focused(false) if window.label() == PANEL => {
                 let app = window.app_handle().clone();
@@ -659,13 +666,18 @@ pub fn run() {
                     }
                 }
             });
-            let args: Vec<String> = std::env::args().collect();
-            let starter = handle.clone();
-            std::thread::spawn(move || {
-                std::thread::sleep(Duration::from_millis(350));
-                let inner = starter.clone();
-                let _ = starter.run_on_main_thread(move || handle_args(&inner, &args, true));
-            });
+            if std::env::args().any(|a| a == BACKGROUND_FLAG) {
+                reveal::skip(&handle);
+                let starter = handle.clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(Duration::from_millis(350));
+                    let inner = starter.clone();
+                    let _ = starter.run_on_main_thread(move || first_view(&inner));
+                });
+            } else {
+                reveal::round_splash(&handle);
+                reveal::arm_fallback(&handle);
+            }
             Ok(())
         })
         .build(tauri::generate_context!())

@@ -15,6 +15,7 @@
       "csp": "default-src 'self'; img-src 'self' data: appicon: http://appicon.localhost; style-src 'self' 'unsafe-inline'; script-src 'self'"
     },
     "windows": [
+      { "label": "splash", "title": "FormTray", "url": "splash.html", "width": 360, "height": 200, "resizable": false, "decorations": false, "center": true, "transparent": true, "shadow": false, "visible": false },
       { "label": "panel", "title": "FormTray", "url": "index.html?view=apps", "width": 920, "height": 660, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": true, "skipTaskbar": true, "resizable": false, "shadow": true, "focus": true },
       { "label": "prefs", "title": "FormTray Settings", "url": "index.html?view=prefs", "width": 640, "height": 600, "visible": false, "decorations": false, "transparent": true, "alwaysOnTop": false, "skipTaskbar": false, "resizable": false, "shadow": true, "focus": true, "center": true }
     ]
