@@ -118,6 +118,8 @@ FormTray loads extensions made to the Form Extension Contract (API 1): FormPorta
 
 All FormTray builds are compiled and released from [FormCompiler](https://github.com/nodemode-dev/formcompiler); this repo holds the source.
 
+**Updates come through FormPortal.** FormTray does not update itself: install [FormPortal](https://formai.studio/formportal/) and it keeps FormTray up to date (Preferences has a Check for updates in FormPortal button), or download the new version from the links above.
+
 ## Run it from source
 
 Prefer it in your browser, or want to contribute? Run the interface straight from this repo.
