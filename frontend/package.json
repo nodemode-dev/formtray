@@ -1,7 +1,7 @@
 {
   "name": "formtray",
   "private": true,
-  "version": "0.14.1",
+  "version": "0.14.2",
   "description": "FormTray's interface: one dock icon for every Form app",
   "license": "Apache-2.0",
   "type": "module",
