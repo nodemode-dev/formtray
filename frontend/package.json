@@ -12,6 +12,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
+    "build:demo": "tsc -p ../demo --noEmit && vite build --config ../demo/vite.config.ts",
     "tauri": "tauri"
   },
   "devDependencies": {
