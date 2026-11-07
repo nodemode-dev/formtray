@@ -4,6 +4,12 @@ const here = import.meta.dirname;
 const filePlugin = {
   name: "formtray-demo-file-protocol",
   enforce: "pre",
+  resolveId(source: string, importer?: string) {
+    if (importer && importer.replace(/\\/g, "/").includes("/frontend/src/") && /(^|\/)bridge$/.test(source)) {
+      return `${here}/src/bridge.ts`;
+    }
+    return null;
+  },
   transform(code: string, id: string) {
     if (id.replace(/\\/g, "/").endsWith("frontend/src/ui.ts")) {
       return { code: code.split("`/apps/").join("`./apps/"), map: null };
