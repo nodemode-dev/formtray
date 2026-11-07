@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en" data-native="false" data-glass="css" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>FormTray demo: Switcher and hotkeys</title>
+    <script>
+      (function () {
+        var t = "dark";
+        try {
+          t = window.localStorage.getItem("formtray-demo-theme") || "dark";
+        } catch (e) {}
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
+    <link rel="stylesheet" href="../../../frontend/src/styles/tokens.css" />
+    <link rel="stylesheet" href="../../../frontend/src/styles/layers.css" />
+    <link rel="stylesheet" href="../../../frontend/src/styles/app.css" />
+    <link rel="stylesheet" href="../../../demo/src/demo.css" />
+    <link rel="stylesheet" href="./keys.css" />
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <div class="demo" id="demo">
+      <header class="demo-bar" data-demo-ui>
+        <div class="demo-brand">
+          <span class="demo-mark app-icon app-icon-s" aria-hidden="true"><img class="ai-dark" src="./apps/formtray.webp" alt="" /><img class="ai-light" src="./apps/formtray-light.webp" alt="" /></span>
+          <span class="demo-title">FormTray</span>
+          <span class="demo-tag">demo</span>
+          <nav class="demo-links" aria-label="Demos">
+            <a href="../../demo/index.html">Overview</a>
+            <a href="./index.html" aria-current="page">Switcher</a>
+            <a href="../widgets/index.html">Widgets</a>
+          </nav>
+        </div>
+        <nav class="demo-views demo-dyn" id="demo-views" aria-label="Views"></nav>
+        <div class="demo-opts">
+          <label class="demo-opt"><span>Theme</span>
+            <select class="pf-select" id="opt-theme" aria-label="Theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="system">System</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <section class="stage" id="stage" aria-label="FormTray window">
+        <div class="desktop" id="desktop"></div>
+        <div class="stage-fit demo-dyn" id="fit">
+          <main class="panel" id="panel"></main>
+        </div>
+        <div class="cast" id="cast" aria-live="polite">
+          <div class="cast-keys" id="cast-keys"></div>
+          <div class="cast-what" id="cast-what">Press a hotkey, or play a flow</div>
+        </div>
+      </section>
+
+      <aside class="side demo-dyn" data-demo-ui aria-label="Demo tools">
+        <section class="side-sec">
+          <h2 class="pf-h">Hotkeys on</h2>
+          <div class="seg" id="seg-platform" role="group" aria-label="Operating system">
+            <button type="button" class="seg-b" data-platform="macos">macOS</button>
+            <button type="button" class="seg-b" data-platform="windows">Windows</button>
+            <button type="button" class="seg-b" data-platform="linux">Linux</button>
+          </div>
+          <div class="kb-list demo-dyn" id="kb-list"></div>
+          <div class="side-row">
+            <button class="btn" type="button" id="kb-try">Try a reserved chord</button>
+            <button class="btn" type="button" id="kb-reset">Defaults</button>
+          </div>
+          <p class="side-status" id="kb-status" aria-live="polite">Click a chord, then press the new keys.</p>
+        </section>
+
+        <section class="side-sec">
+          <h2 class="pf-h">Keyboard flows</h2>
+          <p class="side-hint">Each flow presses real keys on the real window. Rebind a chord above and the flow follows.</p>
+          <div class="fl-list demo-dyn" id="fl-list"></div>
+        </section>
+
+        <section class="side-sec">
+          <h2 class="pf-h">Your settings</h2>
+          <p class="side-hint">Drop a FormTray <b>prefs.json</b> anywhere on this page to load its hotkeys.</p>
+          <div class="side-row">
+            <button class="btn" type="button" id="pick">Open prefs.json</button>
+            <input type="file" id="file" accept=".json,application/json" multiple hidden />
+            <button class="btn" type="button" id="export">Export prefs.json</button>
+            <button class="btn" type="button" id="reset">Reset demo</button>
+          </div>
+        </section>
+
+        <section class="side-sec side-grow">
+          <h2 class="pf-h">Command line</h2>
+          <div class="cl-chips" id="cl-chips">
+            <button class="pill" type="button" data-cmd="hotkeys">hotkeys</button>
+            <button class="pill" type="button" data-cmd="open formpdf">open formpdf</button>
+            <button class="pill" type="button" data-cmd="open formdeck">open formdeck</button>
+            <button class="pill" type="button" data-cmd="quit formcut">quit formcut</button>
+            <button class="pill" type="button" data-cmd="list">list</button>
+          </div>
+          <div class="cl-log" id="cl-log" role="log" aria-live="off" tabindex="0"></div>
+          <form class="cl-form" id="cl-form" autocomplete="off">
+            <label class="cl-prompt" for="cl-input">formtray cli</label>
+            <input class="cl-input" id="cl-input" type="text" spellcheck="false" placeholder="hotkey switcher Alt+Q" />
+          </form>
+        </section>
+      </aside>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="drop" id="drop" hidden><p>Drop prefs.json</p></div>
+  </body>
+</html>

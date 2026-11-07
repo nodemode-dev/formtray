@@ -1,7 +1,7 @@
 {
   "name": "formtray",
   "private": true,
-  "version": "0.13.0",
+  "version": "0.15.1",
   "description": "FormTray's interface: one dock icon for every Form app",
   "license": "Apache-2.0",
   "type": "module",
@@ -12,6 +12,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
+    "build:demo": "tsc -p ../demo --noEmit && vite build --config ../demo/vite.config.ts",
     "tauri": "tauri"
   },
   "devDependencies": {

@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img alt="version 0.13.0" src="https://img.shields.io/badge/version-0.13.0-eef0f4?style=flat-square">
+  <img alt="version 0.15.1" src="https://img.shields.io/badge/version-0.15.1-eef0f4?style=flat-square">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-stable-B7410E?style=flat-square&logo=rust&logoColor=white">
   <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square">
   <img alt="macOS, Windows, Linux" src="https://img.shields.io/badge/macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-native-2f7bf5?style=flat-square">
@@ -94,6 +94,10 @@
 
 `./formtray cli hotkeys`, `quit <app>`, `hotkey <action> <chord>` and `where` complete it. See [`CLAUDE.md`](CLAUDE.md).
 
+## Extensions
+
+FormTray loads extensions made to the Form Extension Contract (API 1): FormPortal installs them, form.ext runs one from a folder while you make it. The tray menu has an Extensions submenu with each extension's commands, the Extensions panel (also the puzzle button on the Widgets board) lists what is installed with its permissions and state, an extension's panels dock as tiles on the Widgets board or open as a card, and its commands show up in the Apps search. Each extension runs in a sandboxed frame and asks once per version before it can read or change the board. Agents use `./formtray cli extensions_list` and `./formtray cli extension_command <id> <command>`. What an extension can read and change is in [`docs/EXTENSIONS.md`](docs/EXTENSIONS.md).
+
 ## Under the hood
 
 - **Engine:** `formtray-core` holds the app registry, discovery, open, focus, quit, running state, preferences and hotkey tables.
@@ -139,6 +143,14 @@ Default hotkeys: the Switcher is Option + Tab on macOS and Alt + ` on Windows an
 > **Status:** released. Add a Form app by adding one entry to `core/data/apps.json`; it shows once its release wave opens. FormPortal installs and updates apps; FormTray only opens and switches them.
 
 **Contributing:** branch from `main`, keep changes to source here, and leave packaging and releases to formcompiler. See [`CLAUDE.md`](CLAUDE.md).
+
+## Demo
+
+Three demos run the real views in any browser with no install; open each `index.html`:
+
+- [`demo/`](demo/README.md), the overview. It has a built-in sample FormPortal record, reads your own `installed.json` and `catalog/apps.json`, launches and quits apps in the page, rebinds hotkeys, and answers `formtray cli` commands. Rebuild it with `npm run build:demo` in `frontend/`.
+- [`demos/switcher/`](demos/switcher/README.md), keyboard first: hotkey tables for macOS, Windows and Linux, rebinding with the engine's refusals, a keystroke strip, and five keyboard flows that press real keys on the real views.
+- [`demos/widgets/`](demos/widgets/README.md), widgets and layout: a workday of four boards (09:00 to 17:30) that set the tiles, sizes, groups and open apps, with Edit mode, Stack and Windows following.
 
 ## Repository
 

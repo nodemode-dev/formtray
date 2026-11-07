@@ -1,0 +1,9 @@
+{
+  "extends": "../../frontend/tsconfig.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "types": [],
+    "rootDir": "../.."
+  },
+  "include": ["src", "../../demo/src", "../../frontend/src", "../../core/data/apps.json", "../../frontend/package.json"]
+}

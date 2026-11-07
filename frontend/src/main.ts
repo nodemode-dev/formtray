@@ -1,4 +1,5 @@
 import { call, native, on, VIEWS, type Prefs, type ShellInfo, type Snapshot, type View } from "./bridge";
+import { createExtensions, loadListing, type Listing } from "./ext/host";
 import { syncIdentity } from "./ui";
 import { apps } from "./views/apps";
 import { prefsView } from "./views/prefs";
@@ -53,9 +54,12 @@ function activate(next: View, reason: string) {
     target.pane.hidden = false;
     active = next;
     document.documentElement.dataset.view = next;
+    onView(next);
   }
   target.module.shown(reason);
 }
+
+let onView: (v: View) => void = () => undefined;
 
 let toastTimer = 0;
 function toast(message: string) {
@@ -66,7 +70,8 @@ function toast(message: string) {
 }
 
 async function start() {
-  const [snap, info] = await Promise.all([call<Snapshot>("snapshot"), call<ShellInfo>("shell_info")]);
+  const none: Listing = { product: "formtray", app: "FormTray", appVersion: "", stamp: [0, 0], extensions: [] };
+  const [snap, info, listing] = await Promise.all([call<Snapshot>("snapshot"), call<ShellInfo>("shell_info"), panelMode ? loadListing() : Promise.resolve(none)]);
   document.documentElement.dataset.glass = info.glass;
   document.documentElement.dataset.platform = snap.platform;
   syncIdentity(snap);
@@ -114,12 +119,44 @@ async function start() {
     },
   };
 
+  if (panelMode) {
+    const layer = document.createElement("div");
+    layer.className = "ext-layer";
+    root.append(layer);
+    ctx.ext = createExtensions(
+      layer,
+      {
+        snap: () => ctx.snap,
+        view: () => active,
+        go: (v) => ctx.go(v),
+        open: (id) => ctx.open(id),
+        quit: (id) => ctx.quit(id),
+        rescan: () => {
+          call("rescan").catch((e) => toast(String(e)));
+        },
+        updates: () => ctx.updates(),
+        async savePrefs(prefs) {
+          await ctx.savePrefs(prefs);
+          for (const { module } of panes.values()) module.update(ctx.snap);
+          ctx.ext?.observe(ctx.snap);
+        },
+        toast,
+        show: () => {
+          if (native) call("show", { view: active }).catch(() => undefined);
+        },
+      },
+      listing,
+    );
+    onView = (v) => ctx.ext?.viewChanged(v);
+  }
+
   for (const { module, pane } of panes.values()) module.mount(pane, ctx);
 
   await on<Snapshot>("state", (next) => {
     ctx.snap = next;
     for (const { module } of panes.values()) module.update(next);
     syncIdentity(next);
+    ctx.ext?.observe(next);
   });
   await on<string>("view:shown", (reason) => current().shown(reason));
   await on<{ view: View; reason: string; moving: boolean }>("view:show", (p) => {
@@ -163,6 +200,7 @@ async function start() {
 
   if (!native) current().shown(active === "switcher" ? "switcher" : "preview");
   document.documentElement.classList.add("is-ready");
+  if (native && panelMode) afterPaint(() => call("app_ready").catch(() => undefined));
 }
 
 start().catch((e) => toast(String(e)));

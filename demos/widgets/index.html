@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" data-native="false" data-glass="css" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>FormTray demo: Widgets and layout</title>
+    <script>
+      (function () {
+        var t = "dark";
+        try {
+          t = window.localStorage.getItem("formtray-demo-theme") || "dark";
+        } catch (e) {}
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
+    <script defer src="./assets/widgets.js"></script>
+    <link rel="stylesheet" href="./assets/style.css">
+  </head>
+  <body>
+    <div class="demo" id="demo">
+      <header class="demo-bar" data-demo-ui>
+        <div class="demo-brand">
+          <span class="demo-mark app-icon app-icon-s" aria-hidden="true"><img class="ai-dark" src="./apps/formtray.webp" alt="" /><img class="ai-light" src="./apps/formtray-light.webp" alt="" /></span>
+          <span class="demo-title">FormTray</span>
+          <span class="demo-tag">demo</span>
+          <nav class="demo-links" aria-label="Demos">
+            <a href="../../demo/index.html">Overview</a>
+            <a href="../switcher/index.html">Switcher</a>
+            <a href="./index.html" aria-current="page">Widgets</a>
+          </nav>
+        </div>
+        <nav class="demo-views demo-dyn" id="demo-views" aria-label="Views"></nav>
+        <div class="demo-opts">
+          <label class="demo-opt"><span>Theme</span>
+            <select class="pf-select" id="opt-theme" aria-label="Theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="system">System</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <section class="stage" id="stage" aria-label="FormTray window">
+        <div class="desktop" id="desktop"></div>
+        <div class="stage-fit demo-dyn" id="fit">
+          <main class="panel" id="panel"></main>
+        </div>
+      </section>
+
+      <aside class="side demo-dyn" data-demo-ui aria-label="Demo tools">
+        <section class="side-sec">
+          <h2 class="pf-h">A workday</h2>
+          <p class="side-hint">Pick a time. The board, the open apps, Stack, Windows and the desktop all follow.</p>
+          <div class="wd-list demo-dyn" id="wd-list"></div>
+        </section>
+
+        <section class="side-sec">
+          <h2 class="pf-h">Look at it in</h2>
+          <div class="seg" id="seg-view" role="group" aria-label="View">
+            <button type="button" class="seg-b" data-view="widgets">Widgets</button>
+            <button type="button" class="seg-b" data-view="stack">Stack</button>
+            <button type="button" class="seg-b" data-view="windows">Windows</button>
+          </div>
+        </section>
+
+        <section class="side-sec">
+          <h2 class="pf-h">Shape the board</h2>
+          <p class="side-status" id="board-sum" aria-live="polite"></p>
+          <ol class="wd-how">
+            <li>Choose <b>Edit</b>, then drag a tile to reorder it.</li>
+            <li>The corner buttons change a tile's size or remove it.</li>
+            <li>Add apps, a group or the FormPortal updates tile below the board.</li>
+            <li>Focus a tile and press Alt with an arrow key to move it from the keyboard.</li>
+          </ol>
+          <div class="side-row">
+            <button class="btn" type="button" id="edit">Edit the board</button>
+            <button class="btn" type="button" id="add-group">New group</button>
+          </div>
+        </section>
+
+        <section class="side-sec">
+          <h2 class="pf-h">Your board</h2>
+          <p class="side-hint">Save the board as a FormTray <b>prefs.json</b>, or drop one anywhere on this page to load it.</p>
+          <div class="side-row">
+            <button class="btn" type="button" id="pick">Open prefs.json</button>
+            <input type="file" id="file" accept=".json,application/json" multiple hidden />
+            <button class="btn" type="button" id="export">Export prefs.json</button>
+            <button class="btn" type="button" id="reset">Reset demo</button>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="drop" id="drop" hidden><p>Drop prefs.json</p></div>
+  </body>
+</html>

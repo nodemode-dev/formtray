@@ -2,7 +2,7 @@ export type View = "switcher" | "stack" | "apps" | "windows" | "widgets" | "pref
 export const VIEWS: View[] = ["switcher", "stack", "apps", "windows", "widgets"];
 
 export interface Tile {
-  kind: "app" | "group" | "updates";
+  kind: "app" | "group" | "updates" | "extension";
   id: string;
   app: string;
   name: string;

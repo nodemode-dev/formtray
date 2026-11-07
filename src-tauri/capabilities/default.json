@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "The FormTray panels: read state, open apps, move and hide their own window.",
-  "windows": ["panel", "prefs"],
+  "windows": ["splash", "panel", "prefs"],
   "permissions": [
     "core:default",
     "core:window:allow-hide",

@@ -1,4 +1,5 @@
 import type { AppState, Tile } from "../bridge";
+import type { Docked } from "../ext/host";
 import { icons } from "../icons";
 import { ago, appIcon, appName, el, iconButton, runDot, viewBar } from "../ui";
 import type { Ctx, ViewModule } from "./types";
@@ -18,7 +19,7 @@ export function widgets(): ViewModule {
   let addBar: HTMLElement;
   let hint: HTMLElement;
   let empty: HTMLElement;
-  type Entry = { node: HTMLElement; meta: HTMLElement; size: Tile["size"]; tile: Tile; minis?: HTMLElement; name?: HTMLElement; icon?: HTMLElement; input?: HTMLInputElement; fit?: () => void; ro?: ResizeObserver; commit?: () => void };
+  type Entry = { node: HTMLElement; meta: HTMLElement; size: Tile["size"]; tile: Tile; minis?: HTMLElement; name?: HTMLElement; icon?: HTMLElement; input?: HTMLInputElement; fit?: () => void; ro?: ResizeObserver; commit?: () => void; mounted?: Docked | null; mount?: () => void };
   type Want = { key: string; label: string; build: () => HTMLElement };
   const tiles = new Map<string, Entry>();
   let pending: Tile[] = [];
@@ -41,6 +42,8 @@ export function widgets(): ViewModule {
 
   function dispose(t: Entry) {
     t.ro?.disconnect();
+    t.mounted?.dispose();
+    t.mounted = null;
     if (marked === t.node) {
       window.clearTimeout(markTimer);
       marked = null;
@@ -364,6 +367,54 @@ export function widgets(): ViewModule {
     return entry;
   }
 
+  function makeExt(tile: Tile): Entry {
+    const node = el("article", "wg-tile wg-ext");
+    node.dataset.id = tile.id;
+    node.dataset.kind = "extension";
+    node.dataset.size = tile.size;
+    const face = el("div", "wg-face wg-ext-face");
+    face.tabIndex = 0;
+    const title = el("h3", "wg-name wg-ext-title");
+    const box = el("div", "wg-ext-box");
+    face.append(title, box);
+    node.append(face, toolsFor(tile.id));
+    wireReorder(node);
+    const entry: Entry = { node, meta: title, size: tile.size, tile: { ...tile, apps: [] }, name: title };
+    entry.mount = () => {
+      entry.mounted?.dispose();
+      entry.mounted = ctx.ext?.mountPanel(tile.app, tile.name, box, title) ?? null;
+    };
+    entry.mount();
+    return entry;
+  }
+
+  function dock(id: string, panel: string) {
+    const key = `ext:${id}:${panel}`;
+    const have = tiles.get(key);
+    if (have) {
+      reveal(have);
+      return;
+    }
+    pending = pending.filter((t) => t.id !== key);
+    const entry = makeExt({ kind: "extension", id: key, app: id, name: panel, apps: [], size: "l" });
+    place(entry);
+    save();
+    syncAdd();
+    reveal(entry);
+  }
+
+  function extChanged() {
+    for (const t of tiles.values()) {
+      if (t.tile.kind !== "extension") continue;
+      const rec = ctx.ext?.get(t.tile.app);
+      if (rec && t.mounted && rec.version !== t.mounted.version) t.mount?.();
+      else if (rec && t.mounted && ctx.ext?.state(rec) === "ready" && !t.node.querySelector("iframe")) t.mount?.();
+    }
+    reconcileTiles();
+    empty.hidden = tiles.size > 0;
+    syncAdd();
+  }
+
   function openPop(key: string) {
     const entry = tiles.get(key);
     if (!entry) return;
@@ -442,6 +493,12 @@ export function widgets(): ViewModule {
       place(makeUpdates(t));
       return true;
     }
+    if (kind === "extension") {
+      if (!t.id || !ctx.ext?.dockable(t.app, t.name)) return false;
+      if (tiles.has(t.id)) return true;
+      place(makeExt(t));
+      return true;
+    }
     const app = byId(t.app);
     if (!app) return false;
     if (tiles.has(app.id)) return true;
@@ -451,7 +508,7 @@ export function widgets(): ViewModule {
 
   function reconcileTiles() {
     for (const [key, t] of [...tiles]) {
-      const gone = t.tile.kind === "app" ? !byId(t.tile.app) : t.tile.kind === "updates" ? !byId("formportal") : false;
+      const gone = t.tile.kind === "app" ? !byId(t.tile.app) : t.tile.kind === "updates" ? !byId("formportal") : t.tile.kind === "extension" ? !ctx.ext?.dockable(t.tile.app, t.tile.name) : false;
       if (!gone) continue;
       pending.push({ ...t.tile, size: t.size });
       dispose(t);
@@ -506,7 +563,65 @@ export function widgets(): ViewModule {
 
   function save() {
     empty.hidden = tiles.size > 0;
-    ctx.savePrefs({ ...ctx.snap.prefs, widgets: order() });
+    const widgets = order();
+    boardSig = sigOf(widgets);
+    ctx.savePrefs({ ...ctx.snap.prefs, widgets });
+  }
+
+  let boardSig = "";
+
+  function sigOf(list: Tile[]): string {
+    return list.map((t) => [t.kind ?? "app", (t.kind ?? "app") === "app" ? t.app : t.id, t.size, t.name, t.apps.join("+")].join("|")).join(",");
+  }
+
+  function adopt(list: Tile[]) {
+    const want = new Map(list.map((t) => [(t.kind ?? "app") === "app" ? t.app : t.id, t]));
+    for (const [key, t] of [...tiles]) {
+      if (want.has(key)) continue;
+      dispose(t);
+      tiles.delete(key);
+      if (addingTo === key) addingTo = null;
+    }
+    pending = [];
+    for (const t of list) {
+      const key = (t.kind ?? "app") === "app" ? t.app : t.id;
+      const have = tiles.get(key);
+      if (!have) {
+        if (!admit(t)) pending.push({ ...t });
+        continue;
+      }
+      if (have.size !== t.size) {
+        have.size = t.size;
+        have.node.dataset.size = t.size;
+        have.fit?.();
+        if (have.icon) {
+          have.icon.classList.remove("app-icon-s", "app-icon-m", "app-icon-l");
+          have.icon.classList.add(`app-icon-${t.size === "s" ? "m" : "l"}`);
+        }
+      }
+      if (have.tile.kind === "group") {
+        const name = t.name || "Group";
+        if (have.tile.name !== name) {
+          have.tile.name = name;
+          if (have.name) have.name.textContent = name;
+          if (have.input) have.input.value = name;
+        }
+        if (have.tile.apps.join(",") !== t.apps.join(",")) {
+          have.tile.apps = [...t.apps];
+          fillGroup(have);
+        }
+      }
+    }
+    let prev: Element | null = null;
+    for (const t of list) {
+      const node = tiles.get((t.kind ?? "app") === "app" ? t.app : t.id)?.node;
+      if (!node) continue;
+      const at: Element | null = prev ? prev.nextElementSibling : board.firstElementChild;
+      if (node !== at) board.insertBefore(node, at);
+      prev = node;
+    }
+    empty.hidden = tiles.size > 0;
+    syncAdd();
   }
 
   function reconcileAdd(want: Want[]) {
@@ -625,6 +740,12 @@ export function widgets(): ViewModule {
         }),
       });
     }
+    const panels = (ctx.ext?.list() ?? []).flatMap((x) => x.panels.filter((p) => p.location !== "dialog" && ctx.ext?.dockable(x.id, p.id) && !tiles.has(`ext:${x.id}:${p.id}`)).map((p) => ({ x, p })));
+    if (panels.length) want.push(sep("sep:ext", "Extension panels"));
+    for (const { x, p } of panels) {
+      const label = `${x.name}: ${p.title}`;
+      want.push({ key: `x:${x.id}:${p.id}`, label, build: () => chip(glyph(icons.puzzle), label, () => ctx.ext?.openPanel(x.id, p.id)) });
+    }
     reconcileAdd(want);
   }
 
@@ -674,7 +795,7 @@ export function widgets(): ViewModule {
       hint = el("p", "wg-hint", "Drag tiles to reorder. Resize or remove from a tile's corner.");
       const headText = el("div", "wg-headtext");
       headText.append(el("h1", "pn-title", "Widgets"), hint);
-      head.append(headText, viewBar("widgets", (v) => ctx.go(v)), editBtn, iconButton(icons.gear, "Settings", () => ctx.go("prefs")));
+      head.append(headText, viewBar("widgets", (v) => ctx.go(v)), editBtn, ...(ctx.ext ? [iconButton(icons.puzzle, "Extensions", () => ctx.ext?.showSheet())] : []), iconButton(icons.gear, "Settings", () => ctx.go("prefs")));
       board = el("div", "wg-board");
       empty = el("p", "pn-empty", "The board is empty. Choose Edit to add apps.");
       addBar = el("section", "wg-addbar");
@@ -695,6 +816,9 @@ export function widgets(): ViewModule {
       }
       empty.hidden = tiles.size > 0;
       root.append(head, board, empty, addBar, pop);
+      boardSig = sigOf(ctx.snap.prefs.widgets);
+      ctx.ext?.setDock(dock);
+      ctx.ext?.subscribe(extChanged);
       syncAdd();
       const clearStale = () => {
         if (drag && !drag.active) drag = null;
@@ -707,6 +831,11 @@ export function widgets(): ViewModule {
     },
     update(snap) {
       ctx.snap = snap;
+      const bsig = sigOf(snap.prefs.widgets);
+      if (bsig !== boardSig && !drag?.active) {
+        boardSig = bsig;
+        adopt(snap.prefs.widgets);
+      }
       const before = tiles.size;
       reconcileTiles();
       empty.hidden = tiles.size > 0;

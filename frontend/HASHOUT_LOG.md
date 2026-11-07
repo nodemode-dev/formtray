@@ -35,6 +35,11 @@ frontend/
 
 ## src/main.ts {#main}
 
+- refers-to: start (last lines), public/splash.html, public/favicon.png
+- kind: rationale
+- logged: v0.14.2 · 2026-11-07
+- When the panel is native, start() ends by calling `app_ready` once through afterPaint (two frames, 60 ms timer as the fallback because a hidden webview may not run animation frames), after `is-ready` is set and every view is mounted. The shell holds the splash until then and for at least 2.6 s. Settings does not call it. `public/splash.html` is formvis's card with the app name, `favicon.png` (the 256 px app icon from assets/app-icon) and the done hook `formtraySplashDone`; the commented SVG in the reference is not copied.
+
 - refers-to: panes, activate
 - kind: rationale
 - logged: v0.7.0 · 2026-10-20
@@ -150,3 +155,31 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 - kind: rationale
 - logged: v0.9.5 · 2026-10-25
 - Family rule from `FAMILY_DEV_PLAN.md` v0.4.x Phase 2b (formai_dev sidecar): every frontend installs with zero `npm audit` findings. Vite 8.3.2 carries a `launch-editor` with two command-injection advisories in the dev server (ledger FB-004); 8.3.5 clears them. Dev dependency only, nothing in the shipped bundle changed. Verified: `npm install` then `npm audit` reports 0 vulnerabilities, `npm run typecheck` passes, `vite build` succeeds, and `vite` serves 200 on localhost with no Network address printed.
+
+## extension host 2026-11-07 {#extensions}
+
+- refers-to: src/ext/host-bridge.ts
+- kind: decision
+- logged: v0.15.0 · 2026-11-07
+- The Form Extension Contract kit's host bridge, copied unchanged (NOTICE row). formtray adapts it only from outside, in ext/host.ts.
+- refers-to: src/ext/host.ts :: createExtensions, CATALOGUE, BOARD, ACTIONS, change, act, read, loadListing
+- kind: decision
+- formtray has no document, so `document.read` returns the board (Widgets tiles), the Stack pins, hidden apps, the app list, the view and FormPortal's updates (docs/EXTENSIONS.md has the shape). The commands are formtray's own board and app actions. `document.apply` takes only board commands: each op is applied to a copy of the prefs and the copy is saved once through `set_prefs`, so the call lands whole or not at all; there is no undo history in formtray to group it into (contract-issues.md). Action commands (open, quit, view, rescan, updates) run only through `app.run`. Theme tokens map `--ground --pane --ink --ink-soft --focus --edge-strong --radius-m` onto the contract names, and a `prefers-color-scheme` change calls `setTheme`. `files.open` uses a hidden file input (the iframe click's user activation reaches the parent); `files.save` and `net.fetch` are left out (-32003). Events: `document.changed` from `observe` on every state broadcast and after an extension's own save, `selection.changed` from main.ts activate, `apps.changed` when the running set changes.
+- refers-to: src/ext/sheet.ts :: buildSheet, consentCard, dialogCard, trap
+- kind: rationale
+- The Extensions panel is a glass sheet over the panel window (formtray has no dock), built hidden with the layer before the first paint; rows are keyed by id, patched in place, and only their chips and buttons are rebuilt when state, version, permissions or panels change. Consent and dialog panels use the same card as the group pop-over. Escape is caught in the capture phase by the topmost open sheet or card, so it does not reach main.ts and hide the whole panel.
+- refers-to: src/views/widgets.ts :: makeExt, dock, extChanged, adopt, sigOf, boardSig; Tile kind "extension"
+- kind: decision
+- Contributed dock panels live on the Widgets board as tiles of kind `extension` (id `ext:<extension>:<panel>`, `app` the extension id, `name` the panel id), saved in prefs.widgets like any tile, so they can be resized, moved and removed in Edit mode; the frame stops taking the pointer in Edit mode so drag still works. A tile whose extension is gone or refused moves to `pending` and comes back when it is ready again; a new version remounts the frame in place. The add bar lists extension panels not yet on the board. Because an extension can now change the board, `update` compares a signature of `snap.prefs.widgets` with the last one the view saved or adopted and, when they differ, adopts the list by moving, resizing or removing existing tiles (no rebuild of tiles that stay).
+- refers-to: src/views/apps.ts :: cmdWrap, cmdRow, cmdCells
+- kind: rationale
+- formtray has no command palette; the Apps search is the nearest, so typing there also lists matching extension commands (`Name: Title`) above the grid. Buttons are kept by key between keystrokes.
+- refers-to: vite-ext.ts, vite.config.ts plugins
+- kind: rationale
+- In the browser preview the Vite server answers `GET /api/extensions` and `GET /api/extensions/files/{id}/{version}/{path}` by running `formtray-cli extensions_list --json` and `extension_file` (target/debug, or FORMTRAY_CLI), so the preview uses the same Rust resolver as the app. The config imports `./vite-ext.ts` with its extension (tsconfig `allowImportingTsExtensions`, fine with `noEmit`), so Vite's future native config loader has nothing to warn about. The middleware reads the raw request path (only `?` and `#` split off), not `new URL(...).pathname`: the WHATWG parser folds `..`, `%2e%2e` and `\` before the resolver sees them, so `ui/../manifest.json` was served and `../../etc/passwd` fell through to the page. Now the raw segments reach `extension_file` and are refused with 404 as the kit does.
+- refers-to: src/views/widgets.ts :: Extensions header button
+- kind: rationale
+- The puzzle button is built only when `ctx.ext` exists (the panel window), so the browser demos, which mount the same view without a host, show no dead button.
+- refers-to: src/ext/host.ts :: mountPanel, openPanel, starting; src/ext/sheet.ts :: dialogCard
+- kind: decision
+- Panels open through the kit's `open()` (contract 07:47: consent before the frame exists), not `mount()`. A docked tile keeps the pending `open()` in `starting` so a command with a panel can wait for that frame; a tile disposed before `open()` settles disposes the late frame. `dialogCard` awaits its mount and closes itself when `open()` gives no frame.

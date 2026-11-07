@@ -35,6 +35,12 @@ src-tauri/
 
 ## src/lib.rs {#lib}
 
+- refers-to: src/reveal.rs, tauri.conf.json splash window, first_view, run, setup, capabilities/default.json, Cargo.toml objc2-app-kit features
+- kind: rationale
+- logged: v0.14.2 · 2026-11-07
+- FormTray now opens with the same splash as formvis: a 360 x 200 transparent window (label splash, url splash.html, built hidden) holding the 16 px rounded card, the app icon, "Starting formtray" and the 2.6 s family-gradient bar. formtray has no main window, so the reveal differs from formvis in what it releases: the first launch no longer opens its default view 350 ms after setup; the panel page calls `app_ready` two frames after its first content is mounted (main.ts), and `reveal::show_main` waits until 2600 ms since `mark_launch`, runs `formtraySplashDone` so the bar completes in 220 ms, then runs `first_view` (the old handle_args(first = true), same default view) and destroys the splash in one main-thread step. Only the panel calls `app_ready`; Settings (prefs) does not. FALLBACK is 20 s from setup, so a panel page that never loads still gets its view. `REVEALED` makes all of it run once.
+- The splash is destroyed, not closed, because this app's CloseRequested handler prevents close and hides the window. A launch with `--background` (open at login) shows no splash: `reveal::skip` marks the reveal done and destroys the window, and the old 350 ms start runs as before, so nothing pops up at login. No BUILD_VISIBLE, BACKGROUND or alpha-0 concealment: those guard formvis's main window, and the panel and Settings are already hidden, transparent and shown by `settle_view`. `round_splash` is formvis's: on macOS non-opaque, clear background, content layer radius 16 with masksToBounds, invalidateShadow, then show; elsewhere just show. objc2-app-kit gains NSWindow, NSView, NSColor, NSResponder and objc2-core-foundation. The splash page keeps its inline script, which Tauri hashes into the CSP at build; if it were blocked the bar would only stop at 92 percent before the window goes. `app_ready` needs no permission entry (build.rs has no app manifest); "splash" is listed in the capability windows as in formvis. Not compiled: cargo check was not run on this shared machine; the Rust was read against formvis's reveal.rs and main.rs.
+
 - refers-to: show_menu_images, refresh_tray, build_tray, the poller thread, menu_icons::bytes, icons/menu
 - kind: rationale
 - logged: v0.13.0 · 2026-11-06
@@ -167,3 +173,17 @@ src-tauri/
 - logged: v0.9.9 · 2026-11-03
 
 The launch punch list (2026-11-03): the About of a downloaded app says NodeAgentc, Inc., not nodemode-ai, and lists the licence. The bundle's copyright was "nodemode-ai, Apache-2.0"; it is now "Copyright 2026 NodeAgentc, Inc. Apache-2.0" as in formMCP and formskills, with `publisher`, `license` and `licenseFile` (`../LICENSE` from `src-tauri`) beside it. The macOS About panel reads the copyright, Tauri's default About metadata takes its authors from `bundle.publisher`, tauri-build writes `CompanyName` from it into the Windows version resource, and the workspace `authors` (the company now) is the .deb's Maintainer. Checked here: the JSON parses; no build was run.
+
+## src/extensions.rs · the extension host 2026-11-07 {#extensions}
+
+- refers-to: src/extensions.rs :: respond, split, decode, base; lib.rs :: register_uri_scheme_protocol("formext"); tauri.conf.json :: security.csp frame-src
+- kind: decision
+- logged: v0.15.0 · 2026-11-07
+- formtray has no HTTP server, so extension files are served by the Tauri custom protocol the contract names: `formext://{id}/{version}/{path}` on macOS and Linux, `http://formext.localhost/{id}/{version}/{path}` on Windows (Tauri's custom-scheme form there); a request to `formext://localhost/{id}/...` is read the same way. The path is percent-decoded, then `formtray_core::extensions::file_for` decides; every answer, 404s included, carries nosniff, no-store, CORP cross-origin and ACAO `*`, and HTML gets the contract CSP with BASE set to the extension's own absolute prefix (`csp_for` takes the formext:// or http:// prefix as the source). Only GET and HEAD are served. The window's CSP gains `frame-src formext: http://formext.localhost`. The resolved list is cached against `stamp` (enabled.json and dev.json modification times) so a file request does not read every manifest.
+- refers-to: src/extensions.rs :: poll, reload, current; lib.rs :: the poller thread
+- kind: rationale
+- The existing poller (1 s while a panel or Settings is visible, 3 s otherwise) calls `poll`: a stamp change re-resolves, rebuilds the tray menu on the main thread and emits `ext:changed` with the new listing only when the public rows differ; it also takes CLI requests from the mailbox and emits them to the panel as `ext:request`. The window also polls `extensions_stamp` every 2 s while focused, as the contract asks.
+- refers-to: src/extensions.rs :: submenu, on_menu; lib.rs :: tray_menu, build_tray on_menu_event
+- kind: decision
+- formtray has no menu bar, so the contract's Extensions menu is a submenu of the tray menu, after the views: one `Name: Title` item per command of a ready extension (`ext-cmd:<id>:<command>`, both ids are `[a-z0-9-]` so the colon is safe), a separator, Extensions Panel, Reload Extensions, Manage in FormPortal (`formai://extensions?product=formtray` through `open`, `cmd /C start` or `xdg-open`). A command item and Extensions Panel first show the panel at the last view (reason `switch`, so a visible panel is not toggled away), then emit `ext:run` or `ext:sheet` to it, because consent, toasts and panels live in the panel window.
+- Not compiled: this machine has no GTK, so `cargo check -p formtray` was not run; the Tauri calls (`register_uri_scheme_protocol`, `UriSchemeContext::app_handle`, `Submenu::with_id_and_items`) were read against tauri 2.12.5's source in the cargo registry. WebKit and WebView2 behaviour for module scripts and CORS from a sandboxed frame on a custom scheme is unverified on a device.

@@ -1,4 +1,5 @@
 pub mod discover;
+pub mod extensions;
 pub mod hotkeys;
 pub mod identity;
 pub mod launch;

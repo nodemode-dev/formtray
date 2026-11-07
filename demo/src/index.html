@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" data-native="false" data-glass="css" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>FormTray demo</title>
+    <script>
+      (function () {
+        var t = "dark";
+        try {
+          t = window.localStorage.getItem("formtray-demo-theme") || "dark";
+        } catch (e) {}
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
+    <link rel="stylesheet" href="../../frontend/src/styles/tokens.css" />
+    <link rel="stylesheet" href="../../frontend/src/styles/layers.css" />
+    <link rel="stylesheet" href="../../frontend/src/styles/app.css" />
+    <link rel="stylesheet" href="./demo.css" />
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <div class="demo" id="demo">
+      <header class="demo-bar" data-demo-ui>
+        <div class="demo-brand">
+          <span class="demo-mark app-icon app-icon-s" aria-hidden="true"><img class="ai-dark" src="./apps/formtray.webp" alt="" /><img class="ai-light" src="./apps/formtray-light.webp" alt="" /></span>
+          <span class="demo-title">FormTray</span>
+          <span class="demo-tag">demo</span>
+          <nav class="demo-links" aria-label="Demos">
+            <a href="./index.html" aria-current="page">Overview</a>
+            <a href="../demos/switcher/index.html">Switcher</a>
+            <a href="../demos/widgets/index.html">Widgets</a>
+          </nav>
+        </div>
+        <nav class="demo-views" id="demo-views" aria-label="Views"></nav>
+        <div class="demo-opts">
+          <label class="demo-opt"><span>System</span>
+            <select class="pf-select" id="opt-platform" aria-label="Operating system">
+              <option value="macos">macOS</option>
+              <option value="windows">Windows</option>
+              <option value="linux">Linux</option>
+            </select>
+          </label>
+          <label class="demo-opt"><span>Theme</span>
+            <select class="pf-select" id="opt-theme" aria-label="Theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="system">System</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <section class="stage" id="stage" aria-label="FormTray window">
+        <div class="desktop" id="desktop"></div>
+        <div class="stage-fit" id="fit">
+          <main class="panel" id="panel"></main>
+        </div>
+      </section>
+
+      <aside class="side" data-demo-ui aria-label="Demo tools">
+        <section class="side-sec">
+          <h2 class="pf-h">Your FormPortal files</h2>
+          <p class="side-hint">Drop FormPortal's <b>installed.json</b> and <b>catalog/apps.json</b>, or a FormTray <b>prefs.json</b>, anywhere on this page. Files are read in this tab and go nowhere.</p>
+          <div class="side-row">
+            <button class="btn" type="button" id="pick">Open files</button>
+            <input type="file" id="file" accept=".json,application/json" multiple hidden />
+            <button class="btn" type="button" id="use-sample">Use built-in sample</button>
+          </div>
+          <div class="side-row">
+            <button class="btn" type="button" id="dl-installed">Save sample installed.json</button>
+            <button class="btn" type="button" id="dl-catalog">Save sample apps.json</button>
+          </div>
+          <p class="side-status" id="portal-status" aria-live="polite"></p>
+        </section>
+
+        <section class="side-sec">
+          <h2 class="pf-h">Settings and time</h2>
+          <div class="side-row">
+            <button class="btn" type="button" id="export">Export prefs.json</button>
+            <button class="btn" type="button" id="reset">Reset demo</button>
+          </div>
+          <label class="side-field"><span>Pretend today is</span>
+            <input class="pf-select" type="date" id="opt-date" aria-label="Release date" />
+          </label>
+          <p class="side-hint">Each app opens on its release wave in <b>apps.json</b>. Move the date to watch more apps appear; the views reload as FormTray does on a restart.</p>
+        </section>
+
+        <section class="side-sec side-grow">
+          <h2 class="pf-h">Command line</h2>
+          <div class="cl-chips" id="cl-chips">
+            <button class="pill" type="button" data-cmd="list">list</button>
+            <button class="pill" type="button" data-cmd="open formpdf">open formpdf</button>
+            <button class="pill" type="button" data-cmd="quit formcut">quit formcut</button>
+            <button class="pill" type="button" data-cmd="hotkeys">hotkeys</button>
+            <button class="pill" type="button" data-cmd="updates">updates</button>
+            <button class="pill" type="button" data-cmd="where">where</button>
+          </div>
+          <div class="cl-log" id="cl-log" role="log" aria-live="off" tabindex="0"></div>
+          <form class="cl-form" id="cl-form" autocomplete="off">
+            <label class="cl-prompt" for="cl-input">formtray cli</label>
+            <input class="cl-input" id="cl-input" type="text" spellcheck="false" placeholder="open formcut" />
+          </form>
+        </section>
+      </aside>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="drop" id="drop" hidden><p>Drop installed.json, apps.json or prefs.json</p></div>
+  </body>
+</html>
