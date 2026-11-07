@@ -9,6 +9,7 @@ import type { Ctx, ViewModule } from "../../frontend/src/views/types";
 import { widgets } from "../../frontend/src/views/widgets";
 import { windowsView } from "../../frontend/src/views/windows";
 import { mountConsole } from "./console";
+import { mountDesktop } from "./desktop";
 import { download, readFiles } from "./files";
 import { normalise, type Platform } from "./engine";
 
@@ -42,7 +43,7 @@ function toast(message: string) {
 
 function refit() {
   const [w, h] = SIZES[active];
-  const s = Math.min(1, (stage.clientWidth - 32) / w, (stage.clientHeight - 32) / h);
+  const s = Math.min(0.9, (stage.clientWidth - 32) / w, (stage.clientHeight - 32) / h);
   fit.style.setProperty("--fit", String(Math.max(0.3, s)));
 }
 
@@ -162,6 +163,9 @@ async function start() {
   refit();
   new ResizeObserver(refit).observe(stage);
 
+  const desktop = mountDesktop($("desktop"), (id) => ctx.open(id));
+  desktop.sync(snap, engine.now());
+
   const portalStatus = $("portal-status");
   const syncStatus = () => {
     const text = engine.portalSummary();
@@ -179,6 +183,7 @@ async function start() {
       syncIdentity(next);
     }
     html.dataset.platform = next.platform;
+    desktop.sync(next, engine.now());
     syncStatus();
   });
   await on<string>("notice", (message) => toast(message));

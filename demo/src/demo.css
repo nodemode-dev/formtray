@@ -163,7 +163,198 @@ html[data-native="false"] body {
 }
 
 .stage-fit {
+  position: relative;
+  z-index: var(--z-raised);
   zoom: var(--fit, 1);
+}
+
+html[data-native="false"][data-glass="css"] .panel {
+  background: rgb(24 27 35 / 0.64);
+  -webkit-backdrop-filter: blur(30px) saturate(1.5);
+  backdrop-filter: blur(30px) saturate(1.5);
+}
+
+html[data-native="false"][data-glass="css"][data-theme="light"] .panel {
+  background: rgb(250 251 253 / 0.7);
+}
+
+.desktop {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-base);
+  overflow: hidden;
+  background: linear-gradient(rgb(6 8 14 / 0.3), rgb(6 8 14 / 0.08)), url(./shots/wallpaper.webp) center / cover no-repeat #0b0e17;
+}
+
+.dt-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-raised);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: 30px;
+  padding: 0 var(--sp-4);
+  background: rgb(14 16 22 / 0.42);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  color: #eef0f4;
+  font-size: var(--fs-m);
+}
+
+.dt-mark .app-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.dt-mark .app-icon img {
+  filter: none;
+}
+
+.dt-active {
+  font-weight: 600;
+}
+
+.dt-when {
+  margin-left: auto;
+  color: #d3d8e4;
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
+}
+
+.dw {
+  --x: 0%;
+  --y: 0%;
+  --w: 50%;
+  --ar: 16 / 10;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  aspect-ratio: var(--ar);
+  border-radius: 10px;
+  background: var(--shot) center / cover no-repeat #14161b;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14), 0 26px 60px rgb(0 0 0 / 0.55);
+  opacity: 0;
+  filter: brightness(0.7);
+  transform: translateY(10px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 260ms var(--ease), transform 260ms var(--ease), filter 260ms var(--ease);
+}
+
+.dw.is-open {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.dw.is-front {
+  z-index: var(--z-raised);
+  filter: none;
+}
+
+.dk {
+  position: absolute;
+  left: 50%;
+  bottom: var(--sp-3);
+  z-index: var(--z-raised);
+  display: flex;
+  gap: var(--sp-2);
+  padding: 6px var(--sp-3);
+  border-radius: 22px;
+  background: rgb(24 27 35 / 0.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: inset 0 1px 0 var(--sheen), inset 0 0 0 1px var(--edge-strong);
+  transform: translateX(-50%);
+}
+
+.dk-item {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding-bottom: 6px;
+  transition: transform var(--quick) var(--ease), opacity var(--quick) var(--ease);
+}
+
+.dk-item .app-icon {
+  width: 42px;
+  height: 42px;
+}
+
+.dk-item:hover {
+  transform: translateY(-4px);
+}
+
+.dk-item.is-off {
+  opacity: 0.36;
+  pointer-events: none;
+}
+
+.dk-dot {
+  position: absolute;
+  bottom: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: #eef0f4;
+  opacity: 0;
+  transition: opacity var(--quick) var(--ease);
+}
+
+.dk-item.is-running .dk-dot {
+  opacity: 0.9;
+}
+
+.dw[data-app="formvis"],
+.wc-plate[data-label="FormVis"],
+.wg-tile[data-size="l"][data-app="formvis"] { --shot: url(./shots/formvis.webp); --x: 1.5%; --y: 5%; --w: 50%; --ar: 16 / 10; }
+.dw[data-app="formcut"],
+.wc-plate[data-label="FormCut"],
+.wg-tile[data-size="l"][data-app="formcut"] { --shot: url(./shots/formcut.webp); --x: 46%; --y: 4%; --w: 52%; --ar: 16 / 10; }
+.dw[data-app="formwav"],
+.wc-plate[data-label="FormWav"],
+.wg-tile[data-size="l"][data-app="formwav"] { --shot: url(./shots/formwav.webp); --x: 22%; --y: 50%; --w: 56%; --ar: 16 / 9; }
+.dw[data-app="formdeck"],
+.wc-plate[data-label="FormDeck"],
+.wg-tile[data-size="l"][data-app="formdeck"] { --shot: url(./shots/formdeck.webp); --x: 3%; --y: 36%; --w: 46%; --ar: 16 / 9; }
+.dw[data-app="formlit"],
+.wc-plate[data-label="FormLit"],
+.wg-tile[data-size="l"][data-app="formlit"] { --shot: url(./shots/formlit.webp); --x: 4%; --y: 12%; --w: 46%; --ar: 16 / 9; }
+.dw[data-app="formvfx"],
+.wc-plate[data-label="FormVFX"],
+.wg-tile[data-size="l"][data-app="formvfx"] { --shot: url(./shots/formvfx.webp); --x: 50%; --y: 10%; --w: 46%; --ar: 16 / 9; }
+.dw[data-app="formpdf"],
+.wc-plate[data-label="FormPDF"],
+.wg-tile[data-size="l"][data-app="formpdf"] { --shot: url(./shots/formpdf.webp); --x: 28%; --y: 40%; --w: 46%; --ar: 16 / 9; }
+.dw[data-app="formencoder"],
+.wc-plate[data-label="FormEncoder"],
+.wg-tile[data-size="l"][data-app="formencoder"] { --shot: url(./shots/formencoder.webp); --x: 50%; --y: 38%; --w: 46%; --ar: 16 / 9; }
+.dw[data-app="formmd"],
+.wc-plate[data-label="form.md"],
+.wg-tile[data-size="l"][data-app="formmd"] { --shot: url(./shots/formmd.webp); --x: 52%; --y: 48%; --w: 44%; --ar: 16 / 10; }
+
+.wc-plate:is([data-label="FormVis"], [data-label="FormCut"], [data-label="FormWav"], [data-label="FormDeck"], [data-label="FormLit"], [data-label="FormVFX"], [data-label="FormPDF"], [data-label="FormEncoder"], [data-label="form.md"]) {
+  place-items: end start;
+  padding: var(--sp-2);
+  background-color: var(--control);
+  background-image: var(--shot);
+  background-position: center top;
+  background-size: cover;
+}
+
+.wc-plate:is([data-label="FormVis"], [data-label="FormCut"], [data-label="FormWav"], [data-label="FormDeck"], [data-label="FormLit"], [data-label="FormVFX"], [data-label="FormPDF"], [data-label="FormEncoder"], [data-label="form.md"]) .app-icon {
+  width: var(--icon-s);
+  height: var(--icon-s);
+}
+
+.wg-tile[data-size="l"]:is([data-app="formvis"], [data-app="formcut"], [data-app="formwav"], [data-app="formdeck"], [data-app="formlit"], [data-app="formvfx"], [data-app="formpdf"], [data-app="formencoder"], [data-app="formmd"]) {
+  --ink: #eef0f4;
+  --ink-faint: #c3c8d4;
+  color: #eef0f4;
+  background: linear-gradient(to top, rgb(14 16 22 / 0.94) 14%, rgb(14 16 22 / 0.5) 46%, rgb(14 16 22 / 0.06) 80%), var(--shot) center top / cover no-repeat, #1b1e25;
 }
 
 .side {
