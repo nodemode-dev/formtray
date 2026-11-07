@@ -2,8 +2,8 @@
 
 Living log of rationale for the browser demo. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.14.0
-Last updated: 2026-11-07 · v0.14.0 the demo
+Current build version: v0.14.1
+Last updated: 2026-11-07 · v0.14.1 the real desktop and media; v0.14.0 the demo
 
 ---
 
