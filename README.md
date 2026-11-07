@@ -138,6 +138,10 @@ Default hotkeys: the Switcher is Option + Tab on macOS and Alt + ` on Windows an
 
 **Contributing:** branch from `main`, keep changes to source here, and leave packaging and releases to formcompiler. See [`CLAUDE.md`](CLAUDE.md).
 
+## Demo
+
+[`demo/`](demo/README.md) runs the real views in any browser with no install: open `demo/index.html`. It has a built-in sample FormPortal record, reads your own `installed.json` and `catalog/apps.json`, launches and quits apps in the page, rebinds hotkeys, and answers `formtray cli` commands. Rebuild it with `npm run build:demo` in `frontend/`.
+
 ## Repository
 
 | Path | What it is |

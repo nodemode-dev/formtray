@@ -22,6 +22,7 @@ FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons i
 | objc2-app-kit (macOS) | the system glass and key events |
 | gtk, gdkx11, x11 (Linux) | the panel window on Linux |
 | Vite, TypeScript, @tauri-apps/cli, @types/node (build only) | building the interface and the app; not shipped |
+| `demo/` (no new packages) | the browser demo is built with the same Vite and TypeScript from `frontend/package-lock.json`; it ships the app's own interface code, `core/data/apps.json` and the family icon pack, and adds no font, binary or third-party data |
 
 Every new dependency, binary, font or data file gets a row here before it is used.
 
