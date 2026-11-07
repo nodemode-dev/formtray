@@ -1,3 +1,4 @@
+mod extensions;
 mod glass;
 mod keys;
 mod menu_icons;
@@ -341,6 +342,7 @@ fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         .iter()
         .map(|(id, label)| MenuItem::with_id(app, *id, *label, true, None::<&str>))
         .collect::<tauri::Result<_>>()?;
+    let ext_menu = extensions::submenu(app)?;
     let updates = MenuItem::with_id(app, "updates", "Check for Updates...", true, None::<&str>)?;
     let prefs = MenuItem::with_id(app, "prefs", "Settings...", true, Some("CmdOrCtrl+,"))?;
     let login = CheckMenuItem::with_id(app, "login", "Open at Login", true, login_on, None::<&str>)?;
@@ -362,7 +364,7 @@ fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         refs.push(&sep0);
     }
     refs.extend(items.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>));
-    refs.extend([&sep1 as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &updates, &rescan, &prefs, &login, &sep2, &quit]);
+    refs.extend([&sep1 as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &ext_menu, &updates, &rescan, &prefs, &login, &sep2, &quit]);
     Menu::with_items(app, &refs)
 }
 
@@ -445,6 +447,9 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             }
             "quit" => app.exit(0),
             other => {
+                if extensions::on_menu(app, other) {
+                    return;
+                }
                 if let Some(view) = other.strip_prefix("view-") {
                     show_view(app, view, "menu");
                 } else if let Some(id) = other.strip_prefix("open-") {
@@ -604,8 +609,30 @@ pub fn run() {
                 .build(),
         )
         .manage(Shell::default())
+        .manage(extensions::Exts::default())
         .register_uri_scheme_protocol("appicon", |_ctx, request| icon_response(request.uri().path()))
-        .invoke_handler(tauri::generate_handler![snapshot, open_app, quit_app, set_prefs, show, settle, current_view, dismiss, shell_info, updates, rescan, set_hotkey, pause_hotkeys, reveal::app_ready])
+        .register_uri_scheme_protocol("formext", |ctx, request| extensions::respond(ctx.app_handle(), &request))
+        .invoke_handler(tauri::generate_handler![
+            snapshot,
+            open_app,
+            quit_app,
+            set_prefs,
+            show,
+            settle,
+            current_view,
+            dismiss,
+            shell_info,
+            updates,
+            rescan,
+            set_hotkey,
+            pause_hotkeys,
+            reveal::app_ready,
+            extensions::extensions,
+            extensions::extensions_stamp,
+            extensions::extensions_reload,
+            extensions::extension_answer,
+            extensions::extensions_manage
+        ])
         .on_window_event(|window, event| match event {
             WindowEvent::Focused(false) if window.label() == PANEL => {
                 let app = window.app_handle().clone();
@@ -654,6 +681,7 @@ pub fn run() {
                 loop {
                     let visible = poller.state::<Shell>().shown.lock().unwrap().is_some() || panel(&poller, "prefs").and_then(|w| w.is_visible().ok()).unwrap_or(false);
                     std::thread::sleep(Duration::from_millis(if visible { 1000 } else { 3000 }));
+                    extensions::poll(&poller);
                     let changed = with_engine(&poller, |e| e.refresh_running());
                     if changed && visible {
                         broadcast(&poller);

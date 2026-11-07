@@ -173,3 +173,17 @@ src-tauri/
 - logged: v0.9.9 · 2026-11-03
 
 The launch punch list (2026-11-03): the About of a downloaded app says NodeAgentc, Inc., not nodemode-ai, and lists the licence. The bundle's copyright was "nodemode-ai, Apache-2.0"; it is now "Copyright 2026 NodeAgentc, Inc. Apache-2.0" as in formMCP and formskills, with `publisher`, `license` and `licenseFile` (`../LICENSE` from `src-tauri`) beside it. The macOS About panel reads the copyright, Tauri's default About metadata takes its authors from `bundle.publisher`, tauri-build writes `CompanyName` from it into the Windows version resource, and the workspace `authors` (the company now) is the .deb's Maintainer. Checked here: the JSON parses; no build was run.
+
+## src/extensions.rs · the extension host 2026-11-07 {#extensions}
+
+- refers-to: src/extensions.rs :: respond, split, decode, base; lib.rs :: register_uri_scheme_protocol("formext"); tauri.conf.json :: security.csp frame-src
+- kind: decision
+- logged: v0.15.0 (unreleased) · 2026-11-07
+- formtray has no HTTP server, so extension files are served by the Tauri custom protocol the contract names: `formext://{id}/{version}/{path}` on macOS and Linux, `http://formext.localhost/{id}/{version}/{path}` on Windows (Tauri's custom-scheme form there); a request to `formext://localhost/{id}/...` is read the same way. The path is percent-decoded, then `formtray_core::extensions::file_for` decides; every answer, 404s included, carries nosniff, no-store, CORP cross-origin and ACAO `*`, and HTML gets the contract CSP with BASE set to the extension's own absolute prefix (`csp_for` takes the formext:// or http:// prefix as the source). Only GET and HEAD are served. The window's CSP gains `frame-src formext: http://formext.localhost`. The resolved list is cached against `stamp` (enabled.json and dev.json modification times) so a file request does not read every manifest.
+- refers-to: src/extensions.rs :: poll, reload, current; lib.rs :: the poller thread
+- kind: rationale
+- The existing poller (1 s while a panel or Settings is visible, 3 s otherwise) calls `poll`: a stamp change re-resolves, rebuilds the tray menu on the main thread and emits `ext:changed` with the new listing only when the public rows differ; it also takes CLI requests from the mailbox and emits them to the panel as `ext:request`. The window also polls `extensions_stamp` every 2 s while focused, as the contract asks.
+- refers-to: src/extensions.rs :: submenu, on_menu; lib.rs :: tray_menu, build_tray on_menu_event
+- kind: decision
+- formtray has no menu bar, so the contract's Extensions menu is a submenu of the tray menu, after the views: one `Name: Title` item per command of a ready extension (`ext-cmd:<id>:<command>`, both ids are `[a-z0-9-]` so the colon is safe), a separator, Extensions Panel, Reload Extensions, Manage in FormPortal (`formai://extensions?product=formtray` through `open`, `cmd /C start` or `xdg-open`). A command item and Extensions Panel first show the panel at the last view (reason `switch`, so a visible panel is not toggled away), then emit `ext:run` or `ext:sheet` to it, because consent, toasts and panels live in the panel window.
+- Not compiled: this machine has no GTK, so `cargo check -p formtray` was not run; the Tauri calls (`register_uri_scheme_protocol`, `UriSchemeContext::app_handle`, `Submenu::with_id_and_items`) were read against tauri 2.12.5's source in the cargo registry. WebKit and WebView2 behaviour for module scripts and CORS from a sandboxed frame on a custom scheme is unverified on a device.
