@@ -229,11 +229,8 @@ pub fn check(mut ext: Extension, product: &str, app_version: &str, app_name: &st
     if !version_ok(&ext.version) {
         return refuse(ext, "its version is not x.y.z".to_string());
     }
-    if manifest.get("api").is_none_or(Value::is_null) {
-        return refuse(ext, format!("it does not say which extension API it needs; this {app_name} offers API {API}"));
-    }
     if manifest.get("api").and_then(Value::as_str) != Some(API) {
-        return refuse(ext, format!("this extension needs a newer {app_name} (it asks for extension API {}; this {app_name} offers API {API})", py_str(manifest.get("api"))));
+        return refuse(ext, format!("it needs extension API {}; this {app_name} offers API {API}", py_str(manifest.get("api"))));
     }
     if truthy(manifest.get("native")) {
         return refuse(ext, format!("native extensions are not supported by {app_name}"));

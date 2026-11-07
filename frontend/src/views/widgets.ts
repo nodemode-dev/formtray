@@ -795,7 +795,7 @@ export function widgets(): ViewModule {
       hint = el("p", "wg-hint", "Drag tiles to reorder. Resize or remove from a tile's corner.");
       const headText = el("div", "wg-headtext");
       headText.append(el("h1", "pn-title", "Widgets"), hint);
-      head.append(headText, viewBar("widgets", (v) => ctx.go(v)), editBtn, iconButton(icons.puzzle, "Extensions", () => ctx.ext?.showSheet()), iconButton(icons.gear, "Settings", () => ctx.go("prefs")));
+      head.append(headText, viewBar("widgets", (v) => ctx.go(v)), editBtn, ...(ctx.ext ? [iconButton(icons.puzzle, "Extensions", () => ctx.ext?.showSheet())] : []), iconButton(icons.gear, "Settings", () => ctx.go("prefs")));
       board = el("div", "wg-board");
       empty = el("p", "pn-empty", "The board is empty. Choose Edit to add apps.");
       addBar = el("section", "wg-addbar");

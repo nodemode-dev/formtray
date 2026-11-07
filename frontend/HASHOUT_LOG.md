@@ -160,7 +160,7 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 
 - refers-to: src/ext/host-bridge.ts
 - kind: decision
-- logged: v0.15.0 (unreleased) · 2026-11-07
+- logged: v0.15.0 · 2026-11-07
 - The Form Extension Contract kit's host bridge, copied unchanged (NOTICE row). formtray adapts it only from outside, in ext/host.ts.
 - refers-to: src/ext/host.ts :: createExtensions, CATALOGUE, BOARD, ACTIONS, change, act, read, loadListing
 - kind: decision
@@ -176,7 +176,10 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 - formtray has no command palette; the Apps search is the nearest, so typing there also lists matching extension commands (`Name: Title`) above the grid. Buttons are kept by key between keystrokes.
 - refers-to: vite-ext.ts, vite.config.ts plugins
 - kind: rationale
-- In the browser preview the Vite server answers `GET /api/extensions` and `GET /api/extensions/files/{id}/{version}/{path}` by running `formtray-cli extensions_list --json` and `extension_file` (target/debug, or FORMTRAY_CLI), so the preview uses the same Rust resolver as the app. The config imports `./vite-ext.ts` with its extension (tsconfig `allowImportingTsExtensions`, fine with `noEmit`), so Vite's future native config loader has nothing to warn about.
+- In the browser preview the Vite server answers `GET /api/extensions` and `GET /api/extensions/files/{id}/{version}/{path}` by running `formtray-cli extensions_list --json` and `extension_file` (target/debug, or FORMTRAY_CLI), so the preview uses the same Rust resolver as the app. The config imports `./vite-ext.ts` with its extension (tsconfig `allowImportingTsExtensions`, fine with `noEmit`), so Vite's future native config loader has nothing to warn about. The middleware reads the raw request path (only `?` and `#` split off), not `new URL(...).pathname`: the WHATWG parser folds `..`, `%2e%2e` and `\` before the resolver sees them, so `ui/../manifest.json` was served and `../../etc/passwd` fell through to the page. Now the raw segments reach `extension_file` and are refused with 404 as the kit does.
+- refers-to: src/views/widgets.ts :: Extensions header button
+- kind: rationale
+- The puzzle button is built only when `ctx.ext` exists (the panel window), so the browser demos, which mount the same view without a host, show no dead button.
 - refers-to: src/ext/host.ts :: mountPanel, openPanel, starting; src/ext/sheet.ts :: dialogCard
 - kind: decision
 - Panels open through the kit's `open()` (contract 07:47: consent before the frame exists), not `mount()`. A docked tile keeps the pending `open()` in `starting` so a command with a panel can wait for that frame; a tile disposed before `open()` settles disposes the late frame. `dialogCard` awaits its mount and closes itself when `open()` gives no frame.

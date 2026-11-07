@@ -25,8 +25,8 @@ export function extensionRoutes(): Plugin {
     name: "formtray-extensions",
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        const url = new URL(req.url ?? "/", "http://localhost");
-        if (url.pathname === "/api/extensions") {
+        const pathname = (req.url ?? "/").split(/[?#]/)[0];
+        if (pathname === "/api/extensions") {
           const { code, out } = await run(["extensions_list", "--json", "--base", BASE]);
           res.statusCode = code === 0 ? 200 : 503;
           res.setHeader("Content-Type", "application/json");
@@ -34,8 +34,8 @@ export function extensionRoutes(): Plugin {
           res.end(code === 0 ? out : JSON.stringify({ error: "formtray-cli is not built; run cargo build -p formtray-cli" }));
           return;
         }
-        if (!url.pathname.startsWith(`${BASE}/`)) return next();
-        const parts = url.pathname.slice(BASE.length + 1).split("/");
+        if (!pathname.startsWith(`${BASE}/`)) return next();
+        const parts = pathname.slice(BASE.length + 1).split("/");
         const [id, version] = parts;
         let rel = "";
         try {
