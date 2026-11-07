@@ -94,6 +94,10 @@
 
 `./formtray cli hotkeys`, `quit <app>`, `hotkey <action> <chord>` and `where` complete it. See [`CLAUDE.md`](CLAUDE.md).
 
+## Extensions
+
+FormTray loads extensions made to the Form Extension Contract (API 1): FormPortal installs them, form.ext runs one from a folder while you make it. The tray menu has an Extensions submenu with each extension's commands, the Extensions panel (also the puzzle button on the Widgets board) lists what is installed with its permissions and state, an extension's panels dock as tiles on the Widgets board or open as a card, and its commands show up in the Apps search. Each extension runs in a sandboxed frame and asks once per version before it can read or change the board. Agents use `./formtray cli extensions_list` and `./formtray cli extension_command <id> <command>`. What an extension can read and change is in [`docs/EXTENSIONS.md`](docs/EXTENSIONS.md).
+
 ## Under the hood
 
 - **Engine:** `formtray-core` holds the app registry, discovery, open, focus, quit, running state, preferences and hotkey tables.
