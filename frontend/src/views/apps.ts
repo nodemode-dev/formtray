@@ -15,6 +15,9 @@ export function apps(): ViewModule {
   let empty: HTMLElement;
   const gridCells = new Map<string, HTMLButtonElement>();
   const recentCells = new Map<string, HTMLButtonElement>();
+  const cmdCells = new Map<string, HTMLButtonElement>();
+  let cmdWrap: HTMLElement;
+  let cmdRow: HTMLElement;
   let category = "all";
   let index = 0;
 
@@ -61,7 +64,35 @@ export function apps(): ViewModule {
       b.hidden = !hit;
       if (hit) shown++;
     }
-    empty.hidden = shown > 0;
+    const hits = q
+      ? (ctx.ext?.list() ?? [])
+          .filter((x) => x.state === "ready")
+          .flatMap((x) => x.commands.map((c) => ({ x, c })))
+          .filter(({ x, c }) => `${x.name} ${c.title} ${c.id}`.toLowerCase().includes(q))
+      : [];
+    const keep = new Set(hits.map(({ x, c }) => `${x.id}:${c.id}`));
+    for (const [k, b] of cmdCells) {
+      if (!keep.has(k)) {
+        b.remove();
+        cmdCells.delete(k);
+      }
+    }
+    for (const { x, c } of hits) {
+      const k = `${x.id}:${c.id}`;
+      let b = cmdCells.get(k);
+      if (!b) {
+        b = el("button", "pill ap-cmd", `${x.name}: ${c.title}`);
+        b.type = "button";
+        const [id, cmd] = [x.id, c.id];
+        b.addEventListener("click", () => {
+          ctx.ext?.run(id, cmd).catch((e) => ctx.toast(String((e as Error).message ?? e)));
+        });
+        cmdCells.set(k, b);
+      }
+      cmdRow.append(b);
+    }
+    cmdWrap.hidden = hits.length === 0;
+    empty.hidden = shown > 0 || hits.length > 0;
     recentWrap.hidden = Boolean(q) || category !== "all" || recentRow.childElementCount === 0;
     select(0);
   }
@@ -139,7 +170,11 @@ export function apps(): ViewModule {
         gridCells.set(app.id, b);
         grid.append(b);
       }
-      body.append(recentWrap, el("h2", "ap-section", "All apps"), grid, empty);
+      cmdWrap = el("section", "ap-cmds");
+      cmdWrap.hidden = true;
+      cmdRow = el("div", "ap-cmd-row");
+      cmdWrap.append(el("h2", "ap-section", "Extension commands"), cmdRow);
+      body.append(cmdWrap, recentWrap, el("h2", "ap-section", "All apps"), grid, empty);
       root.append(head, pills, body);
       buildRecent();
       filter();

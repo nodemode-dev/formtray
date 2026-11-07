@@ -1272,6 +1272,325 @@ html[data-native="false"][data-view="prefs"] .panel { width: 640px; height: 600p
   transform: translate(-50%, 0);
 }
 
+/* extensions: the panel sheet, consent and dialog cards, docked tiles, commands in Apps */
+.ext-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-overlay);
+}
+
+.ext-layer > * {
+  pointer-events: auto;
+}
+
+.ext-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.ext-sheet {
+  position: absolute;
+  top: 64px;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  width: min(460px, 70vw);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-l);
+  background: var(--glass-solid);
+  box-shadow: inset 0 1px 0 var(--sheen), inset 0 0 0 1px var(--edge-strong), var(--shadow);
+}
+
+.ext-sheet[hidden],
+.ext-list[hidden],
+.ext-empty[hidden] {
+  display: none;
+}
+
+.ext-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 56px;
+  flex: none;
+  padding: 0 var(--sp-3) 0 var(--sp-5);
+}
+
+.ext-title {
+  margin: 0 auto 0 0;
+  font-size: var(--fs-l);
+  font-weight: 600;
+}
+
+.ext-btn {
+  height: 28px;
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-s);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.ext-btn.is-primary {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+.ext-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3) var(--sp-3);
+}
+
+.ext-row {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-3);
+  border-radius: var(--radius-m);
+  background: var(--control);
+  box-shadow: inset 0 0 0 1px var(--edge);
+}
+
+.ext-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.ext-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.ext-name {
+  margin: 0;
+  font-size: var(--fs-m);
+  font-weight: 600;
+}
+
+.ext-ver,
+.ext-src {
+  font-size: var(--fs-s);
+  color: var(--ink-faint);
+}
+
+.ext-state {
+  font-size: var(--fs-s);
+  padding: 1px var(--sp-2);
+  border-radius: var(--radius-pill);
+  background: var(--control);
+  color: var(--ink-soft);
+}
+
+.ext-state[data-state="ready"] {
+  color: var(--live);
+}
+
+.ext-state[data-state="refused"] {
+  color: var(--fault);
+}
+
+.ext-desc,
+.ext-reason,
+.ext-path {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-s);
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.ext-reason {
+  color: var(--fault);
+}
+
+.ext-path {
+  color: var(--ink-faint);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.ext-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  margin-top: var(--sp-2);
+}
+
+.ext-chips:empty {
+  display: none;
+}
+
+.ext-chip {
+  font-size: var(--fs-s);
+  padding: 1px var(--sp-2);
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1px var(--edge-strong);
+  color: var(--ink-soft);
+}
+
+.ext-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  flex: none;
+}
+
+.ext-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.ext-foot {
+  flex: none;
+  margin: 0;
+  padding: var(--sp-2) var(--sp-5) var(--sp-4);
+  font-size: var(--fs-s);
+  color: var(--ink-faint);
+}
+
+.ext-scrim {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-xl);
+  background: rgb(0 0 0 / 0.28);
+}
+
+.ext-card {
+  width: min(400px, 86vw);
+  padding: var(--sp-5);
+  border-radius: var(--radius-l);
+  background: var(--glass-solid);
+  box-shadow: inset 0 1px 0 var(--sheen), inset 0 0 0 1px var(--edge-strong), var(--shadow);
+}
+
+.ext-card-panel {
+  width: min(640px, 90vw);
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+}
+
+.ext-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 var(--sp-2) var(--sp-2);
+}
+
+.ext-card-title {
+  margin: 0;
+  font-size: var(--fs-l);
+  font-weight: 600;
+}
+
+.ext-card-text {
+  margin: var(--sp-2) 0;
+  color: var(--ink-soft);
+}
+
+.ext-perms {
+  margin: 0 0 var(--sp-4);
+  padding-left: var(--sp-5);
+}
+
+.ext-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+.ext-card-box {
+  height: var(--ext-h, 420px);
+  max-height: 70vh;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  background: var(--pane);
+}
+
+.formext-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.wg-ext-face {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+}
+
+.wg-ext-face:hover {
+  background: none;
+}
+
+.wg-ext-title {
+  flex: none;
+  font-size: var(--fs-m);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wg-ext-box {
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  background: var(--pane);
+}
+
+.wg-tile[data-size="s"] .wg-ext-title {
+  display: none;
+}
+
+.is-editing .wg-ext-box {
+  pointer-events: none;
+}
+
+.ext-wait {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-s);
+  color: var(--ink-soft);
+}
+
+.ext-wait p {
+  margin: 0;
+}
+
+.ap-cmds[hidden] {
+  display: none;
+}
+
+.ap-cmd-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
