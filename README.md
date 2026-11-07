@@ -140,7 +140,11 @@ Default hotkeys: the Switcher is Option + Tab on macOS and Alt + ` on Windows an
 
 ## Demo
 
-[`demo/`](demo/README.md) runs the real views in any browser with no install: open `demo/index.html`. It has a built-in sample FormPortal record, reads your own `installed.json` and `catalog/apps.json`, launches and quits apps in the page, rebinds hotkeys, and answers `formtray cli` commands. Rebuild it with `npm run build:demo` in `frontend/`.
+Three demos run the real views in any browser with no install; open each `index.html`:
+
+- [`demo/`](demo/README.md), the overview. It has a built-in sample FormPortal record, reads your own `installed.json` and `catalog/apps.json`, launches and quits apps in the page, rebinds hotkeys, and answers `formtray cli` commands. Rebuild it with `npm run build:demo` in `frontend/`.
+- [`demos/switcher/`](demos/switcher/README.md), keyboard first: hotkey tables for macOS, Windows and Linux, rebinding with the engine's refusals, a keystroke strip, and five keyboard flows that press real keys on the real views.
+- [`demos/widgets/`](demos/widgets/README.md), widgets and layout: a workday of four boards (09:00 to 17:30) that set the tiles, sizes, groups and open apps, with Edit mode, Stack and Windows following.
 
 ## Repository
 
