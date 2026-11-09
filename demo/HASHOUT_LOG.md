@@ -42,6 +42,10 @@ demo/
 - refers-to: the module as a whole
 - kind: rationale
 - The frontend's own bridge falls back to preview data when there is no Tauri global. The demo main imports this module in its place so the views can run against an engine that keeps state (running, usage, prefs, hotkeys, portal), and `on` is wired to engine events. The views import `../bridge`; a resolveId hook in vite.config.ts sends every `bridge` import made from `frontend/src` to this file, so views, ui.ts and the shell share one module and one engine. The views only use `call`, `on`, `native`, `VIEWS` and types.
+- refers-to: case "open_demo"; src/index.html and the other demos' index.html :: `.demo-links a[data-demo]`
+- kind: decision
+- logged: v0.16.0 · 2026-11-09
+- Settings now has a Demos section that calls `open_demo`. In a demo page that means "go to that demo", so the bridge follows the page's own link for that id (found by `data-demo`, never by its text). The links are relative, and the app's copies of these pages have them rewritten by `frontend/vite-demos.ts`, so the same code works on file://, in the repository and inside the app.
 
 ## src/engine.ts
 
