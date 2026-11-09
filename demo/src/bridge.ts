@@ -73,6 +73,11 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
       engine.emit("notice", engine.snapshot().portal ? `FormPortal would open here: ${n} update${n === 1 ? "" : "s"} waiting.` : "FormPortal has no install record on this computer.");
       return undefined as T;
     }
+    case "open_demo": {
+      const link = document.querySelector<HTMLAnchorElement>(`.demo-links a[data-demo="${String(args?.id)}"]`);
+      if (link && link.getAttribute("aria-current") !== "page") location.href = link.href;
+      return undefined as T;
+    }
     default:
       return undefined as T;
   }

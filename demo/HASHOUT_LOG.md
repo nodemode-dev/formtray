@@ -2,8 +2,8 @@
 
 Living log of rationale for the browser demo. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.15.1
-Last updated: 2026-11-07 · v0.15.1 rebuilt for the version the bundle embeds, no demo change; v0.15.0 rebuilt for the version the bundle embeds (the shared views now carry the extension host's optional hooks, unused here); v0.14.3 the quiet three-demo link row, rebuilt for the version the bundle embeds; v0.14.2 rebuilt for the version the bundle embeds, no demo change; v0.14.1 the real desktop and media; v0.14.0 the demo
+Current build version: v0.16.0
+Last updated: 2026-11-09 · v0.16.0 the bridge answers open_demo through the data-demo links, rebuilt for the version the bundle embeds and for the Demos section in Settings; 2026-11-07 · v0.15.1 rebuilt for the version the bundle embeds, no demo change; v0.15.0 rebuilt for the version the bundle embeds (the shared views now carry the extension host's optional hooks, unused here); v0.14.3 the quiet three-demo link row, rebuilt for the version the bundle embeds; v0.14.2 rebuilt for the version the bundle embeds, no demo change; v0.14.1 the real desktop and media; v0.14.0 the demo
 
 ---
 
@@ -42,6 +42,10 @@ demo/
 - refers-to: the module as a whole
 - kind: rationale
 - The frontend's own bridge falls back to preview data when there is no Tauri global. The demo main imports this module in its place so the views can run against an engine that keeps state (running, usage, prefs, hotkeys, portal), and `on` is wired to engine events. The views import `../bridge`; a resolveId hook in vite.config.ts sends every `bridge` import made from `frontend/src` to this file, so views, ui.ts and the shell share one module and one engine. The views only use `call`, `on`, `native`, `VIEWS` and types.
+- refers-to: case "open_demo"; src/index.html and the other demos' index.html :: `.demo-links a[data-demo]`
+- kind: decision
+- logged: v0.16.0 · 2026-11-09
+- Settings now has a Demos section that calls `open_demo`. In a demo page that means "go to that demo", so the bridge follows the page's own link for that id (found by `data-demo`, never by its text). The links are relative, and the app's copies of these pages have them rewritten by `frontend/vite-demos.ts`, so the same code works on file://, in the repository and inside the app.
 
 ## src/engine.ts
 

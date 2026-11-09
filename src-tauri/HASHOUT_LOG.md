@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.9
-Last updated: 2026-11-03 · v0.9.9 the bundle names the publisher and the licence; 2026-10-22 · no shell change; bundles are built by formcompiler, not this repository's desktop.yml
+Current build version: v0.16.0
+Last updated: 2026-11-09 · v0.16.0 open_demo and the Demos submenu, demo windows close for real; 2026-11-03 · v0.9.9 the bundle names the publisher and the licence; 2026-10-22 · no shell change; bundles are built by formcompiler, not this repository's desktop.yml
 
 ---
 
@@ -187,3 +187,13 @@ The launch punch list (2026-11-03): the About of a downloaded app says NodeAgent
 - kind: decision
 - formtray has no menu bar, so the contract's Extensions menu is a submenu of the tray menu, after the views: one `Name: Title` item per command of a ready extension (`ext-cmd:<id>:<command>`, both ids are `[a-z0-9-]` so the colon is safe), a separator, Extensions Panel, Reload Extensions, Manage in FormPortal (`formai://extensions?product=formtray` through `open`, `cmd /C start` or `xdg-open`). A command item and Extensions Panel first show the panel at the last view (reason `switch`, so a visible panel is not toggled away), then emit `ext:run` or `ext:sheet` to it, because consent, toasts and panels live in the panel window.
 - Not compiled: this machine has no GTK, so `cargo check -p formtray` was not run; the Tauri calls (`register_uri_scheme_protocol`, `UriSchemeContext::app_handle`, `Submenu::with_id_and_items`) were read against tauri 2.12.5's source in the cargo registry. WebKit and WebView2 behaviour for module scripts and CORS from a sandboxed frame on a custom scheme is unverified on a device.
+
+## In-app demos {#demos}
+
+- refers-to: src/lib.rs :: DEMOS, DEMO_WINDOW, open_demo_window, open_demo, tray_menu (Demos submenu), on_menu_event `demo:`
+- kind: decision
+- logged: v0.16.0 · 2026-11-09
+- The tray menu is formtray's only menu, so the demos are a Demos submenu after Extensions (`demo:overview`, `demo:switcher`, `demo:widgets`), and Settings has a Demos section that calls `open_demo {id}`. Both run `open_demo_window`: an unknown id is refused, the panel is hidden, and the demo opens in a normal decorated, resizable window `demo-{id}` (1280 by 800, at least 960 by 640) titled "FormTray demo: ..." on `demos/{id}.html` from the bundle (frontend HASHOUT_LOG). A second request shows and raises the open window. The command is async because creating a window from a synchronous command can deadlock on Windows.
+- refers-to: capabilities/default.json, run :: CloseRequested
+- kind: rationale
+- The demo windows are not listed in the capability, so their pages get no command, and their own bridge never calls Tauri: a demo cannot launch, quit or change anything real. Panel, prefs and splash still hide on close; a `demo-*` window really closes, so the next open starts the demo fresh. Closing the last demo window does not quit FormTray (`ExitRequested` without a code is prevented).

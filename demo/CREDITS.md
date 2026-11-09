@@ -2,6 +2,8 @@
 
 Every media file in the demo, where it came from and what was changed. The family app icons in `apps/` are the owner's own artwork (see `NOTICE.md`) and are unchanged.
 
+The app ships these same files inside its interface (`demos/assets/` in the built frontend) so Settings and the menu bar menu can open the demos; nothing is added or changed there.
+
 ## Wallpaper
 
 | File in the demo | Title | Author | Source page | Licence as stated on the page | Changes |

@@ -122,6 +122,10 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
     snap.hotkeys[String(args?.action)] = chord || snap.hotkeys[String(args?.action)];
     return snap as T;
   }
+  if (cmd === "open_demo") {
+    window.open(`/demos/${String(args?.id)}.html`, "_blank", "noopener");
+    return undefined as T;
+  }
   if (cmd === "open_app") {
     const snap = await previewSnapshot();
     const app = snap.apps.find((a) => a.id === args?.id);

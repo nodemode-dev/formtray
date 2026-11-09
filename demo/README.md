@@ -20,6 +20,10 @@ It works with zero files (a built-in sample FormPortal record, with a few apps n
 
 Nothing is launched for real: running state is simulated in the page. Nothing leaves the tab.
 
+## In the app
+
+FormTray ships this demo and the two in `demos/` inside the app. Open them from Settings (the Demos section) or from the menu bar menu (Demos). Each opens in its own window, on the same sample engine as here: it launches nothing and leaves your apps and settings alone. Close the window to leave the demo.
+
 ## Rebuild
 
 ```sh

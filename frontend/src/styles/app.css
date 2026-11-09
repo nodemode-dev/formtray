@@ -1169,6 +1169,57 @@ html[data-native="false"][data-view="prefs"] .panel { width: 640px; height: 600p
   white-space: nowrap;
 }
 
+.pf-demos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.pf-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 0;
+  border-radius: var(--radius-m);
+  background: var(--control);
+  box-shadow: inset 0 0 0 1px var(--edge);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--quick) var(--ease);
+}
+
+.pf-demo:hover {
+  background: var(--control-hover);
+}
+
+.pf-demo:active {
+  background: var(--control-press);
+}
+
+.pf-demo:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.pf-demo-art {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 120 / 72;
+  color: var(--ink-soft);
+  border-radius: var(--radius-s);
+  background: var(--control);
+}
+
+.pf-demo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .pf-keys {
   display: flex;
   flex-direction: column;

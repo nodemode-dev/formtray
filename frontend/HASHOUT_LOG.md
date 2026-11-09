@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.9
-Last updated: 2026-11-03 · v0.9.9 Copyright 2026 NodeAgentc, Inc. and the licence in Settings, About; 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
+Current build version: v0.16.0
+Last updated: 2026-11-09 · v0.16.0 the Demos section in Settings and the demo pages in the bundle (vite-demos.ts); 2026-11-03 · v0.9.9 Copyright 2026 NodeAgentc, Inc. and the licence in Settings, About; 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
 
 ---
 
@@ -183,3 +183,16 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 - refers-to: src/ext/host.ts :: mountPanel, openPanel, starting; src/ext/sheet.ts :: dialogCard
 - kind: decision
 - Panels open through the kit's `open()` (contract 07:47: consent before the frame exists), not `mount()`. A docked tile keeps the pending `open()` in `starting` so a command with a panel can wait for that frame; a tile disposed before `open()` settles disposes the late frame. `dialogCard` awaits its mount and closes itself when `open()` gives no frame.
+
+## In-app demos {#demos}
+
+- refers-to: src/demos.ts, src/views/prefs.ts :: the Demos section, styles/app.css :: .pf-demos, .pf-demo
+- kind: decision
+- logged: v0.16.0 · 2026-11-09
+- formtray has no start page and no document. Its home surface for things that are not the board is Settings, so the three demos are a Demos section there, after General: one card per demo (`data-demo` = overview, switcher, widgets) with an inline currentColor SVG preview, the title and one line, and a note that the demo is a sample, launches nothing and leaves the person's apps and settings alone. A card calls `open_demo {id}`; the shell opens the demo in its own window. The tray menu has the same three items under Demos (src-tauri HASHOUT_LOG).
+- refers-to: vite-demos.ts, vite.config.ts plugins
+- kind: rationale
+- A FormTray demo is the real views on `demo/src/engine.ts`, the TypeScript port of formtray-core, over a desktop of sample apps. Running that inside the real panel would swap the bridge under live state; a separate window on the committed demo builds shows exactly the browser demo and is sandboxed by construction: the page's bridge is the demo engine, it never calls Tauri, and the `demo-*` windows are in no capability, so they could not invoke a command if they tried. Its only storage is the demo's own `formtray-demo-*` localStorage keys, which the app does not use. `vite-demos.ts` emits `demos/{overview,switcher,widgets}.html` and one shared `demos/assets/` (the three scripts and stylesheets, the wallpaper and nine screenshots once, identical in all three demos, checked byte for byte at build), and points the icons at the app's own `/apps/` pack (`../apps/`), so no media file is shipped twice. Every rewrite throws if its target string is missing, so a demo rebuilt in a new shape fails the app build instead of shipping a broken page. The dev server answers the same paths from the same map.
+- refers-to: bridge.ts :: open_demo in the preview branch; demo/src/bridge.ts :: open_demo
+- kind: decision
+- The browser preview opens `/demos/{id}.html` in a new tab. The browser demos mount the same Settings view, so their bridge answers `open_demo` by following the page's own demo link (`.demo-links a[data-demo]`), which is right on file://, in the repository and in the app's copies.
