@@ -13,7 +13,7 @@ use std::time::Duration;
 use formtray_core::{Engine, Prefs, Snapshot, VIEWS};
 use serde::Serialize;
 use tauri::image::Image;
-use tauri::menu::{CheckMenuItem, IconMenuItem, Menu, MenuItem, PredefinedMenuItem};
+use tauri::menu::{CheckMenuItem, IconMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, RunEvent, WebviewWindow, WindowEvent};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
@@ -21,6 +21,8 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 const PANEL: &str = "panel";
 const BACKGROUND_FLAG: &str = "--background";
+const DEMO_WINDOW: &str = "demo-";
+const DEMOS: &[(&str, &str)] = &[("overview", "Overview"), ("switcher", "Switcher and hotkeys"), ("widgets", "Widgets and layout")];
 
 #[derive(Clone, Serialize)]
 struct HotkeyIssue {
@@ -291,6 +293,28 @@ fn open_prefs(app: &AppHandle) {
     }
 }
 
+fn open_demo_window(app: &AppHandle, id: &str) -> Result<(), String> {
+    let Some((id, title)) = DEMOS.iter().find(|(d, _)| *d == id) else {
+        return Err(format!("There is no demo called {id}."));
+    };
+    hide_panels(app);
+    let label = format!("{DEMO_WINDOW}{id}");
+    if let Some(w) = panel(app, &label) {
+        let _ = w.show();
+        raise(&w);
+        return Ok(());
+    }
+    let window = tauri::WebviewWindowBuilder::new(app, &label, tauri::WebviewUrl::App(format!("demos/{id}.html").into()))
+        .title(format!("FormTray demo: {title}"))
+        .inner_size(1280.0, 800.0)
+        .min_inner_size(960.0, 640.0)
+        .center()
+        .build()
+        .map_err(|e| e.to_string())?;
+    raise(&window);
+    Ok(())
+}
+
 fn check_updates(app: &AppHandle) -> Result<(), String> {
     hide_panels(app);
     with_engine(app, |e| e.open("formportal")).map(|_| ()).map_err(|e| format!("{e}. Install FormPortal to check for updates."))
@@ -343,6 +367,12 @@ fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         .map(|(id, label)| MenuItem::with_id(app, *id, *label, true, None::<&str>))
         .collect::<tauri::Result<_>>()?;
     let ext_menu = extensions::submenu(app)?;
+    let demo_items: Vec<MenuItem<tauri::Wry>> = DEMOS
+        .iter()
+        .map(|(id, title)| MenuItem::with_id(app, format!("demo:{id}"), *title, true, None::<&str>))
+        .collect::<tauri::Result<_>>()?;
+    let demo_refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = demo_items.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>).collect();
+    let demos = Submenu::with_id_and_items(app, "demo-menu", "Demos", true, &demo_refs)?;
     let updates = MenuItem::with_id(app, "updates", "Check for Updates...", true, None::<&str>)?;
     let prefs = MenuItem::with_id(app, "prefs", "Settings...", true, Some("CmdOrCtrl+,"))?;
     let login = CheckMenuItem::with_id(app, "login", "Open at Login", true, login_on, None::<&str>)?;
@@ -364,7 +394,7 @@ fn tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         refs.push(&sep0);
     }
     refs.extend(items.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<tauri::Wry>));
-    refs.extend([&sep1 as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &ext_menu, &updates, &rescan, &prefs, &login, &sep2, &quit]);
+    refs.extend([&sep1 as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &ext_menu, &demos, &updates, &rescan, &prefs, &login, &sep2, &quit]);
     Menu::with_items(app, &refs)
 }
 
@@ -452,6 +482,10 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                 }
                 if let Some(view) = other.strip_prefix("view-") {
                     show_view(app, view, "menu");
+                } else if let Some(id) = other.strip_prefix("demo:") {
+                    if let Err(e) = open_demo_window(app, id) {
+                        let _ = app.emit("notice", e);
+                    }
                 } else if let Some(id) = other.strip_prefix("open-") {
                     if let Err(e) = with_engine(app, |e| e.open(id)) {
                         let _ = app.emit("notice", e.to_string());
@@ -569,6 +603,11 @@ fn updates(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+async fn open_demo(app: AppHandle, id: String) -> Result<(), String> {
+    open_demo_window(&app, &id)
+}
+
+#[tauri::command]
 fn set_hotkey(app: AppHandle, action: String, chord: String) -> Result<Snapshot, String> {
     let result = with_engine(&app, |e| e.set_hotkey(&action, &chord));
     register_hotkeys(&app);
@@ -625,6 +664,7 @@ pub fn run() {
             updates,
             rescan,
             set_hotkey,
+            open_demo,
             pause_hotkeys,
             reveal::app_ready,
             extensions::extensions,
@@ -648,7 +688,7 @@ pub fn run() {
                     }
                 });
             }
-            WindowEvent::CloseRequested { api, .. } => {
+            WindowEvent::CloseRequested { api, .. } if !window.label().starts_with(DEMO_WINDOW) => {
                 api.prevent_close();
                 let _ = window.hide();
             }
