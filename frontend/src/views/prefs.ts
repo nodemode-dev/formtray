@@ -1,4 +1,5 @@
 import { native, VIEWS, call, type AppState, type Prefs, type ShellInfo, type Snapshot, type View } from "../bridge";
+import { DEMOS, openDemo } from "../demos";
 import { icons } from "../icons";
 import { appIcon, appName, el, iconButton, prettyChord } from "../ui";
 import type { Ctx, ViewModule } from "./types";
@@ -226,6 +227,22 @@ export function prefsView(): ViewModule {
       updates.type = "button";
       updates.addEventListener("click", () => ctx.updates());
 
+      const demos = el("div", "pf-demos");
+      for (const demo of DEMOS) {
+        const card = el("button", "pf-demo");
+        card.type = "button";
+        card.dataset.demo = demo.id;
+        card.innerHTML = demo.art;
+        const text = el("span", "pf-demo-text");
+        text.append(el("strong", "", demo.title), el("span", "pf-hint", demo.line));
+        card.append(text);
+        card.addEventListener("click", () => {
+          openDemo(demo.id).catch((err) => ctx.toast(String(err)));
+        });
+        demos.append(card);
+      }
+      const demoNote = el("p", "pf-hint", "Each demo opens in its own window on sample apps. Nothing is launched, and your apps and settings are not changed. Close the window to leave it.");
+
       keys = el("div", "pf-keys");
       about = el("p", "pf-hint");
       const credit = el("p", "pf-hint", "Copyright 2026 NodeAgentc, Inc. Apache License 2.0; the LICENSE file is beside the app.");
@@ -234,6 +251,7 @@ export function prefsView(): ViewModule {
       const body = el("div", "pf-body");
       body.append(
         section("General", field("Opens with", defaultView, "The view FormTray shows when it starts."), field("Open at login", login, "Off by default. FormTray waits in the menu bar until a hotkey or the Dock icon calls it.")),
+        section("Demos", demos, demoNote),
         section("Apps", list),
         section("Where to look", locations, rescan),
         section("Hotkeys", keys),

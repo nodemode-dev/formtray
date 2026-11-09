@@ -1,10 +1,11 @@
 import { defineConfig } from "vite";
+import { demoPages } from "./vite-demos.ts";
 import { extensionRoutes } from "./vite-ext.ts";
 
 const FRONTEND_PORT = 5610;
 
 export default defineConfig({
-  plugins: [extensionRoutes()],
+  plugins: [extensionRoutes(), demoPages()],
   root: ".",
   publicDir: "public",
   clearScreen: false,

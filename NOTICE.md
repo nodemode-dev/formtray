@@ -26,6 +26,7 @@ FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons i
 | `demos/switcher/`, `demos/widgets/` (v0.14.3) | two more browser demos built with the same Vite and TypeScript; each adds no media of its own and builds the demo 1 wallpaper, window screenshots and icon pack, listed in `demos/switcher/CREDITS.md` and `demos/widgets/CREDITS.md` |
 | Form Extension Contract kit, Apache-2.0, nodemode | `frontend/src/ext/host-bridge.ts` vendored unchanged; `core/src/extensions.rs` is a line-for-line Rust port of the kit's `formext_host.py` with its messages |
 | `demo/src/shots/`, `demo/assets/*.webp` (v0.14.1) | one Pexels photograph (Pexels License) used as the desktop wallpaper, and nine window screenshots taken from the demos of the Apache-2.0 sibling Form apps (their own interface; every photograph, clip or recording visible in them is Pexels, CC0 or public domain and is credited in `demo/CREDITS.md`) |
+| `demos/` in the built interface (v0.16.0) | the three demos inside the app: `frontend/vite-demos.ts` copies the committed builds of `demo/`, `demos/switcher/` and `demos/widgets/` into the bundle, with no new media; the wallpaper and nine window screenshots are the ones above, shipped once, and the icons are the app's own pack in `/apps/` |
 
 Every new dependency, binary, font or data file gets a row here before it is used.
 
