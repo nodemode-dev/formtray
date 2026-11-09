@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.9.9
-Last updated: 2026-11-03 · v0.9.9 the bundle names the publisher and the licence; 2026-10-22 · no shell change; bundles are built by formcompiler, not this repository's desktop.yml
+Current build version: v0.16.0
+Last updated: 2026-11-09 · v0.16.0 open_demo and the Demos submenu, demo windows close for real; 2026-11-03 · v0.9.9 the bundle names the publisher and the licence; 2026-10-22 · no shell change; bundles are built by formcompiler, not this repository's desktop.yml
 
 ---
 

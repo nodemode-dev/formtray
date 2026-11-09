@@ -2,8 +2,8 @@
 
 Living log of rationale for the Widgets and layout demo. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.14.3
-Last updated: 2026-11-07 · v0.14.3 the demo
+Current build version: v0.16.0
+Last updated: 2026-11-09 · v0.16.0 data-demo on the demo links, rebuilt for the version the bundle embeds; the app ships this build in its interface; 2026-11-07 · v0.14.3 the demo
 
 ---
 
