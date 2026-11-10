@@ -21,7 +21,7 @@
 
 <p align="center">
   <a href="https://formtray.formai.studio/"><b>Download FormTray on formai.studio</b></a> ·
-  <a href="https://github.com/nodemode-dev/formcompiler/releases/tag/formtray-v0.9.8">Latest release</a> ·
+  <a href="https://github.com/nodemode-dev/formcompiler/releases?q=formtray-v&expanded=true">Latest release</a> ·
   <a href="#run-it-from-source">Run it from source</a>
 </p>
 
