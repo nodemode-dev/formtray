@@ -2,7 +2,7 @@
 
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.16.0
+Current build version: v0.16.1
 Last updated: 2026-11-09 · v0.16.0 the Demos section in Settings and the demo pages in the bundle (vite-demos.ts); 2026-11-03 · v0.9.9 Copyright 2026 NodeAgentc, Inc. and the licence in Settings, About; 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
 
 ---
