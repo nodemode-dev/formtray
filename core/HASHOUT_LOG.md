@@ -245,3 +245,10 @@ cli/
 - refers-to: cli/src/main.rs :: extensions_list, extension_command, extension_file
 - kind: rationale
 - The contract's agent tool names are the verbs. `extensions_list --json --base <prefix>` prints the window's listing (with `stamp`) and is what the Vite middleware serves at `/api/extensions`; `extension_file` prints the resolved path, type and headers for one file or exits 1, so the development server answers with the Rust resolver, not a second copy in TypeScript. The app version is the crate version, so `minimum_app` is compared with the workspace version.
+
+## formtray.bat cli branch 2026-11-10 {#bat-cli}
+
+- refers-to: ../formtray.bat :: cli branch, main flow
+- kind: warning-context
+- logged: v0.16.1 · 2026-11-10
+- `formtray.bat cli ...` used to keep `shift`, `%1` to `%9` and `%errorlevel%` inside one parenthesised `if` block. cmd.exe expands every `%` variable of a block when the block is parsed, before `shift` has run, so the CLI received `cli list` instead of `list` and the batch file always exited 0. The branch is now `goto cli` to a `:cli` label below the main flow, so each line is parsed after the previous one has run. The main flow ends with `exit /b %errorlevel%` so it cannot fall into the label. Keep the cli body out of any parenthesised block. TRACED only: not run on Windows.
