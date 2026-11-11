@@ -196,7 +196,10 @@ export function prefsView(): ViewModule {
       root.classList.add("v-prefs");
       const head = el("header", "pn-head");
       head.setAttribute("data-tauri-drag-region", "");
-      head.append(el("h1", "pn-title", "FormTray Settings"), iconButton(icons.close, "Close", () => ctx.dismiss(), "pf-close"));
+      head.append(el("h1", "pn-title", "FormTray Settings"), iconButton(icons.close, "Close", () => {
+        if (capturing) finishCapture();
+        ctx.dismiss();
+      }, "pf-close"));
 
       defaultView = el("select", "pf-select");
       const ordered = ["widgets", ...VIEWS.filter((v) => v !== "widgets")] as View[];
@@ -259,6 +262,9 @@ export function prefsView(): ViewModule {
       );
       root.append(head, body);
       window.addEventListener("keydown", onCapture, true);
+      window.addEventListener("blur", () => {
+        if (capturing) finishCapture();
+      });
       this.update(ctx.snap);
     },
     update(snap) {
@@ -270,6 +276,7 @@ export function prefsView(): ViewModule {
       void renderKeys(snap);
     },
     shown() {
+      if (capturing) return finishCapture();
       void renderKeys(ctx.snap);
     },
   };

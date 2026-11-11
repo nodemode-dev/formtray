@@ -3,7 +3,7 @@
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
 Current build version: v0.16.1
-Last updated: 2026-11-09 · v0.16.0 the Demos section in Settings and the demo pages in the bundle (vite-demos.ts); 2026-11-03 · v0.9.9 Copyright 2026 NodeAgentc, Inc. and the licence in Settings, About; 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
+Last updated: 2026-11-10 · v0.16.2 leaving Settings ends a hotkey recording and restores the hotkeys; 2026-11-09 · v0.16.0 the Demos section in Settings and the demo pages in the bundle (vite-demos.ts); 2026-11-03 · v0.9.9 Copyright 2026 NodeAgentc, Inc. and the licence in Settings, About; 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
 
 ---
 
@@ -107,6 +107,10 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 - refers-to: prefs.ts onCapture
 - kind: rationale
 - It listens in the capture phase and stops propagation, so the shared keys in main.ts (1 to 5, Esc) do not act while a chord is being recorded. The chord is built from `e.code`, so Option on macOS does not turn the letter into a symbol.
+- refers-to: prefs.ts :: mount (close button, window blur), shown, finishCapture
+- kind: fix
+- logged: v0.16.2 · 2026-11-10
+- Leaving Settings while a hotkey was being recorded left every global hotkey unregistered: `capture` calls `pause_hotkeys(true)`, and only Escape or a finished chord called `finishCapture`. Trigger: click a hotkey button, then close Settings with its X, click another app, or close it from the taskbar. The Switcher, summon and view hotkeys stayed dead until a restart, and `capturing` stayed set, so a later key press in Settings was saved as that action's chord. Now the close button, a window `blur` and `shown()` each end a capture in progress through `finishCapture` (which re-registers the hotkeys and redraws the list). Checked: `tsc --noEmit` passes; not run in the app (no WebKit on the build host).
 - refers-to: widgets.ts wireReorder, reposition, shift, .wg-ph, .wg-hint, .wg-board
 - kind: removed-code
 - logged: v0.13.0 · 2026-11-06
