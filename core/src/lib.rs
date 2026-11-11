@@ -58,6 +58,11 @@ pub struct Engine {
     identities: HashMap<String, identity::Identity>,
     running: HashMap<String, running::Running>,
     watcher: running::Watcher,
+    seen: [Option<std::time::SystemTime>; 2],
+}
+
+fn stamp(name: &str) -> Option<std::time::SystemTime> {
+    std::fs::metadata(prefs::dir().join(name)).and_then(|m| m.modified()).ok()
 }
 
 impl Default for Engine {
@@ -77,6 +82,7 @@ impl Engine {
             identities: HashMap::new(),
             running: HashMap::new(),
             watcher: running::Watcher::new(),
+            seen: [stamp("prefs.json"), stamp("usage.json")],
         };
         engine.rediscover();
         engine.refresh_running();
@@ -222,6 +228,7 @@ impl Engine {
         launch::open(&app, path.as_deref(), &pids)?;
         self.usage.touch(&app.id);
         let _ = self.usage.save();
+        self.seen[1] = stamp("usage.json");
         Ok(app.id)
     }
 
@@ -235,6 +242,7 @@ impl Engine {
         let relocate = prefs.locations != self.prefs.locations;
         self.prefs = prefs;
         self.prefs.save()?;
+        self.seen[0] = stamp("prefs.json");
         if relocate {
             self.rediscover();
         }
@@ -245,7 +253,28 @@ impl Engine {
         if VIEWS.contains(&view) && self.usage.last_view != view {
             self.usage.last_view = view.to_string();
             let _ = self.usage.save();
+            self.seen[1] = stamp("usage.json");
         }
+    }
+
+    pub fn reload_changed(&mut self) -> bool {
+        let mut changed = false;
+        if stamp("prefs.json") != self.seen[0] {
+            let next = Prefs::load();
+            self.seen[0] = stamp("prefs.json");
+            let relocate = next.locations != self.prefs.locations;
+            self.prefs = next;
+            if relocate {
+                self.rediscover();
+            }
+            changed = true;
+        }
+        if stamp("usage.json") != self.seen[1] {
+            self.usage = Usage::load();
+            self.seen[1] = stamp("usage.json");
+            changed = true;
+        }
+        changed
     }
 
     pub fn last_view(&self) -> String {
