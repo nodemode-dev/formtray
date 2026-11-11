@@ -13,7 +13,6 @@ cargo run -p formtray -- %*
 exit /b %errorlevel%
 
 :cli
-shift
 cargo build -q --release -p formtray-cli || exit /b 1
-target\release\formtray-cli.exe %1 %2 %3 %4 %5 %6 %7 %8 %9
+target\release\formtray-cli.exe %*
 exit /b %errorlevel%
