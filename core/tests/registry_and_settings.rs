@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::{Mutex, MutexGuard};
 
-use formtray_core::{prefs, Prefs, Registry, Tile, Usage};
+use formtray_core::{prefs, Engine, Prefs, Registry, Tile, Usage};
 
 const ORDER: [&str; 33] = [
     "formvis", "formlit", "formpath", "formdam", "formref", "formcut", "formvfx", "formencoder", "formwav", "formdesign", "formpdf", "formdeck",
@@ -144,4 +144,17 @@ fn usage_counts_persist() {
     assert_eq!(back.apps["formcut"].count, 2);
     assert!(back.apps["formcut"].last > 0);
     assert_eq!(back.last_view, "widgets");
+}
+
+#[test]
+fn a_hotkey_that_does_not_parse_is_refused_and_not_saved() {
+    let _c = Config::new("hotkey");
+    let mut engine = Engine::new();
+    let err = engine.set_hotkey("summon", "Bogus+Nope").unwrap_err();
+    assert!(err.contains("Bogus+Nope"), "{err}");
+    assert!(!Prefs::load().hotkeys.contains_key("summon"));
+    engine.set_hotkey("summon", "Control+Alt+Super+KeyJ").unwrap();
+    assert_eq!(Prefs::load().hotkeys["summon"], "Control+Alt+Super+KeyJ");
+    assert!(engine.set_hotkey("summon", "Control+Alt+Nope").is_err());
+    assert_eq!(Prefs::load().hotkeys["summon"], "Control+Alt+Super+KeyJ");
 }

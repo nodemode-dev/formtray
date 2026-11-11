@@ -147,6 +147,7 @@ impl Engine {
             prefs.hotkeys.remove(action);
         } else {
             let wanted = hotkeys::normalise(chord);
+            hotkeys::parse(&wanted)?;
             if let Some(owner) = hotkeys::conflict(&wanted) {
                 return Err(format!("{wanted} is used by {owner}"));
             }

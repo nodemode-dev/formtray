@@ -93,6 +93,10 @@ pub fn normalise(chord: &str) -> String {
     parts.join("+")
 }
 
+pub fn parse(chord: &str) -> Result<(), String> {
+    chord.parse::<global_hotkey::hotkey::HotKey>().map(|_| ()).map_err(|_| format!("{chord} is not a hotkey FormTray can register; give modifiers and one key, for example Control+Alt+Super+KeyF"))
+}
+
 pub fn conflict(chord: &str) -> Option<&'static str> {
     let wanted = normalise(chord).to_ascii_lowercase();
     reserved().iter().find(|(c, _)| normalise(c).to_ascii_lowercase() == wanted).map(|(_, why)| *why)
