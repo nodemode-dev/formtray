@@ -3,7 +3,7 @@
 Living log of comment content and rationale for the interface. Source stays comment-free; read this first, then edit surgically.
 
 Current build version: v0.16.1
-Last updated: 2026-11-10 · v0.16.2 leaving Settings ends a hotkey recording and restores the hotkeys; 2026-11-09 · v0.16.0 the Demos section in Settings and the demo pages in the bundle (vite-demos.ts); 2026-11-03 · v0.9.9 Copyright 2026 NodeAgentc, Inc. and the licence in Settings, About; 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
+Last updated: 2026-11-10 · v0.16.2 the Switcher works again after a failed open; leaving Settings ends a hotkey recording and restores the hotkeys; 2026-11-09 · v0.16.0 the Demos section in Settings and the demo pages in the bundle (vite-demos.ts); 2026-11-03 · v0.9.9 Copyright 2026 NodeAgentc, Inc. and the licence in Settings, About; 2026-10-24 · by nodemode.ai in Settings, About; 2026-10-23 · Preferences' About line says Glass for the macOS 26 material; before it, checks only in the repository, releases through formcompiler, formsculpt fallback icon
 
 ---
 
@@ -91,6 +91,10 @@ The owner's approved rename table (2026-10-23) uses FormTray's own word for Appl
 - refers-to: switcher.ts shown()
 - kind: rationale
 - The order is computed when the Switcher is shown and not on state updates, so a running-state change never reshuffles the strip mid-cycle. A hotkey launch starts on the second app, as Cmd+Tab does.
+- refers-to: switcher.ts commit; main.ts :: ctx.open; views/types.ts :: Ctx.open
+- kind: fix
+- logged: v0.16.2 · 2026-11-10
+- After a failed open the Switcher stayed dead: `commit` set `committed` before `ctx.open` and only `shown()` cleared it, so with the panel still open (a toast says the app is not installed) every later Enter, click or modifier release did nothing. Trigger: no Form app installed (the strip falls back to not-installed apps), or any launch that fails. The app's `ctx.open` now returns a promise that resolves true, or false after the toast when `open_app` fails, and `commit` clears `committed` on false so another pick works. `Ctx.open` is typed `void | Promise<boolean>` so the three demo stages, whose `open` returns nothing, stay valid unchanged; every other caller still ignores the result. Checked: `tsc --noEmit` for frontend, demo, demos/switcher and demos/widgets passes; not run in the app or the preview.
 - refers-to: windows.ts quit
 - kind: rationale
 - Quit needs two clicks within 3 s; the button turns red when armed.

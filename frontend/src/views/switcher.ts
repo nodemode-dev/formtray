@@ -63,7 +63,9 @@ export function switcher(): ViewModule {
   function commit() {
     if (committed || !order[index]) return;
     committed = true;
-    ctx.open(order[index].id);
+    void Promise.resolve(ctx.open(order[index].id)).then((ok) => {
+      if (ok === false) committed = false;
+    });
   }
 
   return {

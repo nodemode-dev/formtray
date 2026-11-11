@@ -86,7 +86,13 @@ async function start() {
   const ctx: Ctx = {
     snap,
     open(id) {
-      call("open_app", { id }).catch((e) => toast(String(e)));
+      return call("open_app", { id }).then(
+        () => true,
+        (e) => {
+          toast(String(e));
+          return false;
+        },
+      );
     },
     async quit(id) {
       await call("quit_app", { id }).catch((e) => toast(String(e)));
