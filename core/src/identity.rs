@@ -15,7 +15,7 @@ pub struct Identity {
 enum Source {
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     Icns(PathBuf),
-    #[cfg_attr(target_os = "windows", allow(dead_code))]
+    #[cfg_attr(not(all(unix, not(target_os = "macos"))), allow(dead_code))]
     File(PathBuf),
     #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     Exe(PathBuf),
