@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.16.2
-Last updated: 2026-11-10 · v0.16.2, Open makes a downloaded AppImage executable; a running AppImage is matched by its extension; formtray.bat reuses a running interface server and waits for it; formtray.bat cli passes its arguments unchanged; the engine reloads prefs.json and usage.json changed outside the app; Quit on Windows asks the app to close first; 2026-11-10 · v0.16.1, formtray.bat cli forwards its arguments and exit code, README release link (no engine change); 2026-11-09 · v0.16.0, the three demos open inside the app from Settings and the menu bar menu (no engine change); 2026-11-07 · v0.15.1, Greg's README note that updates come through FormPortal (no engine change); 2026-11-07 · v0.15.0, the extension host (Form Extension Contract API 1: resolver, request folder, extensions_list and extension_command); 2026-11-07 · v0.14.3, two more browser demos in demos/ (no engine change); 2026-11-07 · v0.14.2, the shell opens with the formvis splash (no engine change); 2026-11-07 · v0.14.1, the demo opens on a real desktop with real media (no engine change); 2026-11-07 · v0.14.0, the browser demo in demo/ (no engine change); 2026-11-06 · v0.13.0, formcompiler removed as an app (excluded); 2026-11-06 · v0.12.0, hosted launches (--formtray-hosted, FORMTRAY_HOSTED=1); 2026-11-06 · v0.11.0, released Form family apps only (no adoption of other ai.nodemode. bundles), the owner's names and release waves in apps.json, FormPortal's studio.formai.portal root, Widgets by default and the last view on reopen; 2026-11-04 · v0.10.2, the version test reads the README badge of the family template; 2026-11-04 · v0.10.1, the README and screenshots (no code change); 2026-11-04 · v0.10.0, the unified v3 app icon, CODEOWNERS (no code change); 2026-11-03 · v0.9.9 the About and the bundle name NodeAgentc, Inc. (no engine change); 2026-11-02 · v0.9.8, the first build through formcompiler (no code change); 2026-10-26 · the test suite and FB-041 (a desktop entry needs its program); the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
+Current build version: v0.16.3
+Last updated: 2026-11-11 · v0.16.3, set_hotkey refuses a chord the shell cannot register; the unused Source::File variant is allowed on every platform but Linux; 2026-11-10 · v0.16.2, Open makes a downloaded AppImage executable; a running AppImage is matched by its extension; formtray.bat reuses a running interface server and waits for it; formtray.bat cli passes its arguments unchanged; the engine reloads prefs.json and usage.json changed outside the app; Quit on Windows asks the app to close first; 2026-11-10 · v0.16.1, formtray.bat cli forwards its arguments and exit code, README release link (no engine change); 2026-11-09 · v0.16.0, the three demos open inside the app from Settings and the menu bar menu (no engine change); 2026-11-07 · v0.15.1, Greg's README note that updates come through FormPortal (no engine change); 2026-11-07 · v0.15.0, the extension host (Form Extension Contract API 1: resolver, request folder, extensions_list and extension_command); 2026-11-07 · v0.14.3, two more browser demos in demos/ (no engine change); 2026-11-07 · v0.14.2, the shell opens with the formvis splash (no engine change); 2026-11-07 · v0.14.1, the demo opens on a real desktop with real media (no engine change); 2026-11-07 · v0.14.0, the browser demo in demo/ (no engine change); 2026-11-06 · v0.13.0, formcompiler removed as an app (excluded); 2026-11-06 · v0.12.0, hosted launches (--formtray-hosted, FORMTRAY_HOSTED=1); 2026-11-06 · v0.11.0, released Form family apps only (no adoption of other ai.nodemode. bundles), the owner's names and release waves in apps.json, FormPortal's studio.formai.portal root, Widgets by default and the last view on reopen; 2026-11-04 · v0.10.2, the version test reads the README badge of the family template; 2026-11-04 · v0.10.1, the README and screenshots (no code change); 2026-11-04 · v0.10.0, the unified v3 app icon, CODEOWNERS (no code change); 2026-11-03 · v0.9.9 the About and the bundle name NodeAgentc, Inc. (no engine change); 2026-11-02 · v0.9.8, the first build through formcompiler (no code change); 2026-10-26 · the test suite and FB-041 (a desktop entry needs its program); the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
 
 ---
 
@@ -75,6 +75,10 @@ cli/
 - refers-to: read_into, locate (per OS)
 - kind: rationale
 - macOS: CFBundleDisplayName, then CFBundleName, then the bundle file name; icon from CFBundleIconFile in Resources. Linux: the desktop entry whose Exec program (or file name) matches, its Name and Icon; Icon is an absolute path or looked up in hicolor under ~/.icons, XDG_DATA_HOME and XDG_DATA_DIRS (largest png first, including Tauri's `256x256@2` folder), then scalable svg, then /usr/share/pixmaps. Only hicolor is searched, not the user's current theme, because Form apps install their icons there. Windows: ProductName (then FileDescription) from the version resource, icon from SHDefExtractIconW at 256 px, converted from BGRA.
+- refers-to: Source::File
+- kind: rationale
+- logged: v0.16.3 · 2026-11-11
+- Only the Linux `locate` builds a File source, so dead_code is allowed everywhere else (it warned on macOS). Matching on File in `read_into` stays on every platform.
 - refers-to: icns_png, sips_png
 - kind: rationale
 - Modern .icns files carry PNG payloads; the largest one at or under 512 px is used, larger ones are scaled down. If a file has none (old ARGB or JPEG 2000 types), macOS falls back to the built-in `sips`. Not run on a Mac in this session.
@@ -196,6 +200,10 @@ cli/
 - refers-to: effective
 - kind: rationale
 - An override that hits a reserved chord is ignored and the default is kept.
+- refers-to: parse, lib.rs :: Engine::set_hotkey
+- kind: rationale
+- logged: v0.16.3 · 2026-11-11
+- A chord is checked with global-hotkey's own parser, the one behind tauri-plugin-global-shortcut's `Shortcut` that `register_hotkeys` uses, so the CLI and Settings refuse exactly what the running app could not register. Before this, `formtray-cli hotkey summon Bogus+Nope` exited 0 and saved the chord, and the app then had no summon hotkey. The parser's own error names another project's tracker, so the message is FormTray's.
 
 ## tests {#tests}
 
@@ -211,6 +219,10 @@ cli/
 - kind: decision
 - logged: v0.9.7 · 2026-10-26
 - The family template (F4 and F9) with formtray's four version sites (no wiki version line).
+- refers-to: core/tests/registry_and_settings.rs :: a_hotkey_that_does_not_parse_is_refused_and_not_saved
+- kind: decision
+- logged: v0.16.3 · 2026-11-11
+- QA 2026-11-11: a chord that does not parse is refused with its text in the message and prefs.json keeps no summon override; a valid chord is saved, and a later bad one leaves it in place. Runs under Config, so no real prefs are touched.
 
 ## owner request 2026-11-06 {#released-only}
 
