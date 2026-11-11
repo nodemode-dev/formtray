@@ -59,7 +59,8 @@ fn owns(app: &AppEntry, exe: Option<&Path>, name: &str) -> bool {
         if let Some(stem) = exe.file_stem() {
             let stem = stem.to_string_lossy();
             let base = stem.split(['_', '-']).next().unwrap_or(&stem);
-            if app.matches_name(&stem) || (stem.ends_with(".AppImage") && app.matches_name(base)) {
+            let is_appimage = exe.extension().is_some_and(|e| e.eq_ignore_ascii_case("appimage"));
+            if app.matches_name(&stem) || (is_appimage && app.matches_name(base)) {
                 return true;
             }
         }

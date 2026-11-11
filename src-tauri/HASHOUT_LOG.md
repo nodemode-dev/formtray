@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the Tauri shell. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.16.0
-Last updated: 2026-11-09 · v0.16.0 open_demo and the Demos submenu, demo windows close for real; 2026-11-03 · v0.9.9 the bundle names the publisher and the licence; 2026-10-22 · no shell change; bundles are built by formcompiler, not this repository's desktop.yml
+Current build version: v0.16.2
+Last updated: 2026-11-10 · v0.16.2 the poller picks up prefs.json and usage.json changed outside the app; 2026-11-09 · v0.16.0 open_demo and the Demos submenu, demo windows close for real; 2026-11-03 · v0.9.9 the bundle names the publisher and the licence; 2026-10-22 · no shell change; bundles are built by formcompiler, not this repository's desktop.yml
 
 ---
 
@@ -197,3 +197,10 @@ The launch punch list (2026-11-03): the About of a downloaded app says NodeAgent
 - refers-to: capabilities/default.json, run :: CloseRequested
 - kind: rationale
 - The demo windows are not listed in the capability, so their pages get no command, and their own bridge never calls Tauri: a demo cannot launch, quit or change anything real. Panel, prefs and splash still hide on close; a `demo-*` window really closes, so the next open starts the demo fresh. Closing the last demo window does not quit FormTray (`ExitRequested` without a code is prevented).
+
+## Settings changed outside the app 2026-11-10 {#reload}
+
+- refers-to: src/lib.rs :: the poller thread (reload_changed, then register_hotkeys, broadcast, refresh_tray on the main thread)
+- kind: fix
+- logged: v0.16.2 · 2026-11-10
+- The shell keeps one Engine for its whole life and never re-read prefs.json or usage.json, so `formtray-cli hotkey ...` (or a hand edit) did nothing in the running app and was then overwritten by the app's next save (every widget drag or setting toggle), and CLI opens were lost from Recent and the Switcher order. Each poller tick (1 s with a panel or Settings visible, 3 s otherwise) now calls the engine's `reload_changed` (core HASHOUT_LOG, #reload); when it reports a change, the hotkeys are registered again, the state is broadcast and the tray menu rebuilt on the main thread. Not compiled here (the shell needs WebKit); the code follows the poller's existing `run_on_main_thread` refresh. Not run in the app.

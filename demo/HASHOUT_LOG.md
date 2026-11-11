@@ -2,7 +2,7 @@
 
 Living log of rationale for the browser demo. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.16.0
+Current build version: v0.16.2
 Last updated: 2026-11-09 · v0.16.0 the bridge answers open_demo through the data-demo links, rebuilt for the version the bundle embeds and for the Demos section in Settings; 2026-11-07 · v0.15.1 rebuilt for the version the bundle embeds, no demo change; v0.15.0 rebuilt for the version the bundle embeds (the shared views now carry the extension host's optional hooks, unused here); v0.14.3 the quiet three-demo link row, rebuilt for the version the bundle embeds; v0.14.2 rebuilt for the version the bundle embeds, no demo change; v0.14.1 the real desktop and media; v0.14.0 the demo
 
 ---

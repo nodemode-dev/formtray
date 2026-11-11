@@ -72,12 +72,35 @@ pub fn open(app: &AppEntry, path: Option<&Path>, running: &[u32]) -> Result<(), 
         return Ok(());
     }
     let path = path.ok_or_else(|| LaunchError::NotFound(app.name.clone()))?;
+    runnable(app, path)?;
     let mut command = Command::new(path);
     command.arg(HOSTED_FLAG).env(HOSTED_ENV, HOSTED_ENV_VALUE);
     if let Some(parent) = path.parent() {
         command.current_dir(parent);
     }
     detached(command)
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
+fn runnable(app: &AppEntry, path: &Path) -> Result<(), LaunchError> {
+    use std::os::unix::fs::PermissionsExt;
+    if !path.extension().is_some_and(|e| e.eq_ignore_ascii_case("appimage")) {
+        return Ok(());
+    }
+    let Ok(meta) = std::fs::metadata(path) else {
+        return Ok(());
+    };
+    let mut perms = meta.permissions();
+    if perms.mode() & 0o111 != 0 {
+        return Ok(());
+    }
+    perms.set_mode(perms.mode() | 0o111);
+    std::fs::set_permissions(path, perms).map_err(|_| LaunchError::Failed(format!("{} is not executable: chmod +x {}", app.name, path.display())))
+}
+
+#[cfg(not(all(unix, not(target_os = "macos"))))]
+fn runnable(_app: &AppEntry, _path: &Path) -> Result<(), LaunchError> {
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]
@@ -131,6 +154,23 @@ fn focus(_pids: &[u32]) -> bool {
     false
 }
 
+#[cfg(target_os = "windows")]
+fn close_politely(pid: u32) -> bool {
+    use std::os::windows::process::CommandExt;
+    Command::new("taskkill")
+        .args(["/PID", &pid.to_string()])
+        .creation_flags(0x0800_0000)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .is_ok_and(|s| s.success())
+}
+
+#[cfg(not(target_os = "windows"))]
+fn close_politely(_pid: u32) -> bool {
+    false
+}
+
 pub fn quit(app: &AppEntry, running: &[u32]) -> Result<(), LaunchError> {
     if cfg!(target_os = "macos") {
         for id in &app.identifiers {
@@ -145,6 +185,9 @@ pub fn quit(app: &AppEntry, running: &[u32]) -> Result<(), LaunchError> {
     }
     let system = sysinfo::System::new_all();
     for pid in running {
+        if close_politely(*pid) {
+            continue;
+        }
         if let Some(process) = system.process(sysinfo::Pid::from_u32(*pid)) {
             if process.kill_with(sysinfo::Signal::Term).is_none() {
                 process.kill();

@@ -2,8 +2,8 @@
 
 Living log of comment content and rationale for the engine. Source stays comment-free; read this first, then edit surgically.
 
-Current build version: v0.16.0
-Last updated: 2026-11-09 · v0.16.0, the three demos open inside the app from Settings and the menu bar menu (no engine change); 2026-11-07 · v0.15.1, Greg's README note that updates come through FormPortal (no engine change); 2026-11-07 · v0.15.0, the extension host (Form Extension Contract API 1: resolver, request folder, extensions_list and extension_command); 2026-11-07 · v0.14.3, two more browser demos in demos/ (no engine change); 2026-11-07 · v0.14.2, the shell opens with the formvis splash (no engine change); 2026-11-07 · v0.14.1, the demo opens on a real desktop with real media (no engine change); 2026-11-07 · v0.14.0, the browser demo in demo/ (no engine change); 2026-11-06 · v0.13.0, formcompiler removed as an app (excluded); 2026-11-06 · v0.12.0, hosted launches (--formtray-hosted, FORMTRAY_HOSTED=1); 2026-11-06 · v0.11.0, released Form family apps only (no adoption of other ai.nodemode. bundles), the owner's names and release waves in apps.json, FormPortal's studio.formai.portal root, Widgets by default and the last view on reopen; 2026-11-04 · v0.10.2, the version test reads the README badge of the family template; 2026-11-04 · v0.10.1, the README and screenshots (no code change); 2026-11-04 · v0.10.0, the unified v3 app icon, CODEOWNERS (no code change); 2026-11-03 · v0.9.9 the About and the bundle name NodeAgentc, Inc. (no engine change); 2026-11-02 · v0.9.8, the first build through formcompiler (no code change); 2026-10-26 · the test suite and FB-041 (a desktop entry needs its program); the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
+Current build version: v0.16.2
+Last updated: 2026-11-10 · v0.16.2, Open makes a downloaded AppImage executable; a running AppImage is matched by its extension; formtray.bat reuses a running interface server and waits for it; formtray.bat cli passes its arguments unchanged; the engine reloads prefs.json and usage.json changed outside the app; Quit on Windows asks the app to close first; 2026-11-10 · v0.16.1, formtray.bat cli forwards its arguments and exit code, README release link (no engine change); 2026-11-09 · v0.16.0, the three demos open inside the app from Settings and the menu bar menu (no engine change); 2026-11-07 · v0.15.1, Greg's README note that updates come through FormPortal (no engine change); 2026-11-07 · v0.15.0, the extension host (Form Extension Contract API 1: resolver, request folder, extensions_list and extension_command); 2026-11-07 · v0.14.3, two more browser demos in demos/ (no engine change); 2026-11-07 · v0.14.2, the shell opens with the formvis splash (no engine change); 2026-11-07 · v0.14.1, the demo opens on a real desktop with real media (no engine change); 2026-11-07 · v0.14.0, the browser demo in demo/ (no engine change); 2026-11-06 · v0.13.0, formcompiler removed as an app (excluded); 2026-11-06 · v0.12.0, hosted launches (--formtray-hosted, FORMTRAY_HOSTED=1); 2026-11-06 · v0.11.0, released Form family apps only (no adoption of other ai.nodemode. bundles), the owner's names and release waves in apps.json, FormPortal's studio.formai.portal root, Widgets by default and the last view on reopen; 2026-11-04 · v0.10.2, the version test reads the README badge of the family template; 2026-11-04 · v0.10.1, the README and screenshots (no code change); 2026-11-04 · v0.10.0, the unified v3 app icon, CODEOWNERS (no code change); 2026-11-03 · v0.9.9 the About and the bundle name NodeAgentc, Inc. (no engine change); 2026-11-02 · v0.9.8, the first build through formcompiler (no code change); 2026-10-26 · the test suite and FB-041 (a desktop entry needs its program); the formsculpt entry in apps.json (id, icon, identifier ai.nodemode.formsculpt)
 
 ---
 
@@ -116,6 +116,10 @@ cli/
 - refers-to: windows_sys::core::BOOL
 - kind: warning-context
 - windows-sys 0.61 moved BOOL out of Win32::Foundation.
+- refers-to: open, runnable (Linux)
+- kind: fix
+- logged: v0.16.2 · 2026-11-10
+- Discovery lists any `.AppImage` file as installed, and browsers save a download without the execute bit, so Open failed with "Permission denied (os error 13)". Before spawning, an AppImage (extension `appimage`, any case) with no execute bit now gets `+x` (mode | 0o111), what users do by hand; if that fails, Open says "<name> is not executable: chmod +x <path>". Other files and other platforms are unchanged. Checked: in a sandboxed HOME, a mode 644 copy of `sleep` named `FormCut_2.8.8_amd64.AppImage` in ~/Applications opened with `formtray-cli open formcut` (exit 0) and is now 755; `cargo test --locked -p formtray-core -p formtray-cli` passes.
 
 ## src/portal.rs {#portal}
 
@@ -164,6 +168,10 @@ cli/
 - kind: rationale
 - logged: v0.4.0 · 2026-10-12
 - On macOS the exe path `/<Name>.app/Contents/MacOS/` decides, and any other .app is rejected, so FormPortal's helper processes do not count as another app. AppImages are matched on the name before the first underscore or hyphen, which handles names like `formwav_2.14.6_amd64.AppImage`.
+- refers-to: owns (the AppImage test)
+- kind: fix
+- logged: v0.16.2 · 2026-11-10
+- The AppImage match above never fired before v0.16.2: it tested `stem.ends_with(".AppImage")`, but `file_stem` has already removed the extension. An AppImage whose inner binary is not named exactly like an entry of `names` showed as not running, so Open started a second copy and Quit said it was not running. The test now reads the extension (`appimage`, any case), as discover.rs does. Checked: a copy of `sleep` named `formwav_1.0_amd64.AppImage` running in a scratch folder lists formwav as running with one process (`formtray-cli list --json`); `cargo test --locked -p formtray-core -p formtray-cli` passes.
 
 ## src/prefs.rs {#prefs}
 
@@ -245,3 +253,32 @@ cli/
 - refers-to: cli/src/main.rs :: extensions_list, extension_command, extension_file
 - kind: rationale
 - The contract's agent tool names are the verbs. `extensions_list --json --base <prefix>` prints the window's listing (with `stamp`) and is what the Vite middleware serves at `/api/extensions`; `extension_file` prints the resolved path, type and headers for one file or exits 1, so the development server answers with the Rust resolver, not a second copy in TypeScript. The app version is the crate version, so `minimum_app` is compared with the workspace version.
+
+## formtray.bat cli branch 2026-11-10 {#bat-cli}
+
+- refers-to: ../formtray.bat :: cli branch, main flow
+- kind: warning-context
+- logged: v0.16.1 · 2026-11-10
+- `formtray.bat cli ...` used to keep `shift`, `%1` to `%9` and `%errorlevel%` inside one parenthesised `if` block. cmd.exe expands every `%` variable of a block when the block is parsed, before `shift` has run, so the CLI received `cli list` instead of `list` and the batch file always exited 0. The branch is now `goto cli` to a `:cli` label below the main flow, so each line is parsed after the previous one has run. The main flow ends with `exit /b %errorlevel%` so it cannot fall into the label. Keep the cli body out of any parenthesised block. TRACED only: not run on Windows.
+- refers-to: ../formtray.bat :: :cli; cli/src/main.rs :: main (a leading `cli` is dropped)
+- kind: fix
+- logged: v0.16.2 · 2026-11-10
+- `%1` to `%9` are cmd's re-tokenised view of the command line: an unquoted `=`, `,`, `;` or tab split an argument and the script re-joined the pieces with a space, so `formtray.bat cli extension_command hello say "{\"text\":\"a=b\"}"` sent `{"text":"a b"}`, and a tenth argument was dropped. The cli branch now passes `%*`, the raw text, which `shift` does not change, so it still starts with `cli`; formtray-cli drops a first argument equal to `cli` (any case), which is not a command, so nothing else changes. CRLF kept. Checked on Linux: `formtray-cli cli where` and `CLI where` print the folder (exit 0), `cli nosuch` exits 2, `cli` alone prints help (exit 0). TRACED only for cmd: not run on Windows.
+- refers-to: ../formtray.bat :: main flow (where curl, :wait, :nocurl, :ready), :ping
+- kind: fix
+- logged: v0.16.2 · 2026-11-10
+- The main flow always started `npm run dev` and waited a fixed 3 s. Running `formtray.bat` again in the same console after quitting found the first Vite server still on port 5610 and printed Vite's "Port 5610 is already in use" (strictPort); on a cold start where Vite needed longer than 3 s the window could load before Vite listened. Now `:ping` asks `curl -s --max-time 1 http://localhost:5610/` (curl.exe ships with Windows 10 1803 and later); the server is started only when nothing answers, then the script polls up to 20 times a second apart before `cargo run`, like the bash launcher. Without curl it keeps the old start and 3 s wait. Still open: the server started with `start /b` is not stopped when the app quits (the bash launcher kills its process group); a PID from `netstat -ano` needs the localised State column or a port pattern that also matches client connections, so it is left for a check on Windows. CRLF kept. TRACED only: not run on Windows.
+
+## quit on Windows 2026-11-10 {#quit-windows}
+
+- refers-to: src/launch.rs :: quit, close_politely
+- kind: fix
+- logged: v0.16.2 · 2026-11-10
+- Quit on Windows ended the app at once and lost unsaved work: sysinfo supports only `Signal::Kill` there, so `kill_with(Signal::Term)` returned None for every process and the loop fell through to `kill()` (TerminateProcess). Trigger: Quit from the Windows view, Stack, the tray, an extension's `app.quit` or `formtray-cli quit <id>`. Now each pid first gets `taskkill /PID <pid>` without `/F` (started with CREATE_NO_WINDOW so no console flashes), which posts a close message to the process's windows so the app can save or ask; only a pid for which taskkill fails (for example a process with no window) falls back to the old kill. No new dependency. Checked: `cargo check --target x86_64-pc-windows-gnu -p formtray-core` compiles; not run on Windows.
+
+## settings changed outside the app 2026-11-10 {#reload}
+
+- refers-to: src/lib.rs :: Engine::seen, stamp, reload_changed, new, open, set_prefs, note_view
+- kind: fix
+- logged: v0.16.2 · 2026-11-10
+- `Prefs::load` and `Usage::load` ran only in `Engine::new`, and every save writes the whole in-memory struct. The shell keeps one Engine, so with FormTray running `formtray-cli hotkey summon ...` was never registered and was reverted by the app's next `set_prefs`, and `formtray-cli open` counts were lost at the app's next usage save. The engine now remembers the modification time of prefs.json and usage.json (`seen`), taken after loading and after each of its own saves, and `reload_changed` reloads a file whose time differs (prefs: rediscovering when `locations` changed) and returns true. The shell's poller calls it (src-tauri HASHOUT_LOG, #reload). Limits: a write from another process in the instant between the app's own save and its reading of the time, or within the file system's time resolution of the app's save, is not seen until the file changes again. Checked: `cargo test --locked -p formtray-core -p formtray-cli` passes; not run in the app.

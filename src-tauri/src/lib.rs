@@ -722,6 +722,14 @@ pub fn run() {
                     let visible = poller.state::<Shell>().shown.lock().unwrap().is_some() || panel(&poller, "prefs").and_then(|w| w.is_visible().ok()).unwrap_or(false);
                     std::thread::sleep(Duration::from_millis(if visible { 1000 } else { 3000 }));
                     extensions::poll(&poller);
+                    if with_engine(&poller, |e| e.reload_changed()) {
+                        let inner = poller.clone();
+                        let _ = poller.run_on_main_thread(move || {
+                            register_hotkeys(&inner);
+                            broadcast(&inner);
+                            refresh_tray(&inner);
+                        });
+                    }
                     let changed = with_engine(&poller, |e| e.refresh_running());
                     if changed && visible {
                         broadcast(&poller);

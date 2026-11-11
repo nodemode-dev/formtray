@@ -20,7 +20,10 @@ const HELP: &str = "formtray-cli: the Form apps from the command line
 <app> is an id or a name: formcut, FormVis, form.md";
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let mut args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().is_some_and(|a| a.eq_ignore_ascii_case("cli")) {
+        args.remove(0);
+    }
     let code = match args.first().map(String::as_str) {
         Some("list") => list(args.get(1).is_some_and(|a| a == "--json")),
         Some("open") => act(args.get(1), true),

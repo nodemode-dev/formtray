@@ -4,7 +4,7 @@ import type { ExtApi } from "../ext/host";
 export interface Ctx {
   snap: Snapshot;
   ext?: ExtApi;
-  open(id: string): void;
+  open(id: string): void | Promise<boolean>;
   quit(id: string): Promise<void>;
   go(view: View | "prefs"): void;
   dismiss(): void;
