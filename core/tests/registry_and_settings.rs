@@ -158,3 +158,32 @@ fn a_hotkey_that_does_not_parse_is_refused_and_not_saved() {
     assert!(engine.set_hotkey("summon", "Control+Alt+Nope").is_err());
     assert_eq!(Prefs::load().hotkeys["summon"], "Control+Alt+Super+KeyJ");
 }
+
+#[test]
+fn saving_prefs_refuses_a_hotkey_that_does_not_parse() {
+    let _c = Config::new("prefs-hotkey");
+    let mut engine = Engine::new();
+    let mut bad = Prefs::load();
+    bad.hotkeys.insert("summon".into(), "Bogus+Nope".into());
+    let err = engine.set_prefs(bad).unwrap_err().to_string();
+    assert!(err.contains("Bogus+Nope") && err.contains("is not a hotkey FormTray can register"), "{err}");
+    assert!(!Prefs::load().hotkeys.contains_key("summon"));
+    let mut good = Prefs::load();
+    good.hotkeys.insert("summon".into(), "Control+Alt+Super+KeyJ".into());
+    engine.set_prefs(good).unwrap();
+    assert_eq!(Prefs::load().hotkeys["summon"], "Control+Alt+Super+KeyJ");
+}
+
+#[test]
+fn saving_prefs_keeps_an_unchanged_hotkey_saved_before_the_check() {
+    let _c = Config::new("prefs-hotkey-old");
+    let mut old = Prefs::load();
+    old.hotkeys.insert("summon".into(), "Bogus+Nope".into());
+    old.save().unwrap();
+    let mut engine = Engine::new();
+    let mut next = Prefs::load();
+    next.open_at_login = !next.open_at_login;
+    let want = next.open_at_login;
+    engine.set_prefs(next).unwrap();
+    assert_eq!(Prefs::load().open_at_login, want);
+}
