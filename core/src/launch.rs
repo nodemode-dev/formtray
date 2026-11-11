@@ -72,12 +72,35 @@ pub fn open(app: &AppEntry, path: Option<&Path>, running: &[u32]) -> Result<(), 
         return Ok(());
     }
     let path = path.ok_or_else(|| LaunchError::NotFound(app.name.clone()))?;
+    runnable(app, path)?;
     let mut command = Command::new(path);
     command.arg(HOSTED_FLAG).env(HOSTED_ENV, HOSTED_ENV_VALUE);
     if let Some(parent) = path.parent() {
         command.current_dir(parent);
     }
     detached(command)
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
+fn runnable(app: &AppEntry, path: &Path) -> Result<(), LaunchError> {
+    use std::os::unix::fs::PermissionsExt;
+    if !path.extension().is_some_and(|e| e.eq_ignore_ascii_case("appimage")) {
+        return Ok(());
+    }
+    let Ok(meta) = std::fs::metadata(path) else {
+        return Ok(());
+    };
+    let mut perms = meta.permissions();
+    if perms.mode() & 0o111 != 0 {
+        return Ok(());
+    }
+    perms.set_mode(perms.mode() | 0o111);
+    std::fs::set_permissions(path, perms).map_err(|_| LaunchError::Failed(format!("{} is not executable: chmod +x {}", app.name, path.display())))
+}
+
+#[cfg(not(all(unix, not(target_os = "macos"))))]
+fn runnable(_app: &AppEntry, _path: &Path) -> Result<(), LaunchError> {
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]
