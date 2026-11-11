@@ -131,6 +131,23 @@ fn focus(_pids: &[u32]) -> bool {
     false
 }
 
+#[cfg(target_os = "windows")]
+fn close_politely(pid: u32) -> bool {
+    use std::os::windows::process::CommandExt;
+    Command::new("taskkill")
+        .args(["/PID", &pid.to_string()])
+        .creation_flags(0x0800_0000)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .is_ok_and(|s| s.success())
+}
+
+#[cfg(not(target_os = "windows"))]
+fn close_politely(_pid: u32) -> bool {
+    false
+}
+
 pub fn quit(app: &AppEntry, running: &[u32]) -> Result<(), LaunchError> {
     if cfg!(target_os = "macos") {
         for id in &app.identifiers {
@@ -145,6 +162,9 @@ pub fn quit(app: &AppEntry, running: &[u32]) -> Result<(), LaunchError> {
     }
     let system = sysinfo::System::new_all();
     for pid in running {
+        if close_politely(*pid) {
+            continue;
+        }
         if let Some(process) = system.process(sysinfo::Pid::from_u32(*pid)) {
             if process.kill_with(sysinfo::Signal::Term).is_none() {
                 process.kill();
