@@ -17,6 +17,7 @@ FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons i
 | image (PNG only) | app icons read and scaled (`core`) |
 | plist (macOS) | reading app bundles' Info.plist (`core`) |
 | windows-sys (Windows) | window and registry calls (`core`, `src-tauri`) |
+| global-hotkey | checks that a hotkey parses the way the shell registers it (`core`; already in the shell through tauri-plugin-global-shortcut) |
 | tauri 2, tauri-plugin-global-shortcut, tauri-plugin-single-instance, tauri-plugin-autostart | the desktop shell |
 | window-vibrancy | vibrancy and acrylic panels on older macOS and Windows |
 | objc2-app-kit (macOS) | the system glass and key events |

@@ -147,6 +147,7 @@ impl Engine {
             prefs.hotkeys.remove(action);
         } else {
             let wanted = hotkeys::normalise(chord);
+            hotkeys::parse(&wanted)?;
             if let Some(owner) = hotkeys::conflict(&wanted) {
                 return Err(format!("{wanted} is used by {owner}"));
             }
@@ -239,6 +240,12 @@ impl Engine {
     }
 
     pub fn set_prefs(&mut self, prefs: Prefs) -> std::io::Result<()> {
+        for (action, chord) in &prefs.hotkeys {
+            if chord.trim().is_empty() || self.prefs.hotkeys.get(action) == Some(chord) {
+                continue;
+            }
+            hotkeys::parse(&hotkeys::normalise(chord)).map_err(|m| std::io::Error::new(std::io::ErrorKind::InvalidInput, m))?;
+        }
         let relocate = prefs.locations != self.prefs.locations;
         self.prefs = prefs;
         self.prefs.save()?;
