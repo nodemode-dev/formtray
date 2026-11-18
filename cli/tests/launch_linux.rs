@@ -88,13 +88,29 @@ impl Sandbox {
 
     fn running_copy_of_sleep(&mut self, rel: &str) -> u32 {
         let target = self.path(rel);
-        let sleep = ["/usr/bin/sleep", "/bin/sleep"].into_iter().map(Path::new).find(|p| p.is_file()).expect("a sleep binary");
-        std::fs::copy(sleep, &target).unwrap();
-        std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o755)).unwrap();
-        let child = Command::new(&target).arg("60").spawn().unwrap();
-        let pid = child.id();
-        self.children.push(child);
-        pid
+        let candidates: [(&str, &[&str]); 4] = [
+            ("/usr/bin/sleep", &["60"]),
+            ("/bin/sleep", &["60"]),
+            ("/usr/bin/perl", &["-e", "sleep 60"]),
+            ("/bin/perl", &["-e", "sleep 60"]),
+        ];
+        let mut tried = Vec::new();
+        for (source, args) in candidates {
+            if !Path::new(source).is_file() {
+                continue;
+            }
+            std::fs::copy(source, &target).unwrap();
+            std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o755)).unwrap();
+            let mut child = Command::new(&target).args(args).spawn().unwrap();
+            std::thread::sleep(Duration::from_millis(200));
+            if child.try_wait().unwrap().is_none() {
+                let pid = child.id();
+                self.children.push(child);
+                return pid;
+            }
+            tried.push(source);
+        }
+        panic!("no long-running program survives being copied to {rel}; tried {tried:?}");
     }
 
     fn alive(&mut self) -> bool {
