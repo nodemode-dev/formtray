@@ -77,7 +77,7 @@
 <table>
   <tr>
     <td width="33%" valign="top"><h4>5 views plus Settings</h4>Switcher · Stack · Apps · Windows · Widgets · Settings</td>
-    <td width="33%" valign="top"><h4>Released apps, 6 categories</h4>Image · Video and Audio · Documents · 3D · Web and Code · Family</td>
+    <td width="33%" valign="top"><h4>Released apps, by category</h4>Image · Video and Audio · Documents · 3D · Web and Code · Family · More</td>
     <td width="33%" valign="top"><h4>Platforms</h4>macOS (Dock, menu bar) · Windows (taskbar) · Linux (X11 hotkeys, Wayland by command)</td>
   </tr>
 </table>
@@ -104,9 +104,9 @@ FormTray loads extensions made to the Form Extension Contract (API 1): FormPorta
 - **Shell:** a Tauri 2 shell for panels, glass, the menu bar, hotkeys, Dock reopen, single instance and autostart.
 - **Interface:** vanilla TypeScript and Vite with zero runtime dependencies.
 - **Finds apps by name:** reads FormPortal's install record first, then every bundle identifier and name each app has shipped under.
-- **Release gated:** only Form family apps whose release wave has opened (or that FormPortal's catalogue shows as released) are listed, under their canonical names (FormVis, FormCut, FormWav, form.md, FormDeck, FormBench, FormAT, FormMCP, FormSkills, FormDAM and the rest). Icons are the owner's 34-app pack, dark and light, following the system appearance.
+- **Release gated:** only Form family apps whose release wave has opened (or that FormPortal's catalogue shows as released) are listed, under their canonical names (FormVis, FormCut, FormWav, form.md, FormDeck, FormBench, FormAT, FormMCP, FormSkills, FormDAM and the rest). Icons are the owner's family icon pack, dark and light, following the system appearance.
 - **Offline:** FormTray never touches the network. It reads, but never writes, FormPortal's data at `studio.formai.portal` (falling back to `dev.formai.portal`): `installed.json` and the catalogue.
-- **Tested:** 17 Rust tests (registry, settings and the family contract).
+- **Tested:** the Rust tests in `core/tests/` and `cli/tests/` (registry, settings, the family contract, FormPortal's files record and Linux launches).
 
 ## Download
 

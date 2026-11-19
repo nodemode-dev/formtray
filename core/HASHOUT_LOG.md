@@ -12,7 +12,7 @@ Last updated: 2026-11-18 · v0.16.4, the Linux launch tests keep their fake app 
 ```
 core/
 ├── Cargo.toml                 formtray-core, no window
-├── data/apps.json             the 23 apps and the excluded list: ids, canonical names, hues, fallback icons, every identifier and name
+├── data/apps.json             the apps and the excluded list: ids, canonical names, hues, fallback icons, every identifier and name
 └── src/
     ├── lib.rs                 Engine, Snapshot, AppState, display_name, discovered entries
     ├── registry.rs            loads apps.json, lookup by id or any name
@@ -316,3 +316,12 @@ cli/
 - Verdicts: no install record, no `files` in it (FormPortal before the record existed), a program outside the recorded install folder (found by the search roots, installed another way) or a `files` path whose file is gone: Unrecorded, launched as before. The program's entry matches: launched. The entry differs, or the program is not listed: Changed. The program is gone: Missing. The record is not JSON, not `formportal-files`, or for another product or version: Unreadable. The last three refuse with one sentence through `LaunchError::Failed`, which the window shows as its toast and the command line prints, so the shell needed no change: "<Name> was not opened: its program file is not the one FormPortal installed. Install <Name> again with FormPortal." (or "is missing from the folder FormPortal installed it in", or "FormPortal's list of its files could not be read, so its program could not be checked").
 - Speed: SHA-256 of a 150 MB file took 132 to 300 ms in a release build here (CPU with SHA extensions; slower without), 3.6 to 4.4 s in a debug build. `Cache` keeps each program's digest against its size and modification time for the engine's life, so only the first Open after FormTray starts (or after the file changes) hashes; later ones took 4 to 34 microseconds. The command line starts a new engine each time and hashes every time. Only the program file is checked, not the rest of the install folder.
 - Checked: a scratch program against a temp FormPortal root with a made-up record (matching, changed, changed with the same size, missing program, no `files`, no install, record file gone, unreadable record, program outside the folder, unlisted file in the folder), and `formtray-cli open formcut` in a sandboxed HOME: matching started the program, changed printed the sentence, exit 1 and started nothing, no record started it. `cargo check --target x86_64-pc-windows-gnu -p formtray-core -p formtray-cli` compiles; not run on Windows.
+
+## documents state what the tree holds 2026-11-19 {#doc-counts}
+
+- refers-to: README.md "Released apps" tile and "Tested" line, NOTICE.md Dependencies, demo/README.md "What it shows", this file's Org-navi-map
+- kind: decision
+- logged: 2026-11-19
+- The documents gave counts that had drifted: README and NOTICE said a 34-app icon pack, demo/README said 35, README said 6 categories and 17 Rust tests, and the Org-navi-map said 23 apps. core/data/apps.json holds 33 apps in 7 categories (More holds FormTools), `frontend/public/apps` holds 34 dark and light pairs (the 33 apps plus FormTray's own icon), and the test files hold 25 `#[test]` functions (core/tests 18, cli/tests/launch_linux.rs 7, the last Linux only). The sentences now name where the thing lives (`core/data/apps.json`, `core/tests/`, `cli/tests/`, "the family icon pack") and state no number, because apps.json is the owner's dated release schedule and gains an entry with each wave; the README category tile now lists all seven categories.
+- Left as written: the v0.9.7 tests entry ("the 23 apps") and the frontend log's icon-pack entries (23 files, 35 apps), which record what was true when they were logged; CHANGELOG history.
+- core/data/apps.json is unchanged by this commit.
