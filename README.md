@@ -92,7 +92,7 @@
 ./formtray cli updates          # updates FormPortal has seen (read only, no network)
 ```
 
-`./formtray cli hotkeys`, `quit <app>`, `hotkey <action> <chord>` and `where` complete it. See [`CLAUDE.md`](CLAUDE.md).
+`./formtray cli hotkeys`, `quit <app>`, `hotkey <action> <chord>`, `where`, `extensions_list`, `extension_command` and `extension_file` complete it. See [`CLAUDE.md`](CLAUDE.md).
 
 ## Extensions
 
@@ -104,6 +104,7 @@ FormTray loads extensions made to the Form Extension Contract (API 1): FormPorta
 - **Shell:** a Tauri 2 shell for panels, glass, the menu bar, hotkeys, Dock reopen, single instance and autostart.
 - **Interface:** vanilla TypeScript and Vite with zero runtime dependencies.
 - **Finds apps by name:** reads FormPortal's install record first, then every bundle identifier and name each app has shipped under.
+- **Opens what FormPortal installed (Linux and Windows):** FormPortal keeps a list of the files of each app it installs, with a SHA-256 for each. When you open an app FormPortal installed, FormTray compares its program file with that list first and starts it only if the file is the one FormPortal installed. If the file has changed, is missing, or the list cannot be read, FormTray does not start the app: the window shows one sentence saying so, the command line prints it and exits with 1, and either asks you to install the app again with FormPortal. An app with no such list (installed another way, or by an older FormPortal) opens as before. macOS does not make this check. Only the program file is compared, not the rest of the install folder.
 - **Release gated:** only Form family apps whose release wave has opened (or that FormPortal's catalogue shows as released) are listed, under their canonical names (FormVis, FormCut, FormWav, form.md, FormDeck, FormBench, FormAT, FormMCP, FormSkills, FormDAM and the rest). Icons are the owner's family icon pack, dark and light, following the system appearance.
 - **Offline:** FormTray never touches the network. It reads, but never writes, FormPortal's data at `studio.formai.portal` (falling back to `dev.formai.portal`): `installed.json` and the catalogue.
 - **Tested:** the Rust tests in `core/tests/` and `cli/tests/` (registry, settings, the family contract, FormPortal's files record and Linux launches).
@@ -157,7 +158,7 @@ Three demos run the real views in any browser with no install; open each `index.
 | Path | What it is |
 |---|---|
 | `core/` | The engine: registry (`core/data/apps.json`), discovery, open, focus, quit, running state, prefs, hotkeys |
-| `cli/` | `formtray-cli`: `list`, `open`, `quit`, `hotkeys`, `hotkey`, `updates`, `where` |
+| `cli/` | `formtray-cli`: `list`, `open`, `quit`, `hotkeys`, `hotkey`, `updates`, `where`, `extensions_list`, `extension_command`, `extension_file` |
 | `src-tauri/` | The window shell: panels, glass, menu bar, hotkeys, single instance |
 | `frontend/` | The interface: the views, tokens and the layer scale (dev server on 5610) |
 | `assets/` | The app icon and the icon and tray sources in `icon_src/` |
