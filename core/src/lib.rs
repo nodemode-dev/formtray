@@ -7,6 +7,7 @@ pub mod portal;
 pub mod prefs;
 pub mod registry;
 pub mod running;
+pub mod verify;
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -59,6 +60,7 @@ pub struct Engine {
     running: HashMap<String, running::Running>,
     watcher: running::Watcher,
     seen: [Option<std::time::SystemTime>; 2],
+    verified: verify::Cache,
 }
 
 fn stamp(name: &str) -> Option<std::time::SystemTime> {
@@ -83,6 +85,7 @@ impl Engine {
             running: HashMap::new(),
             watcher: running::Watcher::new(),
             seen: [stamp("prefs.json"), stamp("usage.json")],
+            verified: verify::Cache::default(),
         };
         engine.rediscover();
         engine.refresh_running();
@@ -226,7 +229,13 @@ impl Engine {
         let app = self.entry(id)?;
         let path = self.paths.get(&app.id).cloned().flatten();
         let pids = self.running.get(&app.id).map(|r| r.pids.clone()).unwrap_or_default();
-        launch::open(&app, path.as_deref(), &pids)?;
+        let record = self.portal.records.get(&app.id);
+        let cache = &mut self.verified;
+        let mut guard = |program: &std::path::Path| match verify::refusal(verify::check(record, program, cache), &app.name) {
+            Some(why) => Err(LaunchError::Failed(why)),
+            None => Ok(()),
+        };
+        launch::open(&app, path.as_deref(), &pids, &mut guard)?;
         self.usage.touch(&app.id);
         let _ = self.usage.save();
         self.seen[1] = stamp("usage.json");

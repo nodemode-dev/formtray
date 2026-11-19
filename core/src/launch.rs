@@ -27,7 +27,7 @@ fn detached(mut command: Command) -> Result<(), LaunchError> {
     command.spawn().map(|_| ()).map_err(|e| LaunchError::Failed(e.to_string()))
 }
 
-pub fn open(app: &AppEntry, path: Option<&Path>, running: &[u32]) -> Result<(), LaunchError> {
+pub fn open(app: &AppEntry, path: Option<&Path>, running: &[u32], guard: &mut dyn FnMut(&Path) -> Result<(), LaunchError>) -> Result<(), LaunchError> {
     if cfg!(target_os = "macos") {
         let hosted = running.is_empty();
         let env_pair = format!("{HOSTED_ENV}={HOSTED_ENV_VALUE}");
@@ -72,6 +72,7 @@ pub fn open(app: &AppEntry, path: Option<&Path>, running: &[u32]) -> Result<(), 
         return Ok(());
     }
     let path = path.ok_or_else(|| LaunchError::NotFound(app.name.clone()))?;
+    guard(path)?;
     runnable(app, path)?;
     let mut command = Command::new(path);
     command.arg(HOSTED_FLAG).env(HOSTED_ENV, HOSTED_ENV_VALUE);
