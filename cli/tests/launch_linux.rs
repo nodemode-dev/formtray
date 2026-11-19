@@ -210,3 +210,31 @@ fn quitting_a_running_app_ends_its_process() {
     assert_eq!(code, 1);
     assert!(out.contains("is not running"), "{out}");
 }
+
+#[test]
+fn a_formportal_install_whose_program_changed_is_not_started() {
+    let s = Sandbox::new("record");
+    s.only_ours_running("formcut", 0);
+    let folder = s.path("portal/apps/formcut/stable/1.2.3");
+    std::fs::create_dir_all(&folder).unwrap();
+    let program = s.script("portal/apps/formcut/stable/1.2.3/formcut", &format!("pwd > {}", s.path("started").display()));
+    let body = std::fs::read(&program).unwrap();
+    let sum = Command::new("sha256sum").arg(&program).output().unwrap();
+    let hash = String::from_utf8_lossy(&sum.stdout).split_whitespace().next().unwrap().to_string();
+    let files = s.path("portal/apps/formcut/stable/1.2.3.files.json");
+    let record = serde_json::json!({"format": "formportal-files", "format_version": 1, "product": "formcut", "channel": "stable", "version": "1.2.3", "files": {"formcut": hash}});
+    std::fs::write(&files, record.to_string()).unwrap();
+    let installed = serde_json::json!({"installs": [{"product": "formcut", "channel": "stable", "current": {"version": "1.2.3", "path": folder, "sha256": "0", "installed_at": 1, "files": files}}]});
+    std::fs::write(s.path("portal/installed.json"), installed.to_string()).unwrap();
+    std::fs::write(&program, [body.as_slice(), b"echo changed\n"].concat()).unwrap();
+    let (code, out) = s.cli(&["open", "formcut"]);
+    assert_eq!(code, 1, "{out}");
+    assert!(out.contains("FormCut was not opened: its program file is not the one FormPortal installed"), "{out}");
+    std::thread::sleep(Duration::from_millis(300));
+    assert!(!s.path("started").exists(), "the changed program was started");
+    assert_eq!(usage_count(&s, "formcut"), 0);
+    std::fs::write(&program, &body).unwrap();
+    let (code, out) = s.cli(&["open", "formcut"]);
+    assert_eq!(code, 0, "{out}");
+    assert_eq!(s.wait_for("started").trim(), folder.display().to_string());
+}

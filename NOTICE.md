@@ -7,7 +7,7 @@ Licensed under the Apache License, Version 2.0. See `LICENSE`.
 
 ## Dependencies
 
-FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons in `assets/` and `src-tauri/icons/`, and the 34-app family icon pack in dark and light) is the owner's own artwork (NodeAgentc, Inc. / nodemode). Its dependencies are mostly MIT, Apache-2.0 or dual MIT and Apache-2.0, with some BSD, ISC, Zlib, Unicode and CC0 crates, as their manifests declare. Four linked Tauri crates are MPL-2.0 (see "Desktop shell: crates under other licences" below). The main dependencies:
+FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons in `assets/` and `src-tauri/icons/`, and the family icon pack in dark and light) is the owner's own artwork (NodeAgentc, Inc. / nodemode). Its dependencies are mostly MIT, Apache-2.0 or dual MIT and Apache-2.0, with some BSD, ISC, Zlib, Unicode and CC0 crates, as their manifests declare. Four linked Tauri crates are MPL-2.0 (see "Desktop shell: crates under other licences" below). The main dependencies:
 
 | Package | Used for |
 | --- | --- |
@@ -18,6 +18,7 @@ FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons i
 | plist (macOS) | reading app bundles' Info.plist (`core`) |
 | windows-sys (Windows) | window and registry calls (`core`, `src-tauri`) |
 | global-hotkey | checks that a hotkey parses the way the shell registers it (`core`; already in the shell through tauri-plugin-global-shortcut) |
+| sha2 (MIT or Apache-2.0) | checks a FormPortal-installed program against FormPortal's list of its files before opening it on Linux and Windows (`core`; already in the shell through Tauri) |
 | tauri 2, tauri-plugin-global-shortcut, tauri-plugin-single-instance, tauri-plugin-autostart | the desktop shell |
 | window-vibrancy | vibrancy and acrylic panels on older macOS and Windows |
 | objc2-app-kit (macOS) | the system glass and key events |

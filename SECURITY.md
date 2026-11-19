@@ -7,7 +7,7 @@ check whether the problem is still there.
 
 | Version | Supported |
 | --- | --- |
-| 0.9.x (latest release) | Yes |
+| 0.17.x (latest release) | Yes |
 | Anything older | No |
 
 ## Reporting a vulnerability
@@ -26,7 +26,9 @@ FormTray runs on your own machine and never touches the network, so the things t
 matter most are the ways something outside it could get in:
 
 - **Opening apps**: getting FormTray to launch a program that is not a Form app it
-  found, for example through a crafted FormPortal install record or app bundle.
+  found, for example through a crafted FormPortal install record or app bundle. On
+  Linux and Windows an app FormPortal installed is opened only when its program file
+  matches FormPortal's record of its files; getting around that check counts too.
 - **Requests to the running FormTray**: a second `formtray` start, or another program,
   making it do more than show a view or its settings.
 - **Icons**: reading a file outside FormTray's own icon cache through the `appicon`

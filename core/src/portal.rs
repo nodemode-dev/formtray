@@ -16,6 +16,15 @@ pub struct PortalState {
     pub updates: Vec<PortalUpdate>,
     pub names: std::collections::HashMap<String, String>,
     pub released: Vec<String>,
+    pub records: std::collections::HashMap<String, Record>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Record {
+    pub product: String,
+    pub version: String,
+    pub folder: PathBuf,
+    pub files: Option<PathBuf>,
 }
 
 #[derive(Deserialize)]
@@ -35,6 +44,8 @@ struct Install {
 struct Version {
     version: String,
     path: PathBuf,
+    #[serde(default)]
+    files: Option<PathBuf>,
 }
 
 #[derive(Deserialize)]
@@ -145,6 +156,10 @@ pub fn read_at(root: &Path) -> PortalState {
     for install in installed.installs.iter().filter(|i| i.channel == "stable") {
         let id = family_id(&install.product);
         state.installs.push((id.clone(), install.current.path.clone()));
+        state.records.insert(
+            id.clone(),
+            Record { product: install.product.clone(), version: install.current.version.clone(), folder: install.current.path.clone(), files: install.current.files.clone() },
+        );
         let latest = catalog
             .as_ref()
             .and_then(|c| c.products.iter().find(|p| p.id == install.product))
