@@ -7,7 +7,7 @@ use formtray_core::{prefs, Engine, Prefs, Registry, Tile, Usage};
 const ORDER: [&str; 33] = [
     "formvis", "formlit", "formpath", "formdam", "formref", "formcut", "formvfx", "formencoder", "formwav", "formdesign", "formpdf", "formdeck",
     "formmd", "formsculpt", "formsurface", "formweb", "format", "formcel", "formtxt", "formbench", "formmcp", "formskills", "formportal",
-    "formtools", "formfabric", "formmorpheus", "formcraft", "formpromo", "formrig", "formcad", "formnet", "formslot", "subform",
+    "formtools", "formfabric", "formmorpheus", "formcraft", "formpromo", "formrig", "formcad", "formnet", "formslot", "formsubstrate",
 ];
 
 static ENV: Mutex<()> = Mutex::new(());
