@@ -13,7 +13,7 @@ macro_rules! pack {
 pub fn bytes(id: &str, light: bool) -> Option<&'static [u8]> {
     pack!(
         id, light, "format", "formbench", "formcad", "formcel", "formcraft", "formcut", "formdam", "formdeck", "formdesign", "formencoder", "formfabric", "formlit", "formmcp", "formmd",
-        "formmorpheus", "formnet", "formpath", "formpdf", "formportal", "formpromo", "formref", "formrig", "formsculpt", "formskills", "formslot", "formsubstrate", "formsurface", "formtools", "formtray", "formtxt", "formvfx",
+        "formmorpheus", "formnet", "formpath", "formpdf", "formportal", "formpromo", "formpublisher", "formrec", "formref", "formrig", "formsculpt", "formskills", "formslot", "formsubstrate", "formsurface", "formtools", "formtray", "formtxt", "formvfx",
         "formvis", "formwav", "formweb"
     )
 }
