@@ -42,6 +42,6 @@
     { "id": "formcad", "name": "FormCAD", "alt_of": "SolidWorks", "category": "3d", "hue": "#9a7bd8", "icon": "formcad.webp", "identifiers": ["ai.nodemode.formcad"], "names": ["FormCAD", "formcad"], "opens": "2026-11-25T17:00:00Z" },
     { "id": "formnet", "name": "FormNET", "alt_of": "Charles Proxy", "category": "build", "hue": "#8681dd", "icon": "formnet.webp", "identifiers": ["ai.nodemode.formnet"], "names": ["FormNET", "formnet"], "opens": "2026-11-28T17:00:00Z" },
     { "id": "formslot", "name": "FormSlot", "alt_of": "", "category": "build", "hue": "#aa75d2", "icon": "formslot.webp", "identifiers": ["ai.nodemode.formslot"], "names": ["FormSlot", "formslot"], "opens": "2026-11-28T17:00:00Z" },
-    { "id": "subform", "name": "SubForm", "alt_of": "", "category": "build", "hue": "#a077e0", "icon": "subform.webp", "identifiers": ["ai.nodemode.subform"], "names": ["SubForm", "subform"], "opens": "2026-11-28T17:00:00Z" }
+    { "id": "formsubstrate", "name": "FormSubstrate", "alt_of": "", "category": "build", "hue": "#a077e0", "icon": "formsubstrate.webp", "identifiers": ["ai.nodemode.formsubstrate"], "names": ["FormSubstrate", "formsubstrate", "Substrate"], "opens": "2026-11-28T17:00:00Z" }
   ]
 }
