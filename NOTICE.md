@@ -24,6 +24,7 @@ FormTray's own code and art are nodemode-ai's. The app icon artwork (the icons i
 | objc2-app-kit (macOS) | the system glass and key events |
 | gtk, gdkx11, x11 (Linux) | the panel window on Linux |
 | Vite, TypeScript, @tauri-apps/cli, @types/node (build only) | building the interface and the app; not shipped |
+| vitest (MIT), happy-dom (MIT) (test only) | running the interface tests in `frontend/tests/unit/`; not shipped |
 | `demo/` (no new packages) | the browser demo is built with the same Vite and TypeScript from `frontend/package-lock.json`; it ships the app's own interface code, `core/data/apps.json` and the family icon pack, and adds no font, binary or third-party code |
 | `demos/switcher/`, `demos/widgets/` (v0.14.3) | two more browser demos built with the same Vite and TypeScript; each adds no media of its own and builds the demo 1 wallpaper, window screenshots and icon pack, listed in `demos/switcher/CREDITS.md` and `demos/widgets/CREDITS.md` |
 | Form Extension Contract kit, Apache-2.0, nodemode | `frontend/src/ext/host-bridge.ts` vendored unchanged; `core/src/extensions.rs` is a line-for-line Rust port of the kit's `formext_host.py` with its messages |

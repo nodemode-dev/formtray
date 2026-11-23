@@ -4,7 +4,7 @@ Rules for agents working in this repository. Read the in-tree HASHOUT logs (`cor
 
 ## Tests
 
-- Tests live in `tests/` folders and run in CI; write only tests this plan or its successor names. The plan is `FAMILY_TEST_PLAN.md` in the formai_dev sidecar; `cargo test --locked -p formtray-core -p formtray-cli` runs them.
+- Tests live in `frontend/tests/unit/`, `core/tests/` and `cli/tests/` and run in CI; `./formtray test` runs them (`unit` is vitest in `frontend`, `native` is `cargo test --locked -p formtray-core -p formtray-cli`). Tests are added when the owner asks; a change in behaviour updates its tests in the same pull request; every test follows the five rules in `docs/TESTING.md`.
 
 ## Trademarks, copyright and licences
 

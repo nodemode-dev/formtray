@@ -44,7 +44,8 @@ cargo test --locked -p formtray-core -p formtray-cli
 ```
 
 CI also checks the shell scripts with `bash -n` and refuses an em dash in tracked
-Markdown or an emoji in any tracked text.
+Markdown or an emoji in any tracked text. `./formtray test` runs every test layer;
+[docs/TESTING.md](docs/TESTING.md) says where the tests live and what a test must do.
 
 - Keep each pull request to one change, with tests for what it adds or fixes.
 - Write commit subjects the way the history does, in Conventional Commits:
