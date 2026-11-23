@@ -3,6 +3,7 @@ setlocal
 cd /d "%~dp0"
 
 if /I "%~1"=="cli" goto cli
+if /I "%~1"=="test" "%~dp0formtray_test.bat" %*
 
 where cargo >nul 2>nul || (echo Rust is required: https://rustup.rs. Then run formtray_oc_install.bat & exit /b 1)
 if not exist frontend\node_modules (echo Run formtray_oc_install.bat first. & exit /b 1)

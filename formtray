@@ -2,6 +2,11 @@
 set -e
 cd "$(dirname "$0")"
 
+if [ "${1:-}" = "test" ]; then
+  shift
+  exec ./formtray_test "$@"
+fi
+
 if [ "${1:-}" = "cli" ]; then
   shift
   bin=target/release/formtray-cli

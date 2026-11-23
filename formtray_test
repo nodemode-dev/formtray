@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")"
+root="$(pwd)"
+which="${1:-all}"
+[ $# -gt 0 ] && shift
+case "$which" in
+  all|unit|native) ;;
+  *) echo "unknown test layer: $which (use unit, native or nothing for all)"; exit 2 ;;
+esac
+fail=0
+run() { echo "$1"; shift; "$@" || fail=1; }
+wants() { [ "$which" = all ] || [ "$which" = "$1" ]; }
+if wants unit; then
+  [ -d "$root/frontend/node_modules" ] || { echo "The interface is not installed. Run ./formtray_oc_install first."; exit 1; }
+  cd "$root/frontend"
+  run "interface logic (vitest)" npx vitest run "$@"
+fi
+if wants native; then
+  command -v cargo >/dev/null || { echo "Rust is required: https://rustup.rs. Then run ./formtray_oc_install"; exit 1; }
+  cd "$root"
+  run "engine and command line (cargo test)" cargo test --locked -p formtray-core -p formtray-cli "$@"
+fi
+exit "$fail"
