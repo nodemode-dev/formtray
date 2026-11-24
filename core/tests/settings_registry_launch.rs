@@ -514,12 +514,32 @@ fn sleeping_as(name: &str) -> Fake {
     static N: AtomicUsize = AtomicUsize::new(0);
     let dir = std::env::temp_dir().join(format!("formtray-run-{}-{}", std::process::id(), N.fetch_add(1, Ordering::SeqCst)));
     std::fs::create_dir_all(&dir).unwrap();
-    let real = ["/usr/bin/sleep", "/bin/sleep"].iter().find(|p| Path::new(p).is_file()).expect("a sleep program");
     let copy = dir.join(name);
-    std::fs::copy(real, &copy).unwrap();
-    let child = Command::new(&copy).arg("30").stdin(Stdio::null()).spawn().unwrap();
+    let this_program = std::env::current_exe().unwrap();
+    if std::fs::hard_link(&this_program, &copy).is_err() {
+        std::fs::copy(&this_program, &copy).unwrap();
+    }
+    let mut child = Command::new(&copy)
+        .args(["--ignored", "--exact", STAND_IN])
+        .env("FORMTRAY_STAND_IN", "1")
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
     std::thread::sleep(Duration::from_millis(100));
+    assert!(child.try_wait().unwrap().is_none(), "the stand-in program ended at once, so nothing is running under the name {name}");
     Fake { child, _dir: dir }
+}
+
+const STAND_IN: &str = "stand_in_program_that_waits";
+
+#[test]
+#[ignore = "not a check: this is the program the tests below start under an app's name, and it waits only when they start it"]
+fn stand_in_program_that_waits() {
+    if std::env::var_os("FORMTRAY_STAND_IN").is_some() {
+        std::thread::sleep(Duration::from_secs(30));
+    }
 }
 
 #[test]
