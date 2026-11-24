@@ -342,12 +342,21 @@ fn an_app_in_the_home_local_bin_shows_as_installed_with_its_path_in_both_lists()
 #[test]
 fn an_app_not_on_the_computer_is_listed_as_not_found_with_no_path() {
     let b = Box::new("notfound");
-    b.portal("", &[("formwav", "1.0.0")]);
-    let wav = b.json(&["list", "--json"]).as_array().unwrap().iter().find(|a| a["id"] == "formwav").cloned().unwrap();
-    assert_eq!(wav["installed"], false);
-    assert!(wav["path"].is_null());
-    let line = b.run(&["list"]).out.lines().find(|l| l.starts_with("formwav ")).unwrap().to_string();
-    assert!(line.contains("not found"), "{line}");
+    let ids = ["formwav", "formcut", "formvis", "formdeck"];
+    b.portal("", &ids.map(|id| (id, "1.0.0")));
+    let listed = b.json(&["list", "--json"]);
+    let idle: Vec<&Value> = listed.as_array().unwrap().iter().filter(|a| ids.iter().any(|id| a["id"] == *id) && a["running"] == false).collect();
+    assert!(!idle.is_empty(), "every one of {ids:?} is running on this computer");
+    for app in idle {
+        assert_eq!(app["installed"], false, "{app}");
+        assert!(app["path"].is_null(), "{app}");
+    }
+    let text = b.run(&["list"]).out;
+    let lines: Vec<&str> = text.lines().filter(|l| ids.iter().any(|id| l.starts_with(&format!("{id} "))) && !l.split_whitespace().any(|cell| cell == "running")).collect();
+    assert!(!lines.is_empty(), "every one of {ids:?} is running on this computer");
+    for line in lines {
+        assert!(line.contains("not found"), "{line}");
+    }
 }
 
 #[test]
